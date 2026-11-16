@@ -18,7 +18,9 @@ include(
     ":core:common",
     ":core:designsystem",
     ":core:datastore",
+    ":core:database",
     ":core:monitoring",
     ":feature:home",
+    ":feature:monitor",
     ":feature:settings",
 )

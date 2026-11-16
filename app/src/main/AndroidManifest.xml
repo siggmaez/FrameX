@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Network diagnostics (ping/DNS) that the user starts manually, and connection type display. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <!-- Only to detect whether Shizuku is installed. -->
     <queries>
         <package android:name="moe.shizuku.privileged.api" />

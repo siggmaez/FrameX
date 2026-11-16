@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -50,8 +51,15 @@ fun SettingsScreen(contentPadding: PaddingValues, vm: SettingsViewModel = hiltVi
         }
         item {
             FrameXCard {
+                Text("Monitoring history", style = MaterialTheme.typography.titleMedium)
+                Text("Graphs are kept on this device only while you use the Monitor screen. Up to 2000 samples per metric.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                OutlinedButton(onClick = vm::clearHistory) { Text("Clear history") }
+            }
+        }
+        item {
+            FrameXCard {
                 Text("Permissions", style = MaterialTheme.typography.titleMedium)
-                Text("FrameX currently requests no runtime permissions. It only reads battery, memory and display information that Android gives every app.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Internet: only for the network diagnostics you start yourself (ping, DNS). Network state: to show whether you are on Wi-Fi or mobile data. FrameX asks for no runtime permissions and reads no personal files.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }

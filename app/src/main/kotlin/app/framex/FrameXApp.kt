@@ -31,6 +31,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import app.framex.feature.home.HomeScreen
+import app.framex.feature.monitor.MonitorScreen
 import app.framex.feature.settings.SettingsScreen
 
 private enum class Destination(val route: String, val label: String, val icon: ImageVector) {
@@ -70,7 +71,7 @@ fun FrameXApp() {
             composable(Destination.Home.route) { HomeScreen(padding) }
             composable(Destination.Optimize.route) { NotBuiltYet("Optimize", "Optimization profiles and the engine are not built yet.", padding) }
             composable(Destination.Games.route) { NotBuiltYet("Games", "Game discovery and per-game profiles are not built yet.", padding) }
-            composable(Destination.Monitor.route) { NotBuiltYet("Monitor", "Detailed CPU, thermal, memory and network monitors are not built yet.", padding) }
+            composable(Destination.Monitor.route) { MonitorScreen(padding) }
             composable(Destination.Settings.route) { SettingsScreen(padding) }
         }
     }
