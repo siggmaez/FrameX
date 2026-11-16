@@ -27,6 +27,7 @@ dependencies {
     implementation(project(":core:database"))
     implementation(project(":core:optimization"))
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.hilt.navigation.compose)
