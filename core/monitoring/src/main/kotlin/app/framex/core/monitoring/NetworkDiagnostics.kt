@@ -59,18 +59,18 @@ class NetworkDiagnostics @Inject constructor(@ApplicationContext private val con
         val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val net = cm.activeNetwork
         val caps = net?.let { cm.getNetworkCapabilities(it) }
-        if (caps == null) Metric.Unavailable("No active network")
+        if (caps == null) Metric.Unavailable(context.getString(R.string.net_no_network))
         else {
             val kind = when {
-                caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> "Wi-Fi"
-                caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> "Mobile data"
-                caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> "Ethernet"
-                else -> "Other"
+                caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> context.getString(R.string.net_wifi)
+                caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> context.getString(R.string.net_mobile)
+                caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> context.getString(R.string.net_ethernet)
+                else -> context.getString(R.string.net_other)
             }
             val ok = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-            Metric.Available(kind + if (ok) " · internet validated by Android" else " · internet not validated")
+            Metric.Available(context.getString(if (ok) R.string.net_validated else R.string.net_not_validated, kind))
         }
-    } catch (e: Exception) { Metric.Unavailable("Connection state not available") }
+    } catch (e: Exception) { Metric.Unavailable(context.getString(R.string.net_state_na)) }
 
     suspend fun ping(target: PingTarget, count: Int = 10, timeoutMs: Int = 2000): PingStats = withContext(Dispatchers.IO) {
         val samples = ArrayList<Float?>(count)

@@ -23,21 +23,21 @@ class DetailedMetricsSource @Inject constructor(@ApplicationContext private val 
     private fun thermalLevel(): Metric<ThermalLevel> = try {
         val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
         ThermalLevel.fromStatus(pm.currentThermalStatus)?.let { Metric.Available(it) }
-            ?: Metric.Unavailable("Unknown thermal status")
-    } catch (e: Exception) { Metric.Unavailable("Thermal status not available") }
+            ?: Metric.Unavailable(context.getString(R.string.mon_thermal_unknown))
+    } catch (e: Exception) { Metric.Unavailable(context.getString(R.string.mon_thermal_na)) }
 
     private fun thermalHeadroom(): Metric<Float> {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return Metric.Unavailable("Requires Android 11+")
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return Metric.Unavailable(context.getString(R.string.mon_headroom_android11))
         return try {
             val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
             val h = pm.getThermalHeadroom(0)
-            if (h.isNaN()) Metric.Unavailable("Not supported by this device") else Metric.Available(h)
-        } catch (e: Exception) { Metric.Unavailable("Not supported by this device") }
+            if (h.isNaN()) Metric.Unavailable(context.getString(R.string.mon_not_supported)) else Metric.Available(h)
+        } catch (e: Exception) { Metric.Unavailable(context.getString(R.string.mon_not_supported)) }
     }
 
     private fun thermalSensors(): Metric<List<ThermalSensor>> {
         val zones = File("/sys/class/thermal").listFiles { f -> f.name.startsWith("thermal_zone") }
-            ?: return Metric.Unavailable("Android does not let apps list thermal sensors on this device")
+            ?: return Metric.Unavailable(context.getString(R.string.mon_sensors_list))
         val list = zones.sortedBy { it.name }.mapNotNull { z ->
             try {
                 val raw = File(z, "temp").readText().trim().toFloatOrNull() ?: return@mapNotNull null
@@ -46,7 +46,7 @@ class DetailedMetricsSource @Inject constructor(@ApplicationContext private val 
                 ThermalSensor(File(z, "type").readText().trim(), c)
             } catch (_: Exception) { null }
         }
-        return if (list.isEmpty()) Metric.Unavailable("Thermal sensors are not readable by apps on this device")
+        return if (list.isEmpty()) Metric.Unavailable(context.getString(R.string.mon_sensors_unreadable))
         else Metric.Available(list)
     }
 
@@ -57,7 +57,7 @@ class DetailedMetricsSource @Inject constructor(@ApplicationContext private val 
             CoreFreq(i, readLong(base + "scaling_cur_freq"), readLong(base + "cpuinfo_max_freq"))
         }
         val any = freqs.any { it.curKHz != null || it.maxKHz != null }
-        return CpuInfo(n, if (any) Metric.Available(freqs) else Metric.Unavailable("Android does not let apps read CPU frequencies on this device"))
+        return CpuInfo(n, if (any) Metric.Available(freqs) else Metric.Unavailable(context.getString(R.string.mon_freq_unreadable)))
     }
 
     private fun readLong(path: String): Long? = try { File(path).readText().trim().toLongOrNull() } catch (_: Exception) { null }
@@ -65,5 +65,5 @@ class DetailedMetricsSource @Inject constructor(@ApplicationContext private val 
     private fun ownPss(): Metric<Long> = try {
         val mi = Debug.MemoryInfo().also { Debug.getMemoryInfo(it) }
         Metric.Available(mi.totalPss.toLong())
-    } catch (e: Exception) { Metric.Unavailable("Not available") }
+    } catch (e: Exception) { Metric.Unavailable(context.getString(R.string.mon_na)) }
 }

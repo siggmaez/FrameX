@@ -1,0 +1,24 @@
+<resources>
+    <string name="mon_cpu_restricted">Android blocks apps from reading CPU load on this device</string>
+    <string name="mon_cpu_first_sample">Collecting first sample</string>
+    <string name="mon_ram_error">Memory info could not be read</string>
+    <string name="mon_battery_not_reported">Battery status not reported</string>
+    <string name="mon_battery_temp_missing">Battery temperature not reported by this device</string>
+    <string name="mon_display_error">Display info could not be read</string>
+    <string name="mon_thermal_unknown">Unknown thermal status</string>
+    <string name="mon_thermal_na">Thermal status not available</string>
+    <string name="mon_headroom_android11">Requires Android 11+</string>
+    <string name="mon_not_supported">Not supported by this device</string>
+    <string name="mon_sensors_list">Android does not let apps list thermal sensors on this device</string>
+    <string name="mon_sensors_unreadable">Thermal sensors are not readable by apps on this device</string>
+    <string name="mon_freq_unreadable">Android does not let apps read CPU frequencies on this device</string>
+    <string name="mon_na">Not available</string>
+    <string name="net_no_network">No active network</string>
+    <string name="net_wifi">Wi-Fi</string>
+    <string name="net_mobile">Mobile data</string>
+    <string name="net_ethernet">Ethernet</string>
+    <string name="net_other">Other</string>
+    <string name="net_validated">%1$s · internet validated by Android</string>
+    <string name="net_not_validated">%1$s · internet not validated</string>
+    <string name="net_state_na">Connection state not available</string>
+</resources>

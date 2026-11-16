@@ -1,5 +1,6 @@
 package app.framex
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -22,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -34,12 +36,12 @@ import app.framex.feature.home.HomeScreen
 import app.framex.feature.monitor.MonitorScreen
 import app.framex.feature.settings.SettingsScreen
 
-private enum class Destination(val route: String, val label: String, val icon: ImageVector) {
-    Home("home", "Home", Icons.Outlined.Home),
-    Optimize("optimize", "Optimize", Icons.Outlined.Tune),
-    Games("games", "Games", Icons.Outlined.SportsEsports),
-    Monitor("monitor", "Monitor", Icons.Outlined.Insights),
-    Settings("settings", "Settings", Icons.Outlined.Settings),
+private enum class Destination(val route: String, @StringRes val label: Int, val icon: ImageVector) {
+    Home("home", R.string.nav_home, Icons.Outlined.Home),
+    Optimize("optimize", R.string.nav_optimize, Icons.Outlined.Tune),
+    Games("games", R.string.nav_games, Icons.Outlined.SportsEsports),
+    Monitor("monitor", R.string.nav_monitor, Icons.Outlined.Insights),
+    Settings("settings", R.string.nav_settings, Icons.Outlined.Settings),
 }
 
 @Composable
@@ -61,7 +63,7 @@ fun FrameXApp() {
                             }
                         },
                         icon = { Icon(d.icon, contentDescription = null) },
-                        label = { Text(d.label) },
+                        label = { Text(stringResource(d.label)) },
                     )
                 }
             }
@@ -69,8 +71,8 @@ fun FrameXApp() {
     ) { padding ->
         NavHost(nav, startDestination = Destination.Home.route) {
             composable(Destination.Home.route) { HomeScreen(padding) }
-            composable(Destination.Optimize.route) { NotBuiltYet("Optimize", "Optimization profiles and the engine are not built yet.", padding) }
-            composable(Destination.Games.route) { NotBuiltYet("Games", "Game discovery and per-game profiles are not built yet.", padding) }
+            composable(Destination.Optimize.route) { NotBuiltYet(stringResource(R.string.nav_optimize), padding) }
+            composable(Destination.Games.route) { NotBuiltYet(stringResource(R.string.nav_games), padding) }
             composable(Destination.Monitor.route) { MonitorScreen(padding) }
             composable(Destination.Settings.route) { SettingsScreen(padding) }
         }
@@ -79,13 +81,13 @@ fun FrameXApp() {
 
 /** Honest empty state for sections that have no functionality yet. */
 @Composable
-private fun NotBuiltYet(title: String, text: String, padding: PaddingValues) {
+private fun NotBuiltYet(title: String, padding: PaddingValues) {
     Column(
         Modifier.fillMaxSize().padding(padding).padding(32.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(title, style = MaterialTheme.typography.headlineSmall)
-        Text(text, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.not_built), style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

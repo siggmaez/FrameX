@@ -1,0 +1,24 @@
+<resources>
+    <string name="mon_cpu_restricted">Android не даёт приложениям читать загрузку CPU на этом устройстве</string>
+    <string name="mon_cpu_first_sample">Сбор первого замера</string>
+    <string name="mon_ram_error">Не удалось прочитать данные о памяти</string>
+    <string name="mon_battery_not_reported">Состояние батареи не сообщается</string>
+    <string name="mon_battery_temp_missing">Это устройство не сообщает температуру батареи</string>
+    <string name="mon_display_error">Не удалось прочитать данные о дисплее</string>
+    <string name="mon_thermal_unknown">Неизвестный тепловой статус</string>
+    <string name="mon_thermal_na">Тепловой статус недоступен</string>
+    <string name="mon_headroom_android11">Требуется Android 11+</string>
+    <string name="mon_not_supported">Не поддерживается этим устройством</string>
+    <string name="mon_sensors_list">Android не позволяет приложениям получить список датчиков температуры на этом устройстве</string>
+    <string name="mon_sensors_unreadable">Датчики температуры недоступны приложениям на этом устройстве</string>
+    <string name="mon_freq_unreadable">Android не даёт приложениям читать частоты CPU на этом устройстве</string>
+    <string name="mon_na">Недоступно</string>
+    <string name="net_no_network">Нет активной сети</string>
+    <string name="net_wifi">Wi-Fi</string>
+    <string name="net_mobile">Мобильные данные</string>
+    <string name="net_ethernet">Ethernet</string>
+    <string name="net_other">Другая</string>
+    <string name="net_validated">%1$s · интернет подтверждён Android</string>
+    <string name="net_not_validated">%1$s · интернет не подтверждён</string>
+    <string name="net_state_na">Состояние подключения недоступно</string>
+</resources>

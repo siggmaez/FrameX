@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -27,7 +28,7 @@ fun LineChart(
     val grid = MaterialTheme.colorScheme.outlineVariant
     Box(modifier.fillMaxWidth().height(120.dp), contentAlignment = Alignment.Center) {
         if (values.size < 2) {
-            Text("Collecting data…", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.ds_collecting), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
             val lo = fixedMin ?: values.min()
             var hi = fixedMax ?: values.max()

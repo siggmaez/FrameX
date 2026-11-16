@@ -1,0 +1,18 @@
+<resources>
+    <string name="set_theme">Тема</string>
+    <string name="set_theme_note">На Android 12+ цвета динамически подстраиваются под обои.</string>
+    <string name="set_theme_system">Системная</string>
+    <string name="set_theme_light">Светлая</string>
+    <string name="set_theme_dark">Тёмная</string>
+    <string name="set_language">Язык</string>
+    <string name="set_language_note">Выберите язык приложения.</string>
+    <string name="set_lang_system">Системный</string>
+    <string name="set_interval">Интервал мониторинга</string>
+    <string name="set_interval_note">Как часто обновляются метрики, пока экран открыт. Больший интервал экономит заряд. В фоне ничего не опрашивается.</string>
+    <string name="set_seconds">%1$d с</string>
+    <string name="set_history">История мониторинга</string>
+    <string name="set_history_note">Графики хранятся только на этом устройстве и пополняются, пока открыт экран «Монитор». До 2000 замеров на метрику.</string>
+    <string name="set_history_clear">Очистить историю</string>
+    <string name="set_permissions">Разрешения</string>
+    <string name="set_permissions_note">Интернет: только для сетевой диагностики, которую вы запускаете сами (пинг, DNS). Состояние сети: чтобы показать Wi-Fi или мобильные данные. FrameX не запрашивает разрешений во время работы и не читает личные файлы.</string>
+</resources>

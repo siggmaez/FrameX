@@ -11,6 +11,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.framex.core.common.Metric
 
@@ -20,16 +21,16 @@ fun <T> MetricCard(
     title: String,
     metric: Metric<T>?,
     modifier: Modifier = Modifier,
-    valueText: (T) -> String,
-    detailText: ((T) -> String)? = null,
+    valueText: @Composable (T) -> String,
+    detailText: (@Composable (T) -> String)? = null,
     progress: ((T) -> Float)? = null,
 ) {
     FrameXCard(modifier) {
         Text(title, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         when (metric) {
-            null -> Text("Measuring…", style = MaterialTheme.typography.titleMedium)
+            null -> Text(stringResource(R.string.ds_measuring), style = MaterialTheme.typography.titleMedium)
             is Metric.Unavailable -> {
-                Text("Unavailable", style = MaterialTheme.typography.titleLarge)
+                Text(stringResource(R.string.ds_unavailable), style = MaterialTheme.typography.titleLarge)
                 Text(metric.reason, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             is Metric.Available -> {

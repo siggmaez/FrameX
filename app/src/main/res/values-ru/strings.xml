@@ -1,0 +1,8 @@
+<resources>
+    <string name="nav_home">Главная</string>
+    <string name="nav_optimize">Оптимизация</string>
+    <string name="nav_games">Игры</string>
+    <string name="nav_monitor">Монитор</string>
+    <string name="nav_settings">Настройки</string>
+    <string name="not_built">Ещё не реализовано</string>
+</resources>

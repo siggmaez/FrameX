@@ -1,0 +1,24 @@
+<resources>
+    <string name="home_device">Это устройство</string>
+    <string name="home_android">Android %1$s (API %2$d)</string>
+    <string name="home_ram">ОЗУ</string>
+    <string name="home_ram_used">занято %1$d%%</string>
+    <string name="home_ram_detail">занято %1$s из %2$s ГБ</string>
+    <string name="home_low_memory"> · система сообщает о нехватке памяти</string>
+    <string name="home_cpu">Загрузка CPU</string>
+    <string name="home_battery">Температура батареи</string>
+    <string name="home_charging">заряжается</string>
+    <string name="home_refresh">Частота обновления</string>
+    <string name="home_hz">%1$d Гц</string>
+    <string name="home_supported">Поддерживается: %1$s Гц</string>
+    <string name="home_profile">Выбранный профиль</string>
+    <string name="home_profile_note">Профиль сохранён как ваш выбор, в систему он пока не применяется.</string>
+    <string name="home_shizuku">Shizuku</string>
+    <string name="home_checking">Проверка…</string>
+    <string name="home_shizuku_installed">Установлен</string>
+    <string name="home_shizuku_installed_note">Подключение и разрешение пока не проверяются.</string>
+    <string name="home_shizuku_missing">Не установлен</string>
+    <string name="home_shizuku_missing_note">Необязательно. FrameX работает и без него.</string>
+    <string name="home_recent">Последняя игровая сессия</string>
+    <string name="home_no_sessions">Сессий пока нет</string>
+</resources>

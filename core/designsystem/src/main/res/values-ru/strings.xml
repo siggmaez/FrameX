@@ -1,0 +1,10 @@
+<resources>
+    <string name="ds_measuring">Измерение…</string>
+    <string name="ds_unavailable">Недоступно</string>
+    <string name="ds_collecting">Сбор данных…</string>
+    <string name="profile_balanced">Сбалансированный</string>
+    <string name="profile_gaming">Игровой</string>
+    <string name="profile_performance">Производительность</string>
+    <string name="profile_battery_saver">Экономия заряда</string>
+    <string name="profile_custom">Свой</string>
+</resources>

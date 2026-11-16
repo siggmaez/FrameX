@@ -29,7 +29,7 @@ class SystemMetricsSource @Inject constructor(@ApplicationContext private val co
     fun snapshots(intervalMs: Flow<Long>): Flow<SystemSnapshot> =
         intervalMs.distinctUntilChanged().flatMapLatest { interval ->
             flow {
-                val cpu = CpuSampler()
+                val cpu = CpuSampler(context.getString(R.string.mon_cpu_restricted), context.getString(R.string.mon_cpu_first_sample))
                 while (true) {
                     emit(SystemSnapshot(readRam(), cpu.sample(), readBattery(), readDisplay(), readShizuku()))
                     delay(interval)
@@ -37,18 +37,19 @@ class SystemMetricsSource @Inject constructor(@ApplicationContext private val co
             }
         }.flowOn(Dispatchers.Default)
 
-    private class CpuSampler {
+    private class CpuSampler(restricted: String, private val firstSample: String) {
+        private val restrictedMetric = Metric.Unavailable(restricted)
         private val calc = CpuLoadCalculator()
         private var blocked = false
 
         fun sample(): Metric<Float> {
-            if (blocked) return CPU_RESTRICTED
+            if (blocked) return restrictedMetric
             val line = readProcStatLine()
             if (line == null) {
                 blocked = true
-                return CPU_RESTRICTED
+                return restrictedMetric
             }
-            return calc.update(line)?.let { Metric.Available(it) } ?: Metric.Unavailable("Collecting first sample")
+            return calc.update(line)?.let { Metric.Available(it) } ?: Metric.Unavailable(firstSample)
         }
 
         private fun readProcStatLine(): String? = try {
@@ -63,14 +64,14 @@ class SystemMetricsSource @Inject constructor(@ApplicationContext private val co
         val mi = ActivityManager.MemoryInfo().also { am.getMemoryInfo(it) }
         Metric.Available(RamInfo(mi.totalMem, mi.availMem, mi.lowMemory))
     } catch (e: Exception) {
-        Metric.Unavailable("Memory info could not be read")
+        Metric.Unavailable(context.getString(R.string.mon_ram_error))
     }
 
     private fun readBattery(): Metric<BatteryInfo> {
         val i: Intent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
-            ?: return Metric.Unavailable("Battery status not reported")
+            ?: return Metric.Unavailable(context.getString(R.string.mon_battery_not_reported))
         val tenths = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, Int.MIN_VALUE)
-        if (tenths == Int.MIN_VALUE) return Metric.Unavailable("Battery temperature not reported by this device")
+        if (tenths == Int.MIN_VALUE) return Metric.Unavailable(context.getString(R.string.mon_battery_temp_missing))
         val level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
         val scale = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
         val pct = if (level >= 0 && scale > 0) level * 100 / scale else null
@@ -85,7 +86,7 @@ class SystemMetricsSource @Inject constructor(@ApplicationContext private val co
         val rates = d.supportedModes.map { it.refreshRate }.distinctBy { Math.round(it) }.sorted()
         Metric.Available(DisplayRefresh(d.refreshRate, rates))
     } catch (e: Exception) {
-        Metric.Unavailable("Display info could not be read")
+        Metric.Unavailable(context.getString(R.string.mon_display_error))
     }
 
     private fun readShizuku(): ShizukuInstall = try {
@@ -95,7 +96,4 @@ class SystemMetricsSource @Inject constructor(@ApplicationContext private val co
         ShizukuInstall.NotInstalled
     }
 
-    private companion object {
-        val CPU_RESTRICTED = Metric.Unavailable("Android blocks apps from reading CPU load on this device")
-    }
 }

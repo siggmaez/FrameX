@@ -1,0 +1,10 @@
+<resources>
+    <string name="ds_measuring">Measuring…</string>
+    <string name="ds_unavailable">Unavailable</string>
+    <string name="ds_collecting">Collecting data…</string>
+    <string name="profile_balanced">Balanced</string>
+    <string name="profile_gaming">Gaming</string>
+    <string name="profile_performance">Performance</string>
+    <string name="profile_battery_saver">Battery Saver</string>
+    <string name="profile_custom">Custom</string>
+</resources>

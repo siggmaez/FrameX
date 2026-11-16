@@ -1,0 +1,18 @@
+<resources>
+    <string name="set_theme">Theme</string>
+    <string name="set_theme_note">Dynamic colors follow your wallpaper on Android 12+.</string>
+    <string name="set_theme_system">System</string>
+    <string name="set_theme_light">Light</string>
+    <string name="set_theme_dark">Dark</string>
+    <string name="set_language">Language</string>
+    <string name="set_language_note">Choose the app language.</string>
+    <string name="set_lang_system">System</string>
+    <string name="set_interval">Monitoring interval</string>
+    <string name="set_interval_note">How often live metrics refresh while a screen is visible. Longer intervals use less battery. Nothing is polled in the background.</string>
+    <string name="set_seconds">%1$d s</string>
+    <string name="set_history">Monitoring history</string>
+    <string name="set_history_note">Graphs are kept on this device only while you use the Monitor screen. Up to 2000 samples per metric.</string>
+    <string name="set_history_clear">Clear history</string>
+    <string name="set_permissions">Permissions</string>
+    <string name="set_permissions_note">Internet: only for the network diagnostics you start yourself (ping, DNS). Network state: to show whether you are on Wi-Fi or mobile data. FrameX asks for no runtime permissions and reads no personal files.</string>
+</resources>

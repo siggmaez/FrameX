@@ -3,19 +3,18 @@ package app.framex.feature.home
 import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.framex.core.common.Metric
 import app.framex.core.designsystem.FrameXCard
 import app.framex.core.designsystem.MetricCard
+import app.framex.core.designsystem.label
 import app.framex.core.monitoring.ShizukuInstall
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -34,77 +33,76 @@ fun HomeScreen(contentPadding: PaddingValues, vm: HomeViewModel = hiltViewModel(
     ) {
         item {
             FrameXCard {
-                Text("This device", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Label(stringResource(R.string.home_device))
                 Text("${Build.MANUFACTURER.replaceFirstChar { it.uppercase() }} ${Build.MODEL}", style = MaterialTheme.typography.titleLarge)
-                Text("Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.home_android, Build.VERSION.RELEASE, Build.VERSION.SDK_INT), style = MaterialTheme.typography.bodyMedium)
             }
         }
         item {
+            val low = stringResource(R.string.home_low_memory)
             MetricCard(
-                title = "RAM", metric = snap?.ram,
-                valueText = { "${(it.usedFraction * 100).roundToInt()}% used" },
-                detailText = { "${gb(it.usedBytes)} of ${gb(it.totalBytes)} GB used" + if (it.lowMemory) " · system reports low memory" else "" },
+                title = stringResource(R.string.home_ram), metric = snap?.ram,
+                valueText = { stringResource(R.string.home_ram_used, (it.usedFraction * 100).roundToInt()) },
+                detailText = { stringResource(R.string.home_ram_detail, gb(it.usedBytes), gb(it.totalBytes)) + if (it.lowMemory) low else "" },
                 progress = { it.usedFraction },
             )
         }
         item {
             MetricCard(
-                title = "CPU load", metric = snap?.cpuLoad,
+                title = stringResource(R.string.home_cpu), metric = snap?.cpuLoad,
                 valueText = { "${(it * 100).roundToInt()}%" },
                 progress = { it },
             )
         }
         item {
+            val ch = stringResource(R.string.home_charging)
             MetricCard(
-                title = "Battery temperature", metric = snap?.battery,
+                title = stringResource(R.string.home_battery), metric = snap?.battery,
                 valueText = { String.format(Locale.US, "%.1f °C", it.temperatureC) },
-                detailText = { b ->
-                    listOfNotNull(b.levelPercent?.let { "$it%" }, if (b.charging) "charging" else null).joinToString(" · ")
-                },
+                detailText = { b -> listOfNotNull(b.levelPercent?.let { "$it%" }, if (b.charging) ch else null).joinToString(" · ") },
             )
         }
         item {
             MetricCard(
-                title = "Refresh rate", metric = snap?.display,
-                valueText = { "${it.currentHz.roundToInt()} Hz" },
-                detailText = { "Supported: " + it.supportedHz.joinToString(", ") { r -> "${r.roundToInt()}" } + " Hz" },
+                title = stringResource(R.string.home_refresh), metric = snap?.display,
+                valueText = { stringResource(R.string.home_hz, it.currentHz.roundToInt()) },
+                detailText = { stringResource(R.string.home_supported, it.supportedHz.joinToString(", ") { r -> "${r.roundToInt()}" }) },
             )
         }
         item {
             FrameXCard {
-                Text("Selected profile", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(profileName(ui.profile.name), style = MaterialTheme.typography.titleLarge)
-                Text("The profile is stored as your choice; it is not applied to the system yet.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Label(stringResource(R.string.home_profile))
+                Text(ui.profile.label(), style = MaterialTheme.typography.titleLarge)
+                Text(stringResource(R.string.home_profile_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         item {
             FrameXCard {
-                Text("Shizuku", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Label(stringResource(R.string.home_shizuku))
                 when (snap?.shizuku) {
-                    null -> Text("Checking…", style = MaterialTheme.typography.titleMedium)
+                    null -> Text(stringResource(R.string.home_checking), style = MaterialTheme.typography.titleMedium)
                     ShizukuInstall.Installed -> {
-                        Text("Installed", style = MaterialTheme.typography.titleLarge)
-                        Text("Connection and permission are not checked yet.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.home_shizuku_installed), style = MaterialTheme.typography.titleLarge)
+                        Text(stringResource(R.string.home_shizuku_installed_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     ShizukuInstall.NotInstalled -> {
-                        Text("Not installed", style = MaterialTheme.typography.titleLarge)
-                        Text("Optional. FrameX works without it.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.home_shizuku_missing), style = MaterialTheme.typography.titleLarge)
+                        Text(stringResource(R.string.home_shizuku_missing_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
         }
         item {
             FrameXCard {
-                Text("Recent gaming session", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text("No sessions recorded", style = MaterialTheme.typography.titleMedium)
+                Label(stringResource(R.string.home_recent))
+                Text(stringResource(R.string.home_no_sessions), style = MaterialTheme.typography.titleMedium)
             }
         }
     }
 }
 
-private fun gb(bytes: Long) = String.format(Locale.US, "%.1f", bytes / 1_073_741_824.0)
+@Composable
+private fun Label(text: String) =
+    Text(text, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
-private fun profileName(n: String) = when (n) {
-    "BatterySaver" -> "Battery Saver"
-    else -> n
-}
+private fun gb(bytes: Long) = String.format(Locale.US, "%.1f", bytes / 1_073_741_824.0)

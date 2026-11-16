@@ -85,7 +85,7 @@ class MonitorViewModel @Inject constructor(
                 val dns = network.dnsBenchmark()
                 _net.update { it.copy(dns = dns) }
             } catch (e: Exception) {
-                _net.update { it.copy(error = "Diagnostics failed: ${e.message ?: e.javaClass.simpleName}") }
+                _net.update { it.copy(error = e.message ?: e.javaClass.simpleName) }
             } finally {
                 _net.update { it.copy(running = false) }
             }
