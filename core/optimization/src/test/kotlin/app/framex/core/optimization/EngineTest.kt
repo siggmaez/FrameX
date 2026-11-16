@@ -134,4 +134,18 @@ class EngineTest {
         assertTrue(Profiles.actionsFor(OptimizationProfile.Balanced, emptySet()).isEmpty())
         assertTrue(OptAction.ReduceBrightness !in Profiles.actionsFor(OptimizationProfile.Gaming, emptySet()))
     }
+
+    @Test fun rankingDropsNeverStopAndKeepsRecentlyUsed() {
+        val a = listOf(BackgroundApp("a.one", "Zed"), BackgroundApp("b.two", "Alpha"), BackgroundApp("c.three", "Mid"), BackgroundApp("d.four", "Old"))
+        val used = mapOf("a.one" to 300L, "b.two" to 100L, "c.three" to 200L) // d.four not used in 24 h
+        val r = AppRanking.select(a, used, neverStop = setOf("c.three"), limit = 10)
+        assertEquals(listOf("a.one", "b.two"), r.map { it.packageName }) // recent first, never-stop and idle ones dropped
+        assertEquals(1, AppRanking.select(a, used, emptySet(), limit = 1).size)
+    }
+
+    @Test fun rankingWithoutUsageDataIsAlphabeticalAndLimited() {
+        val a = listOf(BackgroundApp("a.one", "Zed"), BackgroundApp("b.two", "Alpha"), BackgroundApp("c.three", "Mid"))
+        assertEquals(listOf("b.two", "c.three"), AppRanking.select(a, emptyMap(), setOf("a.one"), limit = 5).map { it.packageName })
+        assertEquals(listOf("b.two"), AppRanking.select(a, emptyMap(), emptySet(), limit = 1).map { it.packageName })
+    }
 }

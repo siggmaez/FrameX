@@ -34,6 +34,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import app.framex.feature.home.HomeScreen
 import app.framex.feature.games.GamesScreen
+import app.framex.feature.optimize.BoostHost
 import app.framex.feature.monitor.MonitorScreen
 import app.framex.feature.optimize.OptimizeScreen
 import app.framex.feature.settings.SettingsScreen
@@ -49,6 +50,7 @@ private enum class Destination(val route: String, @StringRes val label: Int, val
 @Composable
 fun FrameXApp() {
     val nav = rememberNavController()
+    BoostHost()
     val backStack by nav.currentBackStackEntryAsState()
     val current = backStack?.destination
     Scaffold(

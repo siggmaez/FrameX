@@ -31,6 +31,7 @@ interface PrivilegedShell {
     fun isAvailable(): Boolean
     suspend fun setGameMode(pkg: String, level: GameModeLevel): ShellResult
     suspend fun getGameMode(pkg: String): String?
+    suspend fun forceStop(pkg: String): ShellResult
     suspend fun setBatterySaver(on: Boolean): ShellResult
     suspend fun isBatterySaverOn(): Boolean?
     suspend fun surfaceFlingerLayers(): List<String>?

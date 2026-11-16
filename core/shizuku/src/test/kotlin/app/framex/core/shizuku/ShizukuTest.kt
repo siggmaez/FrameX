@@ -54,6 +54,12 @@ class ShizukuTest {
         assertNull(Commands.latency(""))
     }
 
+    @Test fun forceStopIsValidated() {
+        assertEquals("am force-stop com.g.a", Commands.forceStop("com.g.a"))
+        assertNull(Commands.forceStop("com.g.a; reboot"))
+        assertNull(Commands.forceStop(""))
+    }
+
     @Test fun batterySaverCommands() {
         assertEquals("settings put global low_power 1", Commands.setBatterySaver(true))
         assertEquals(true, Parsers.batterySaverOn("1\n"))

@@ -62,6 +62,7 @@ class GamesViewModel @Inject constructor(
     private val apps: BackgroundAppsProvider,
     private val shell: PrivilegedShell,
     private val capture: CaptureFpsController,
+    private val runner: app.framex.core.optimization.BoostRunner,
 ) : ViewModel() {
     private val installed = MutableStateFlow<List<InstalledApp>?>(null)
     private val showAll = MutableStateFlow(false)
@@ -157,14 +158,23 @@ class GamesViewModel @Inject constructor(
         val remembered = g.stopPackages.split(',').filter { it.isNotBlank() }
         when {
             !wantsStop -> armAndLaunch(g, profile, emptyList())
+            // automatic: no questions; protected apps and the never-stop list are respected
+            settings.settings.first().autoStopBackground ->
+                armAndLaunch(g, profile, apps.autoList(setOf(g.packageName), runner.suggestedLimit()).map { it.packageName })
             remembered.isNotEmpty() -> armAndLaunch(g, profile, remembered)
             else -> play.value = PlayStep.ConfirmStop(g, profile, apps.eligible(excluding = setOf(g.packageName)))
         }
     }
 
+    /** Stops the apps BEFORE the game opens (so they do not compete while it loads), then starts it. */
     private suspend fun armAndLaunch(g: GameProfileEntity, profile: OptimizationProfile, stop: List<String>) {
+        if (stop.isNotEmpty()) {
+            runner.run(stop)
+            kotlinx.coroutines.delay(1500) // let the result be read
+            runner.dismiss()
+        }
         if (profile != OptimizationProfile.Balanced) {
-            watcher.state.arm(g.packageName, ArmedLaunch(profile, stop))
+            watcher.state.arm(g.packageName, ArmedLaunch(profile, emptyList())) // stopping is already done
             if (!watcher.state.running.value) watcher.start()
         }
         if (!launchGame(g.packageName)) notice.value = PlayNotice.CannotLaunch

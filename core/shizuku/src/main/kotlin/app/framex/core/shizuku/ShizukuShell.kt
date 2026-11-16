@@ -40,6 +40,8 @@ class ShizukuShell @Inject constructor(private val manager: ShizukuManager) : Pr
     override suspend fun getGameMode(pkg: String): String? =
         exec(Commands.listGameModes(pkg)).takeIf { it.ok }?.let { Parsers.currentGameMode(it.output) }
 
+    override suspend fun forceStop(pkg: String) = exec(Commands.forceStop(pkg))
+
     override suspend fun setBatterySaver(on: Boolean) = exec(Commands.setBatterySaver(on))
 
     override suspend fun isBatterySaverOn(): Boolean? =

@@ -36,4 +36,16 @@
     <string name="set_net_both">Wi-Fi + mobile data</string>
     <string name="set_net_local_note">FrameX makes no network connection at all. Monitoring, optimization, games, FPS and benchmarks all work offline.</string>
     <string name="set_net_online_note">Network tests can run over the connections you allow. You choose Wi-Fi or mobile data (or both, to compare) for every test.</string>
+    <string name="set_stop_title">Stop background apps automatically</string>
+    <string name="set_stop_note">When on, Play and Quick Boost stop the apps you used in the last 24 hours by themselves, before the game opens, and show what was stopped. System apps, the keyboard, launcher, dialer, SMS and anything on your never-stop list are skipped. Stopped apps may restart later; unsaved data in them can be lost.</string>
+    <string name="set_stop_m_shizuku">Method now: real force-stop through Shizuku, each app checked afterwards.</string>
+    <string name="set_stop_m_accessibility">Method now: real force-stop through the accessibility service, each app checked afterwards.</string>
+    <string name="set_stop_m_background">Method now: background kill. Android does not confirm it per app and it does not touch apps with running services.</string>
+    <string name="set_stop_a11y_hint">For a real force-stop without Shizuku, turn on the \"FrameX boost\" accessibility service. It only presses \"Force stop\" in the Settings app info page while a boost runs. On Android 13+ you may first need App info → ⋮ → Allow restricted settings.</string>
+    <string name="set_stop_a11y_open">Open accessibility settings</string>
+    <string name="set_stop_never">Never stop these apps (%1$d)</string>
+    <string name="set_stop_never_title">Never stop</string>
+    <string name="set_stop_never_text">Ticked apps are skipped by every automatic boost.</string>
+    <string name="set_stop_save">Save</string>
+    <string name="set_stop_cancel">Cancel</string>
 </resources>

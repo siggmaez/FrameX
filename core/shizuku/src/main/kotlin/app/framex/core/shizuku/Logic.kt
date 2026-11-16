@@ -29,6 +29,8 @@ object Commands {
 
     fun listGameModes(pkg: String): String? = if (isValidPackage(pkg)) "cmd game list-modes $pkg" else null
 
+    fun forceStop(pkg: String): String? = if (isValidPackage(pkg)) "am force-stop $pkg" else null
+
     fun setBatterySaver(on: Boolean) = "settings put global low_power ${if (on) 1 else 0}"
     const val GET_BATTERY_SAVER = "settings get global low_power"
     const val LIST_LAYERS = "dumpsys SurfaceFlinger --list"

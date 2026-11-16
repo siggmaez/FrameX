@@ -46,4 +46,19 @@
     <string name="act_bright">Снизить яркость до ~30% (меньше нагрев)</string>
     <string name="reason_write">Нужно разрешение на изменение системных настроек</string>
     <string name="reason_nowifi">На этом устройстве нет Wi-Fi</string>
+    <string name="boost_title">Буст…</string>
+    <string name="boost_done_title">Буст завершён</string>
+    <string name="boost_m_shizuku">Способ: настоящая принудительная остановка через Shizuku, после каждого приложения идёт проверка.</string>
+    <string name="boost_m_accessibility">Способ: настоящая принудительная остановка через службу доступности, после каждого приложения идёт проверка.</string>
+    <string name="boost_m_background">Способ: остановка фоновых процессов. Android не подтверждает её по каждому приложению; включите Shizuku или службу доступности в настройках для настоящей принудительной остановки.</string>
+    <string name="boost_count">%1$d из %2$d</string>
+    <string name="boost_s_pending">ожидает</string>
+    <string name="boost_s_working">останавливаю…</string>
+    <string name="boost_s_stopped">остановлено ✓</string>
+    <string name="boost_s_not_running">не запущено</string>
+    <string name="boost_s_requested">запрошено</string>
+    <string name="boost_s_failed">ошибка ✗</string>
+    <string name="boost_summary">Остановлено приложений: %1$d из %2$d. Свободная ОЗУ изменилась примерно на %3$d МБ.</string>
+    <string name="boost_honest">Это освобождает память и убирает фоновую работу. Сколько FPS это даст, зависит от игры и устройства.</string>
+    <string name="boost_close">Закрыть</string>
 </resources>

@@ -17,6 +17,8 @@ class SettingsViewModel @Inject constructor(
     private val repo: SettingsRepository,
     private val history: app.framex.core.database.MetricHistoryRepository,
     private val shizukuManager: app.framex.core.shizuku.ShizukuManager,
+    private val runner: app.framex.core.optimization.BoostRunner,
+    private val appsProvider: app.framex.core.optimization.BackgroundAppsProvider,
 ) : ViewModel() {
     val settings: StateFlow<AppSettings> =
         repo.settings.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AppSettings())
@@ -28,6 +30,10 @@ class SettingsViewModel @Inject constructor(
     fun setAutoAnalyze(on: Boolean) { viewModelScope.launch { repo.setAutoAnalyzeOnPlay(on) } }
     fun setNetworkMode(m: app.framex.core.common.NetworkMode) { viewModelScope.launch { repo.setNetworkMode(m) } }
     fun setOverlay(on: Boolean) { viewModelScope.launch { repo.setFpsOverlay(on) } }
+    fun setAutoStop(on: Boolean) { viewModelScope.launch { repo.setAutoStopBackground(on) } }
+    fun setNeverStop(s: Set<String>) { viewModelScope.launch { repo.setNeverStopApps(s) } }
+    fun stopMethod() = runner.bestMethod()
+    suspend fun userApps() = appsProvider.userApps()
     fun clearHistory() { viewModelScope.launch { history.clear() } }
     fun setInterval(ms: Long) { viewModelScope.launch { repo.setMonitoringInterval(ms) } }
 }

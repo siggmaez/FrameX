@@ -19,4 +19,13 @@
     <string name="opt_bright_already">Яркость уже была 30% или ниже</string>
     <string name="opt_bright_restored">Яркость возвращена</string>
     <string name="opt_bright_kept">Вы изменили яркость сами, поэтому она оставлена как есть</string>
+    <string name="opt_boost_done">Остановлено приложений: %1$d из %2$d (%3$s). Свободная ОЗУ изменилась примерно на %4$d МБ</string>
+    <string name="opt_method_shizuku">принудительная остановка через Shizuku</string>
+    <string name="opt_method_accessibility">принудительная остановка через службу доступности</string>
+    <string name="opt_method_background">остановка фоновых процессов</string>
+    <string name="a11y_label">Буст FrameX</string>
+    <string name="a11y_description">Позволяет FrameX нажимать «Остановить» на странице «О приложении» в настройках для приложений из списка буста, пока идёт буст. Больше ничего не читает и нигде больше не действует.</string>
+    <string name="a11y_cover_title">Буст FrameX…</string>
+    <string name="a11y_cover_line">Останавливаю %1$d из %2$d: %3$s</string>
+    <string name="a11y_cover_cancel">Отмена</string>
 </resources>

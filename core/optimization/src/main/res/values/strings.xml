@@ -19,4 +19,13 @@
     <string name="opt_bright_already">Screen was already at or below 30%</string>
     <string name="opt_bright_restored">Brightness restored</string>
     <string name="opt_bright_kept">You changed the brightness yourself, so it was left as it is</string>
+    <string name="opt_boost_done">Stopped %1$d of %2$d apps (%3$s). Available RAM changed by about %4$d MB</string>
+    <string name="opt_method_shizuku">force-stop through Shizuku</string>
+    <string name="opt_method_accessibility">force-stop through accessibility</string>
+    <string name="opt_method_background">background kill</string>
+    <string name="a11y_label">FrameX boost</string>
+    <string name="a11y_description">Lets FrameX press \"Force stop\" in the Settings app info page of the apps your boost list names, while a boost is running. It reads nothing else and acts nowhere else.</string>
+    <string name="a11y_cover_title">FrameX boost…</string>
+    <string name="a11y_cover_line">Stopping %1$d of %2$d: %3$s</string>
+    <string name="a11y_cover_cancel">Cancel</string>
 </resources>

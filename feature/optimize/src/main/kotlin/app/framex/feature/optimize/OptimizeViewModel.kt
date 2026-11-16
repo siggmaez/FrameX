@@ -64,6 +64,7 @@ class OptimizeViewModel @Inject constructor(
     private val apps: BackgroundAppsProvider,
     private val source: SystemMetricsSource,
     private val shell: PrivilegedShell,
+    private val runner: app.framex.core.optimization.BoostRunner,
     store: EngineStateStore,
     logs: OptimizationLogRepository,
 ) : ViewModel() {
@@ -91,6 +92,12 @@ class OptimizeViewModel @Inject constructor(
             val actions = Profiles.actionsFor(profile, custom)
             val caps = capabilities.detect()
             if (OptAction.StopBackgroundApps in actions && caps[OptAction.StopBackgroundApps] == Capability.Supported) {
+                if (settings.settings.first().autoStopBackground) {
+                    // automatic: no questions, the never-stop list and the protected apps are respected
+                    val list = apps.autoList(emptySet(), runner.suggestedLimit())
+                    applyNow(profile, list.map { it.packageName })
+                    return@launch
+                }
                 local.update { it.copy(busy = true, smart = null) }
                 val list = apps.eligible()
                 local.update { it.copy(busy = false, confirm = ConfirmStop(profile, list)) }

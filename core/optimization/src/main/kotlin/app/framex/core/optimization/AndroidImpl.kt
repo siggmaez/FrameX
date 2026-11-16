@@ -65,21 +65,20 @@ class DndExecutor(private val context: Context) : ActionExecutor {
     }
 }
 
-/** Stops background processes of apps the user confirmed. Android does not confirm per-app, so only the memory change is reported. */
-class KillAppsExecutor(private val context: Context) : ActionExecutor {
+/** Stops the listed apps through [BoostRunner] (Shizuku force-stop, accessibility force-stop or background kill). */
+class KillAppsExecutor(private val context: Context, private val runner: BoostRunner) : ActionExecutor {
     override suspend fun apply(action: OptAction, request: ApplyRequest): ExecResult {
-        val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        val before = avail(am)
-        request.stopPackages.forEach { am.killBackgroundProcesses(it) }
-        delay(800)
-        val deltaMb = (avail(am) - before) / 1_048_576
-        return ExecResult(ResultStatus.Applied, context.getString(R.string.opt_kill_done, request.stopPackages.size, deltaMb.toInt()))
+        val p = runner.run(request.stopPackages) ?: return ExecResult(ResultStatus.Skipped, "")
+        val method = context.getString(when (p.method) {
+            StopMethod.ShizukuForceStop -> R.string.opt_method_shizuku
+            StopMethod.AccessibilityForceStop -> R.string.opt_method_accessibility
+            StopMethod.BackgroundKill -> R.string.opt_method_background
+        })
+        return ExecResult(ResultStatus.Applied, context.getString(R.string.opt_boost_done, p.stopped, p.items.size, method, (p.freedMb ?: 0L).toInt()))
     }
 
     override suspend fun restore(action: OptAction, token: String?) =
         ExecResult(ResultStatus.Restored, context.getString(R.string.opt_kill_nothing))
-
-    private fun avail(am: ActivityManager) = ActivityManager.MemoryInfo().also { am.getMemoryInfo(it) }.availMem
 }
 
 /** Game mode through the privileged shell (Shizuku). Read back to validate. */
@@ -135,11 +134,12 @@ object OptimizationModule {
         capabilities: CapabilityProvider,
         store: EngineStateStore,
         log: OptimizationLogRepository,
+        runner: BoostRunner,
     ): OptimizationEngine {
         val game = GameModeExecutor(context, shell)
         val executors = mapOf(
             OptAction.DoNotDisturb to DndExecutor(context),
-            OptAction.StopBackgroundApps to KillAppsExecutor(context),
+            OptAction.StopBackgroundApps to KillAppsExecutor(context, runner),
             OptAction.LowLatencyWifi to WifiLockExecutor(context),
             OptAction.ReduceBrightness to BrightnessExecutor(context),
             OptAction.GameModePerformance to game,

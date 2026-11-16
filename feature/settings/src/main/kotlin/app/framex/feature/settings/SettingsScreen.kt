@@ -10,6 +10,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -77,6 +78,7 @@ fun SettingsScreen(contentPadding: PaddingValues, vm: SettingsViewModel = hiltVi
             }
         }
         item { NetworkModeCard(s.networkMode, vm::setNetworkMode) }
+        item { AutoStopCard(s.autoStopBackground, s.neverStopApps, vm) }
         item { PlayCard(s.autoAnalyzeOnPlay, vm::setAutoAnalyze) }
         item { OverlayCard(s.fpsOverlayEnabled, vm::setOverlay) }
         item { ShizukuCard(vm) }
@@ -198,4 +200,60 @@ private fun NetworkModeCard(mode: app.framex.core.common.NetworkMode, onChange: 
         }
         Note(stringResource(if (mode == app.framex.core.common.NetworkMode.Local) R.string.set_net_local_note else R.string.set_net_online_note))
     }
+}
+
+@Composable
+private fun AutoStopCard(enabled: Boolean, never: Set<String>, vm: SettingsViewModel) {
+    val ctx = LocalContext.current
+    var method by remember { mutableStateOf(vm.stopMethod()) }
+    var picker by remember { mutableStateOf(false) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { method = vm.stopMethod() }
+    FrameXCard {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.set_stop_title), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+            androidx.compose.material3.Switch(checked = enabled, onCheckedChange = vm::setAutoStop)
+        }
+        Note(stringResource(R.string.set_stop_note))
+        Note(stringResource(when (method) {
+            app.framex.core.optimization.StopMethod.ShizukuForceStop -> R.string.set_stop_m_shizuku
+            app.framex.core.optimization.StopMethod.AccessibilityForceStop -> R.string.set_stop_m_accessibility
+            app.framex.core.optimization.StopMethod.BackgroundKill -> R.string.set_stop_m_background
+        }))
+        if (method == app.framex.core.optimization.StopMethod.BackgroundKill) {
+            Note(stringResource(R.string.set_stop_a11y_hint))
+            OutlinedButton(onClick = {
+                ctx.startActivity(android.content.Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+            }) { Text(stringResource(R.string.set_stop_a11y_open)) }
+        }
+        OutlinedButton(onClick = { picker = true }) { Text(stringResource(R.string.set_stop_never, never.size)) }
+    }
+    if (picker) NeverStopDialog(never, vm) { picker = false }
+}
+
+@Composable
+private fun NeverStopDialog(current: Set<String>, vm: SettingsViewModel, onClose: () -> Unit) {
+    var apps by remember { mutableStateOf<List<app.framex.core.optimization.BackgroundApp>?>(null) }
+    val picked = remember { androidx.compose.runtime.mutableStateListOf<String>().also { it.addAll(current) } }
+    androidx.compose.runtime.LaunchedEffect(Unit) { apps = vm.userApps() }
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onClose,
+        title = { Text(stringResource(R.string.set_stop_never_title)) },
+        text = {
+            androidx.compose.foundation.layout.Column {
+                Note(stringResource(R.string.set_stop_never_text))
+                androidx.compose.foundation.lazy.LazyColumn(Modifier.weight(1f, fill = false)) {
+                    val list = apps.orEmpty()
+                    items(list.size) { i ->
+                        val a = list[i]
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            androidx.compose.material3.Checkbox(checked = a.packageName in picked, onCheckedChange = { on -> if (on) picked += a.packageName else picked -= a.packageName })
+                            Text(a.label, style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = { androidx.compose.material3.TextButton(onClick = { vm.setNeverStop(picked.toSet()); onClose() }) { Text(stringResource(R.string.set_stop_save)) } },
+        dismissButton = { androidx.compose.material3.TextButton(onClick = onClose) { Text(stringResource(R.string.set_stop_cancel)) } },
+    )
 }
