@@ -15,8 +15,8 @@
     <string name="opt_wifi_on">Режим низкой задержки Wi-Fi включён (влияет только на пинг по Wi-Fi)</string>
     <string name="opt_wifi_off">Режим низкой задержки Wi-Fi выключен</string>
     <string name="opt_no_write">Разрешение на изменение системных настроек не выдано</string>
-    <string name="opt_bright_set">Яркость снижена примерно до 30% для меньшего нагрева</string>
-    <string name="opt_bright_already">Яркость уже была 30% или ниже</string>
+    <string name="opt_bright_set" formatted="false">Яркость снижена примерно до 30% для меньшего нагрева</string>
+    <string name="opt_bright_already" formatted="false">Яркость уже была 30% или ниже</string>
     <string name="opt_bright_restored">Яркость возвращена</string>
     <string name="opt_bright_kept">Вы изменили яркость сами, поэтому она оставлена как есть</string>
     <string name="opt_boost_done">Остановлено приложений: %1$d из %2$d (%3$s). Свободная ОЗУ изменилась примерно на %4$d МБ</string>

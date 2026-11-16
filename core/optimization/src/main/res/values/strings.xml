@@ -15,8 +15,8 @@
     <string name="opt_wifi_on">Low-latency Wi-Fi mode on (only affects Wi-Fi ping)</string>
     <string name="opt_wifi_off">Low-latency Wi-Fi mode released</string>
     <string name="opt_no_write">Permission to change system settings is not granted</string>
-    <string name="opt_bright_set">Screen dimmed to about 30% for less heat</string>
-    <string name="opt_bright_already">Screen was already at or below 30%</string>
+    <string name="opt_bright_set" formatted="false">Screen dimmed to about 30% for less heat</string>
+    <string name="opt_bright_already" formatted="false">Screen was already at or below 30%</string>
     <string name="opt_bright_restored">Brightness restored</string>
     <string name="opt_bright_kept">You changed the brightness yourself, so it was left as it is</string>
     <string name="opt_boost_done">Stopped %1$d of %2$d apps (%3$s). Available RAM changed by about %4$d MB</string>

@@ -185,9 +185,9 @@ private fun Note(t: String) = Text(t, style = MaterialTheme.typography.bodySmall
 @Composable
 private fun AppIcon(pkg: String) {
     val ctx = LocalContext.current
-    val icon by produceState<ImageBitmap?>(null, pkg) {
-        val bmp = withContext(Dispatchers.IO) { runCatching { ctx.packageManager.getApplicationIcon(pkg).toBitmap(96, 96).asImageBitmap() }.getOrNull() }
-        value = bmp
+    var icon by androidx.compose.runtime.remember(pkg) { androidx.compose.runtime.mutableStateOf<ImageBitmap?>(null) }
+    androidx.compose.runtime.LaunchedEffect(pkg) {
+        icon = withContext(Dispatchers.IO) { runCatching { ctx.packageManager.getApplicationIcon(pkg).toBitmap(96, 96).asImageBitmap() }.getOrNull() }
     }
     icon?.let { Image(it, null, Modifier.size(40.dp)) } ?: androidx.compose.foundation.layout.Spacer(Modifier.size(40.dp))
 }
