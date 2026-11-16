@@ -24,7 +24,11 @@ class AndroidCapabilityProvider @Inject constructor(
 ) : CapabilityProvider {
     override fun detect(): Map<OptAction, Capability> {
         val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        return CapabilityEvaluator.evaluate(nm.isNotificationPolicyAccessGranted, shell.isAvailable(), Build.VERSION.SDK_INT)
+        return CapabilityEvaluator.evaluate(
+            nm.isNotificationPolicyAccessGranted, shell.isAvailable(), Build.VERSION.SDK_INT,
+            canWriteSettings = android.provider.Settings.System.canWrite(context),
+            wifiSupported = context.packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_WIFI),
+        )
     }
 }
 
@@ -136,10 +140,89 @@ object OptimizationModule {
         val executors = mapOf(
             OptAction.DoNotDisturb to DndExecutor(context),
             OptAction.StopBackgroundApps to KillAppsExecutor(context),
+            OptAction.LowLatencyWifi to WifiLockExecutor(context),
+            OptAction.ReduceBrightness to BrightnessExecutor(context),
             OptAction.GameModePerformance to game,
             OptAction.GameModeBattery to game,
             OptAction.BatterySaver to BatterySaverExecutor(context, shell),
         )
         return OptimizationEngine(executors, capabilities, StoreStorage(store), RoomLogger(log))
+    }
+}
+
+/** Low-latency Wi-Fi mode while a game session runs. Affects ping on Wi-Fi, not FPS. */
+class WifiLockExecutor(private val context: Context) : ActionExecutor {
+    private var lock: android.net.wifi.WifiManager.WifiLock? = null
+
+    override suspend fun apply(action: OptAction, request: ApplyRequest): ExecResult {
+        val wm = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as android.net.wifi.WifiManager
+        lock?.takeIf { it.isHeld }?.release()
+        val l = wm.createWifiLock(android.net.wifi.WifiManager.WIFI_MODE_FULL_LOW_LATENCY, "FrameX:low-latency")
+        l.setReferenceCounted(false)
+        l.acquire()
+        lock = l
+        return if (l.isHeld) ExecResult(ResultStatus.Applied, context.getString(R.string.opt_wifi_on), "1")
+        else ExecResult(ResultStatus.Failed, context.getString(R.string.opt_not_confirmed))
+    }
+
+    override suspend fun restore(action: OptAction, token: String?): ExecResult {
+        lock?.takeIf { it.isHeld }?.release()
+        val released = lock?.isHeld != true
+        lock = null
+        return ExecResult(if (released) ResultStatus.Restored else ResultStatus.Failed,
+            context.getString(if (released) R.string.opt_wifi_off else R.string.opt_not_confirmed))
+    }
+}
+
+/** Dims the screen to ~30% for less heat, and puts the previous brightness back (unless you changed it yourself meanwhile). */
+class BrightnessExecutor(private val context: Context) : ActionExecutor {
+    private val resolver get() = context.contentResolver
+
+    override suspend fun apply(action: OptAction, request: ApplyRequest): ExecResult {
+        if (!android.provider.Settings.System.canWrite(context)) return ExecResult(ResultStatus.Failed, context.getString(R.string.opt_no_write))
+        val prevMode = android.provider.Settings.System.getInt(resolver, android.provider.Settings.System.SCREEN_BRIGHTNESS_MODE, 0)
+        val prev = android.provider.Settings.System.getInt(resolver, android.provider.Settings.System.SCREEN_BRIGHTNESS, TARGET)
+        if (prev <= TARGET && prevMode == 0) return ExecResult(ResultStatus.Applied, context.getString(R.string.opt_bright_already), "$prevMode|$prev|")
+        android.provider.Settings.System.putInt(resolver, android.provider.Settings.System.SCREEN_BRIGHTNESS_MODE, 0)
+        android.provider.Settings.System.putInt(resolver, android.provider.Settings.System.SCREEN_BRIGHTNESS, minOf(prev, TARGET))
+        val ok = android.provider.Settings.System.getInt(resolver, android.provider.Settings.System.SCREEN_BRIGHTNESS, -1) == minOf(prev, TARGET)
+        return if (ok) ExecResult(ResultStatus.Applied, context.getString(R.string.opt_bright_set), "$prevMode|$prev|${minOf(prev, TARGET)}")
+        else ExecResult(ResultStatus.Failed, context.getString(R.string.opt_not_confirmed))
+    }
+
+    override suspend fun restore(action: OptAction, token: String?): ExecResult {
+        val p = token?.split('|') ?: return ExecResult(ResultStatus.Failed, context.getString(R.string.opt_no_previous))
+        val mode = p.getOrNull(0)?.toIntOrNull(); val prev = p.getOrNull(1)?.toIntOrNull(); val set = p.getOrNull(2)?.toIntOrNull()
+        if (mode == null || prev == null) return ExecResult(ResultStatus.Failed, context.getString(R.string.opt_no_previous))
+        if (set == null) return ExecResult(ResultStatus.Restored, context.getString(R.string.opt_bright_kept))
+        if (!android.provider.Settings.System.canWrite(context)) return ExecResult(ResultStatus.Failed, context.getString(R.string.opt_no_write))
+        val now = android.provider.Settings.System.getInt(resolver, android.provider.Settings.System.SCREEN_BRIGHTNESS, -1)
+        if (now != set) return ExecResult(ResultStatus.Restored, context.getString(R.string.opt_bright_kept)) // user changed it; leave it
+        android.provider.Settings.System.putInt(resolver, android.provider.Settings.System.SCREEN_BRIGHTNESS, prev)
+        android.provider.Settings.System.putInt(resolver, android.provider.Settings.System.SCREEN_BRIGHTNESS_MODE, mode)
+        val ok = android.provider.Settings.System.getInt(resolver, android.provider.Settings.System.SCREEN_BRIGHTNESS, -1) == prev
+        return ExecResult(if (ok) ResultStatus.Restored else ResultStatus.Failed,
+            context.getString(if (ok) R.string.opt_bright_restored else R.string.opt_not_confirmed))
+    }
+
+    private companion object { const val TARGET = 77 } // 30% of 255
+}
+
+/** Reads what the launch analysis needs. Every value is real or null. */
+@Singleton
+class FindingsReader @Inject constructor(@ApplicationContext private val context: Context, private val shell: PrivilegedShell) {
+    fun read(): Findings {
+        val bat = context.registerReceiver(null, android.content.IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED))
+        val tenths = bat?.getIntExtra(android.os.BatteryManager.EXTRA_TEMPERATURE, Int.MIN_VALUE)
+        val temp = if (tenths == null || tenths == Int.MIN_VALUE) null else tenths / 10f
+        val charging = (bat?.getIntExtra(android.os.BatteryManager.EXTRA_PLUGGED, 0) ?: 0) != 0
+        val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val mi = ActivityManager.MemoryInfo().also { am.getMemoryInfo(it) }
+        val ram = if (mi.totalMem > 0) (mi.totalMem - mi.availMem).toFloat() / mi.totalMem else null
+        val pm = context.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+        val d = runCatching {
+            (context.getSystemService(Context.DISPLAY_SERVICE) as android.hardware.display.DisplayManager).getDisplay(android.view.Display.DEFAULT_DISPLAY)
+        }.getOrNull()
+        return Findings(temp, charging, ram, pm.isPowerSaveMode, d?.refreshRate, d?.supportedModes?.maxOfOrNull { it.refreshRate }, shell.isAvailable())
     }
 }

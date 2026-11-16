@@ -42,4 +42,8 @@
     <string name="smart_privileged">Shizuku is connected, so game-mode tuning is available.</string>
     <string name="smart_default">No special condition found; a light gaming profile is suggested.</string>
     <string name="opt_working">Working…</string>
+    <string name="act_wifi">Low-latency Wi-Fi (lower ping, not FPS)</string>
+    <string name="act_bright">Dim screen to ~30% (less heat)</string>
+    <string name="reason_write">Needs permission to change system settings</string>
+    <string name="reason_nowifi">No Wi-Fi on this device</string>
 </resources>

@@ -23,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,6 +50,8 @@ import java.util.Locale
 @Composable
 fun GamesScreen(contentPadding: PaddingValues, vm: GamesViewModel = hiltViewModel()) {
     val ui by vm.state.collectAsStateWithLifecycle()
+    val autoAnalyze by vm.autoAnalyze.collectAsStateWithLifecycle()
+    PlayDialogs(ui, vm)
     val ctx = LocalContext.current
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.refreshAccess() }
     val notifPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { vm.setWatching(true) }
@@ -78,6 +81,14 @@ fun GamesScreen(contentPadding: PaddingValues, vm: GamesViewModel = hiltViewMode
                 Note(stringResource(R.string.g_auto_note))
             }
         }
+        ui.notice?.let { n ->
+            item {
+                FrameXCard {
+                    Text(stringResource(if (n == PlayNotice.NoUsageAccess) R.string.g_notice_usage else R.string.g_notice_launch), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
+                    TextButton(onClick = vm::dismissNotice) { Text(stringResource(R.string.g_ok)) }
+                }
+            }
+        }
         item { Text(stringResource(R.string.g_my_games), style = MaterialTheme.typography.titleMedium) }
         if (ui.tracked.isEmpty()) item { Note(stringResource(R.string.g_none)) }
         items(ui.tracked.size) { idx ->
@@ -87,6 +98,13 @@ fun GamesScreen(contentPadding: PaddingValues, vm: GamesViewModel = hiltViewMode
                     AppIcon(g.packageName)
                     Text(g.label, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                     TextButton(onClick = { vm.remove(g.packageName) }) { Text(stringResource(R.string.g_remove)) }
+                }
+                androidx.compose.material3.Button(onClick = { vm.play(g) }, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.g_play))
+                }
+                Note(stringResource(if (autoAnalyze) R.string.g_play_note_auto else R.string.g_play_note_saved))
+                if (g.stopPackages.isNotBlank()) {
+                    TextButton(onClick = { vm.forgetStopList(g) }) { Text(stringResource(R.string.g_forget_stop)) }
                 }
                 Note(stringResource(R.string.g_profile))
                 Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -163,4 +181,64 @@ private fun AppIcon(pkg: String) {
         value = withContext(Dispatchers.IO) { runCatching { ctx.packageManager.getApplicationIcon(pkg).toBitmap(96, 96).asImageBitmap() }.getOrNull() }
     }
     icon?.let { Image(it, null, Modifier.size(40.dp)) } ?: androidx.compose.foundation.layout.Spacer(Modifier.size(40.dp))
+}
+
+@Composable
+private fun PlayDialogs(ui: GamesUiState, vm: GamesViewModel) {
+    when (val step = ui.play) {
+        null -> {}
+        is PlayStep.Advice -> androidx.compose.material3.AlertDialog(
+            onDismissRequest = vm::cancelPlay,
+            title = { Text(stringResource(R.string.g_advice_title, step.game.label)) },
+            text = {
+                androidx.compose.foundation.layout.Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Note(stringResource(R.string.g_advice_profile, step.plan.profile.label()))
+                    step.plan.advisories.forEach { a ->
+                        Text(stringResource(when (a) {
+                            app.framex.core.optimization.Advisory.BatterySaverOn -> R.string.adv_saver
+                            app.framex.core.optimization.Advisory.RefreshBelowMax -> R.string.adv_refresh
+                            app.framex.core.optimization.Advisory.DeviceHot -> R.string.adv_hot
+                            app.framex.core.optimization.Advisory.WarmWhileCharging -> R.string.adv_charging
+                            app.framex.core.optimization.Advisory.HighMemory -> R.string.adv_memory
+                        }), style = MaterialTheme.typography.bodyMedium)
+                    }
+                    if (step.plan.advisories.contains(app.framex.core.optimization.Advisory.BatterySaverOn))
+                        TextButton(onClick = vm::openBatterySaverSettings) { Text(stringResource(R.string.g_open_saver)) }
+                    if (step.plan.advisories.contains(app.framex.core.optimization.Advisory.RefreshBelowMax))
+                        TextButton(onClick = vm::openDisplaySettings) { Text(stringResource(R.string.g_open_display)) }
+                }
+            },
+            confirmButton = { TextButton(onClick = vm::continueAfterAdvice) { Text(stringResource(R.string.g_play_anyway)) } },
+            dismissButton = { TextButton(onClick = vm::cancelPlay) { Text(stringResource(R.string.g_cancel)) } },
+        )
+        is PlayStep.ConfirmStop -> {
+            val selected = androidx.compose.runtime.remember(step) { androidx.compose.runtime.mutableStateListOf<String>() }
+            var remember by androidx.compose.runtime.remember(step) { androidx.compose.runtime.mutableStateOf(false) }
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = vm::cancelPlay,
+                title = { Text(stringResource(R.string.g_stop_title)) },
+                text = {
+                    androidx.compose.foundation.layout.Column {
+                        Note(stringResource(R.string.g_stop_text, step.profile.label()))
+                        if (step.apps.isEmpty()) Note(stringResource(R.string.g_stop_none))
+                        androidx.compose.foundation.lazy.LazyColumn(Modifier.weight(1f, fill = false)) {
+                            items(step.apps.size) { i ->
+                                val a = step.apps[i]
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    androidx.compose.material3.Checkbox(checked = a.packageName in selected, onCheckedChange = { on -> if (on) selected += a.packageName else selected -= a.packageName })
+                                    Text(a.label, style = MaterialTheme.typography.bodyMedium)
+                                }
+                            }
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            androidx.compose.material3.Checkbox(checked = remember, onCheckedChange = { remember = it })
+                            Text(stringResource(R.string.g_stop_remember), style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                },
+                confirmButton = { TextButton(onClick = { vm.confirmStop(selected.toList(), remember) }) { Text(stringResource(R.string.g_play)) } },
+                dismissButton = { TextButton(onClick = vm::cancelPlay) { Text(stringResource(R.string.g_cancel)) } },
+            )
+        }
+    }
 }

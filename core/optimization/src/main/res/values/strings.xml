@@ -12,4 +12,11 @@
     <string name="opt_not_confirmed">The system did not confirm the change</string>
     <string name="opt_saver_on">Battery saver turned on</string>
     <string name="opt_saver_restored">Battery saver restored</string>
+    <string name="opt_wifi_on">Low-latency Wi-Fi mode on (only affects Wi-Fi ping)</string>
+    <string name="opt_wifi_off">Low-latency Wi-Fi mode released</string>
+    <string name="opt_no_write">Permission to change system settings is not granted</string>
+    <string name="opt_bright_set">Screen dimmed to about 30% for less heat</string>
+    <string name="opt_bright_already">Screen was already at or below 30%</string>
+    <string name="opt_bright_restored">Brightness restored</string>
+    <string name="opt_bright_kept">You changed the brightness yourself, so it was left as it is</string>
 </resources>

@@ -42,4 +42,8 @@
     <string name="smart_privileged">Shizuku подключён, поэтому доступна настройка игрового режима.</string>
     <string name="smart_default">Особых условий нет, предлагается лёгкий игровой профиль.</string>
     <string name="opt_working">Выполняется…</string>
+    <string name="act_wifi">Wi-Fi с низкой задержкой (меньше пинг, не FPS)</string>
+    <string name="act_bright">Снизить яркость до ~30% (меньше нагрев)</string>
+    <string name="reason_write">Нужно разрешение на изменение системных настроек</string>
+    <string name="reason_nowifi">На этом устройстве нет Wi-Fi</string>
 </resources>

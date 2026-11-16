@@ -1,6 +1,7 @@
 package app.framex.core.datastore
 
 import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -20,6 +21,9 @@ data class AppSettings(
     val monitoringIntervalMs: Long = 2000L,
     val selectedProfile: OptimizationProfile = OptimizationProfile.Balanced,
     val customActions: Set<OptAction> = setOf(OptAction.DoNotDisturb),
+    /** When on, the Play button analyses the device and picks the profile; when off it uses the game's saved profile. */
+    val autoAnalyzeOnPlay: Boolean = true,
+    val fpsOverlayEnabled: Boolean = false,
 )
 
 internal val Context.settingsStore by preferencesDataStore(name = "framex_settings")
@@ -31,6 +35,8 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         val interval = longPreferencesKey("monitoring_interval_ms")
         val profile = stringPreferencesKey("selected_profile")
         val custom = stringSetPreferencesKey("custom_actions")
+        val autoAnalyze = booleanPreferencesKey("auto_analyze_on_play")
+        val overlay = booleanPreferencesKey("fps_overlay")
     }
 
     val settings: Flow<AppSettings> = context.settingsStore.data.map { p ->
@@ -41,12 +47,16 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
                 ?: OptimizationProfile.Balanced,
             customActions = p[Keys.custom]?.mapNotNull { runCatching { OptAction.valueOf(it) }.getOrNull() }?.toSet()
                 ?: setOf(OptAction.DoNotDisturb),
+            autoAnalyzeOnPlay = p[Keys.autoAnalyze] ?: true,
+            fpsOverlayEnabled = p[Keys.overlay] ?: false,
         )
     }
 
     suspend fun setThemeMode(mode: ThemeMode) { context.settingsStore.edit { it[Keys.theme] = mode.name } }
     suspend fun setSelectedProfile(p: OptimizationProfile) { context.settingsStore.edit { it[Keys.profile] = p.name } }
     suspend fun setCustomActions(a: Set<OptAction>) { context.settingsStore.edit { it[Keys.custom] = a.map { x -> x.name }.toSet() } }
+    suspend fun setAutoAnalyzeOnPlay(on: Boolean) { context.settingsStore.edit { it[Keys.autoAnalyze] = on } }
+    suspend fun setFpsOverlay(on: Boolean) { context.settingsStore.edit { it[Keys.overlay] = on } }
     suspend fun setMonitoringInterval(ms: Long) {
         context.settingsStore.edit { it[Keys.interval] = ms.coerceIn(MIN_INTERVAL_MS, MAX_INTERVAL_MS) }
     }

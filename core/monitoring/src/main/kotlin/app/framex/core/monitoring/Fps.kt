@@ -94,7 +94,12 @@ class FrameCollector {
     val frameTimesMs: List<Float> get() = times
 
     fun add(timestampsNs: List<Long>) {
-        for (ts in timestampsNs.sorted()) {
+        val sorted = timestampsNs.sorted()
+        if (sorted.isEmpty()) return
+        // A batch with nothing we have already seen means frames were missed in between:
+        // start a new baseline instead of inventing one long frame.
+        if (lastTs > 0 && sorted.first() > lastTs) lastTs = -1L
+        for (ts in sorted) {
             if (ts <= lastTs) continue
             if (lastTs > 0) {
                 val ms = (ts - lastTs) / 1_000_000f
@@ -102,6 +107,14 @@ class FrameCollector {
             }
             lastTs = ts
         }
+    }
+
+    /** FPS over the most recent second of recorded frames, or null if there is less than a second of data. */
+    fun currentFps(): Float? {
+        var acc = 0f
+        var n = 0
+        for (i in times.indices.reversed()) { acc += times[i]; n++; if (acc >= 1000f) return n * 1000f / acc }
+        return null
     }
 
     private companion object { const val MAX_GAP_MS = 5000f }

@@ -39,7 +39,7 @@ class EngineTest {
     @Test fun gamingAppliesSupportedActionsAndStoresTokens() = runTest {
         val st = MemStorage(); val ex = FakeExec()
         val rep = engine(ex, st, Log()).apply(OptimizationProfile.Gaming, ApplyRequest(stopPackages = listOf("a.b")))
-        assertEquals(setOf(OptAction.DoNotDisturb, OptAction.StopBackgroundApps), ex.applied.toSet())
+        assertEquals(setOf(OptAction.DoNotDisturb, OptAction.StopBackgroundApps, OptAction.LowLatencyWifi), ex.applied.toSet())
         assertTrue(rep.anyApplied)
         assertEquals("prev-DoNotDisturb", st.snap!!.tokens[OptAction.DoNotDisturb])
         assertEquals(123L, st.snap!!.appliedAtMs)
@@ -95,7 +95,7 @@ class EngineTest {
         assertEquals(Capability.Unsupported(UnsupportedReason.NeedsShizuku), none[OptAction.BatterySaver])
         val old = CapabilityEvaluator.evaluate(true, true, 30)
         assertEquals(Capability.Unsupported(UnsupportedReason.NeedsAndroid12), old[OptAction.GameModePerformance])
-        val full = CapabilityEvaluator.evaluate(true, true, 35)
+        val full = CapabilityEvaluator.evaluate(true, true, 35, canWriteSettings = true, wifiSupported = true)
         assertTrue(full.values.all { it == Capability.Supported })
     }
 
@@ -104,5 +104,34 @@ class EngineTest {
         assertEquals(SmartReason.HighMemory, SmartBoost.recommend(35f, 0.9f, false).reason)
         assertEquals(OptimizationProfile.Performance, SmartBoost.recommend(35f, 0.3f, true).profile)
         assertEquals(SmartReason.Default, SmartBoost.recommend(null, null, false).reason)
+    }
+
+    @Test fun newCapabilities() {
+        val c = CapabilityEvaluator.evaluate(true, false, 35, canWriteSettings = false, wifiSupported = false)
+        assertEquals(Capability.Unsupported(UnsupportedReason.NeedsWriteSettings), c[OptAction.ReduceBrightness])
+        assertEquals(Capability.Unsupported(UnsupportedReason.NoWifi), c[OptAction.LowLatencyWifi])
+    }
+
+    private fun f(temp: Float? = 33f, charging: Boolean = false, ram: Float? = 0.5f, saver: Boolean = false, hz: Float? = 90f, max: Float? = 90f, priv: Boolean = false) =
+        Findings(temp, charging, ram, saver, hz, max, priv)
+
+    @Test fun plannerPicksProfileFromRealState() {
+        assertEquals(OptimizationProfile.Gaming, GamePlanner.plan(f()).profile)
+        assertEquals(OptimizationProfile.Performance, GamePlanner.plan(f(priv = true)).profile)
+        assertEquals(OptimizationProfile.Gaming, GamePlanner.plan(f(ram = 0.9f, priv = true)).profile)
+        assertEquals(OptimizationProfile.BatterySaver, GamePlanner.plan(f(temp = 46f, priv = true)).profile)
+    }
+
+    @Test fun plannerAdvisories() {
+        assertTrue(GamePlanner.plan(f()).advisories.isEmpty())
+        val a = GamePlanner.plan(f(saver = true, hz = 60f, max = 90f, temp = 46f, ram = 0.9f)).advisories
+        assertTrue(Advisory.BatterySaverOn in a && Advisory.RefreshBelowMax in a && Advisory.DeviceHot in a && Advisory.HighMemory in a)
+        assertEquals(listOf(Advisory.WarmWhileCharging), GamePlanner.plan(f(temp = 41f, charging = true)).advisories)
+        assertTrue(GamePlanner.plan(f(hz = null, max = null, temp = null, ram = null)).advisories.isEmpty()) // unknown is never guessed
+    }
+
+    @Test fun balancedAndPlannerProfilesHaveNoSurpriseActions() {
+        assertTrue(Profiles.actionsFor(OptimizationProfile.Balanced, emptySet()).isEmpty())
+        assertTrue(OptAction.ReduceBrightness !in Profiles.actionsFor(OptimizationProfile.Gaming, emptySet()))
     }
 }

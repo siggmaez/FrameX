@@ -51,6 +51,8 @@ import java.util.Date
 private fun OptAction.title() = stringResource(when (this) {
     OptAction.DoNotDisturb -> R.string.act_dnd
     OptAction.StopBackgroundApps -> R.string.act_kill
+    OptAction.LowLatencyWifi -> R.string.act_wifi
+    OptAction.ReduceBrightness -> R.string.act_bright
     OptAction.GameModePerformance -> R.string.act_gm_perf
     OptAction.GameModeBattery -> R.string.act_gm_batt
     OptAction.BatterySaver -> R.string.act_saver
@@ -62,6 +64,8 @@ private fun UnsupportedReason?.text() = stringResource(when (this) {
     UnsupportedReason.NeedsShizuku -> R.string.reason_shizuku
     UnsupportedReason.NeedsAndroid12 -> R.string.reason_a12
     UnsupportedReason.NeedsTargetGame -> R.string.reason_target
+    UnsupportedReason.NeedsWriteSettings -> R.string.reason_write
+    UnsupportedReason.NoWifi -> R.string.reason_nowifi
     UnsupportedReason.Unknown -> R.string.reason_unknown
     null -> R.string.reason_none_selected
 })
@@ -131,6 +135,11 @@ fun OptimizeScreen(contentPadding: PaddingValues, vm: OptimizeViewModel = hiltVi
                                 Capability.Supported -> Text(stringResource(R.string.opt_available), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                                 is Capability.Unsupported -> Text(cap.reason.text(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 null -> {}
+                            }
+                        }
+                        if (cap is Capability.Unsupported && cap.reason == UnsupportedReason.NeedsWriteSettings) {
+                            TextButton(onClick = { ctx.startActivity(Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, android.net.Uri.parse("package:${ctx.packageName}")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }) {
+                                Text(stringResource(R.string.opt_grant))
                             }
                         }
                         if (cap is Capability.Unsupported && cap.reason == UnsupportedReason.NeedsPolicyAccess) {

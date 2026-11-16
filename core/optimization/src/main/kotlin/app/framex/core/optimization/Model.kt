@@ -3,7 +3,7 @@ package app.framex.core.optimization
 import app.framex.core.common.OptAction
 import app.framex.core.common.OptimizationProfile
 
-enum class UnsupportedReason { NeedsPolicyAccess, NeedsShizuku, NeedsAndroid12, NeedsTargetGame, Unknown }
+enum class UnsupportedReason { NeedsPolicyAccess, NeedsShizuku, NeedsAndroid12, NeedsTargetGame, NeedsWriteSettings, NoWifi, Unknown }
 
 sealed interface Capability {
     data object Supported : Capability
@@ -39,18 +39,23 @@ data class EngineReport(val profile: OptimizationProfile, val results: List<Acti
 object Profiles {
     fun actionsFor(profile: OptimizationProfile, custom: Set<OptAction>): Set<OptAction> = when (profile) {
         OptimizationProfile.Balanced -> emptySet()
-        OptimizationProfile.Gaming -> setOf(OptAction.DoNotDisturb, OptAction.StopBackgroundApps)
-        OptimizationProfile.Performance -> setOf(OptAction.DoNotDisturb, OptAction.StopBackgroundApps, OptAction.GameModePerformance)
-        OptimizationProfile.BatterySaver -> setOf(OptAction.BatterySaver, OptAction.GameModeBattery)
+        OptimizationProfile.Gaming -> setOf(OptAction.DoNotDisturb, OptAction.StopBackgroundApps, OptAction.LowLatencyWifi)
+        OptimizationProfile.Performance -> setOf(OptAction.DoNotDisturb, OptAction.StopBackgroundApps, OptAction.LowLatencyWifi, OptAction.GameModePerformance)
+        OptimizationProfile.BatterySaver -> setOf(OptAction.BatterySaver, OptAction.GameModeBattery, OptAction.ReduceBrightness)
         OptimizationProfile.Custom -> custom
     }
 }
 
 /** Decides what the device can really do. Never assumes support. */
 object CapabilityEvaluator {
-    fun evaluate(policyAccess: Boolean, shellAvailable: Boolean, sdk: Int): Map<OptAction, Capability> = mapOf(
+    fun evaluate(
+        policyAccess: Boolean, shellAvailable: Boolean, sdk: Int,
+        canWriteSettings: Boolean = false, wifiSupported: Boolean = true,
+    ): Map<OptAction, Capability> = mapOf(
         OptAction.DoNotDisturb to if (policyAccess) Capability.Supported else Capability.Unsupported(UnsupportedReason.NeedsPolicyAccess),
         OptAction.StopBackgroundApps to Capability.Supported,
+        OptAction.LowLatencyWifi to if (wifiSupported) Capability.Supported else Capability.Unsupported(UnsupportedReason.NoWifi),
+        OptAction.ReduceBrightness to if (canWriteSettings) Capability.Supported else Capability.Unsupported(UnsupportedReason.NeedsWriteSettings),
         OptAction.GameModePerformance to game(shellAvailable, sdk),
         OptAction.GameModeBattery to game(shellAvailable, sdk),
         OptAction.BatterySaver to if (shellAvailable) Capability.Supported else Capability.Unsupported(UnsupportedReason.NeedsShizuku),
@@ -73,5 +78,49 @@ object SmartBoost {
         ramUsedFraction != null && ramUsedFraction >= 0.85f -> SmartRecommendation(OptimizationProfile.Gaming, SmartReason.HighMemory)
         privileged -> SmartRecommendation(OptimizationProfile.Performance, SmartReason.PrivilegedAvailable)
         else -> SmartRecommendation(OptimizationProfile.Gaming, SmartReason.Default)
+    }
+}
+
+/** What the device looks like right now, as read from Android. Null means the value could not be read. */
+data class Findings(
+    val batteryTempC: Float?,
+    val charging: Boolean,
+    val ramUsedFraction: Float?,
+    val batterySaverOn: Boolean,
+    val refreshHz: Float?,
+    val maxRefreshHz: Float?,
+    val privileged: Boolean,
+)
+
+/** Things FrameX can see but cannot change without privileges; the user decides. */
+enum class Advisory(val important: Boolean) {
+    BatterySaverOn(true), RefreshBelowMax(true), DeviceHot(true), WarmWhileCharging(false), HighMemory(false)
+}
+
+data class LaunchPlan(val profile: OptimizationProfile, val advisories: List<Advisory>)
+
+/** Rule-based, deterministic and explainable: the same findings always give the same plan. */
+object GamePlanner {
+    const val HOT_C = 45f
+    const val WARM_C = 40f
+    const val HIGH_RAM = 0.85f
+
+    fun plan(f: Findings): LaunchPlan {
+        val hot = f.batteryTempC != null && f.batteryTempC >= HOT_C
+        val highRam = f.ramUsedFraction != null && f.ramUsedFraction >= HIGH_RAM
+        val profile = when {
+            hot -> OptimizationProfile.BatterySaver // less heat: dimmer screen, lower load
+            highRam -> OptimizationProfile.Gaming
+            f.privileged -> OptimizationProfile.Performance
+            else -> OptimizationProfile.Gaming
+        }
+        val adv = buildList {
+            if (f.batterySaverOn) add(Advisory.BatterySaverOn)
+            if (f.refreshHz != null && f.maxRefreshHz != null && f.refreshHz < f.maxRefreshHz - 1f) add(Advisory.RefreshBelowMax)
+            if (hot) add(Advisory.DeviceHot)
+            else if (f.charging && f.batteryTempC != null && f.batteryTempC >= WARM_C) add(Advisory.WarmWhileCharging)
+            if (highRam) add(Advisory.HighMemory)
+        }
+        return LaunchPlan(profile, adv)
     }
 }

@@ -63,4 +63,19 @@ class FpsTest {
         assertEquals("SurfaceView[com.g/com.g.Main]@0(BLAST)#5", SurfaceFlingerLayers.pick(layers, "com.g"))
         assertNull(SurfaceFlingerLayers.pick(layers, "com.none"))
     }
+
+    @Test fun collectorStartsNewBaselineAfterMissedFrames() {
+        val c = FrameCollector()
+        c.add(listOf(1_000_000L, 17_000_000L))                 // 1 interval
+        c.add(listOf(2_000_000_000L, 2_016_000_000L))          // no overlap: gap, only the new pair counts
+        assertEquals(2, c.frameTimesMs.size)
+        assertTrue(c.frameTimesMs.all { it < 20f })
+    }
+
+    @Test fun currentFpsOverLastSecond() {
+        val c = FrameCollector()
+        c.add((0..120).map { it * 16_666_667L + 1 })
+        assertEquals(60f, c.currentFps()!!, 1f)
+        assertNull(FrameCollector().currentFps())
+    }
 }

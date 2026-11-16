@@ -25,6 +25,8 @@ class SettingsViewModel @Inject constructor(
     val shizuku: StateFlow<app.framex.core.shizuku.ShizukuStatus> = shizukuManager.status
     fun refreshShizuku() = shizukuManager.refresh()
     fun requestShizuku() = shizukuManager.requestPermission()
+    fun setAutoAnalyze(on: Boolean) { viewModelScope.launch { repo.setAutoAnalyzeOnPlay(on) } }
+    fun setOverlay(on: Boolean) { viewModelScope.launch { repo.setFpsOverlay(on) } }
     fun clearHistory() { viewModelScope.launch { history.clear() } }
     fun setInterval(ms: Long) { viewModelScope.launch { repo.setMonitoringInterval(ms) } }
 }

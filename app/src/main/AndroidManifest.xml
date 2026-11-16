@@ -8,6 +8,12 @@
     <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
     <!-- Needed to list installed apps (games, apps that can be stopped). Nothing is uploaded. -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <!-- Optional, user-granted in system settings: the FPS overlay is drawn over other apps. -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <!-- Optional, user-granted in system settings: dim the screen during a game and restore it afterwards. -->
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+    <!-- Needed to hold the low-latency Wi-Fi lock; held only during a game session. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <!-- Only to detect whether Shizuku is installed. -->
     <queries>

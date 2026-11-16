@@ -7,6 +7,7 @@ import android.os.LocaleList
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -72,6 +73,8 @@ fun SettingsScreen(contentPadding: PaddingValues, vm: SettingsViewModel = hiltVi
                 }
             }
         }
+        item { PlayCard(s.autoAnalyzeOnPlay, vm::setAutoAnalyze) }
+        item { OverlayCard(s.fpsOverlayEnabled, vm::setOverlay) }
         item { ShizukuCard(vm) }
         item {
             FrameXCard {
@@ -137,6 +140,37 @@ private fun ShizukuCard(vm: SettingsViewModel) {
                     ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://github.com/RikkaApps/Shizuku/releases")).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
                 }) { Text(stringResource(R.string.set_shizuku_download)) }
             ShizukuState.Ready -> {}
+        }
+    }
+}
+
+@Composable
+private fun PlayCard(enabled: Boolean, onChange: (Boolean) -> Unit) {
+    FrameXCard {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.set_play_title), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+            androidx.compose.material3.Switch(checked = enabled, onCheckedChange = onChange)
+        }
+        Note(stringResource(R.string.set_play_note))
+    }
+}
+
+@Composable
+private fun OverlayCard(enabled: Boolean, onChange: (Boolean) -> Unit) {
+    val ctx = LocalContext.current
+    var granted by remember { mutableStateOf(android.provider.Settings.canDrawOverlays(ctx)) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { granted = android.provider.Settings.canDrawOverlays(ctx) }
+    FrameXCard {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.set_overlay_title), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+            androidx.compose.material3.Switch(checked = enabled && granted, enabled = granted, onCheckedChange = onChange)
+        }
+        Note(stringResource(R.string.set_overlay_note))
+        if (!granted) {
+            Note(stringResource(R.string.set_overlay_need))
+            OutlinedButton(onClick = {
+                ctx.startActivity(android.content.Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION, android.net.Uri.parse("package:${ctx.packageName}")).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+            }) { Text(stringResource(R.string.set_overlay_grant)) }
         }
     }
 }

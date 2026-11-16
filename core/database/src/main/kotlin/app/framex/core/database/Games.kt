@@ -18,6 +18,8 @@ data class GameProfileEntity(
     /** OptimizationProfile name */
     val profile: String,
     val autoApply: Boolean,
+    /** Comma-separated packages the user approved to stop when playing; empty = ask. */
+    val stopPackages: String = "",
 )
 
 @Entity(tableName = "game_sessions")
