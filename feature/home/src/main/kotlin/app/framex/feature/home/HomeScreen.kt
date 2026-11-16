@@ -15,8 +15,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.framex.core.designsystem.FrameXCard
 import app.framex.core.designsystem.MetricCard
 import app.framex.core.designsystem.label
+import app.framex.core.designsystem.note
 import app.framex.feature.optimize.QuickBoostCard
-import app.framex.core.monitoring.ShizukuInstall
 import java.util.Locale
 import kotlin.math.roundToInt
 
@@ -81,17 +81,8 @@ fun HomeScreen(contentPadding: PaddingValues, vm: HomeViewModel = hiltViewModel(
         item {
             FrameXCard {
                 Label(stringResource(R.string.home_shizuku))
-                when (snap?.shizuku) {
-                    null -> Text(stringResource(R.string.home_checking), style = MaterialTheme.typography.titleMedium)
-                    ShizukuInstall.Installed -> {
-                        Text(stringResource(R.string.home_shizuku_installed), style = MaterialTheme.typography.titleLarge)
-                        Text(stringResource(R.string.home_shizuku_installed_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    ShizukuInstall.NotInstalled -> {
-                        Text(stringResource(R.string.home_shizuku_missing), style = MaterialTheme.typography.titleLarge)
-                        Text(stringResource(R.string.home_shizuku_missing_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
+                Text(ui.shizuku.label(), style = MaterialTheme.typography.titleLarge)
+                Text(ui.shizuku.note(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         item {

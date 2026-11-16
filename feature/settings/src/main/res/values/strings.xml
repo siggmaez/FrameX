@@ -15,4 +15,11 @@
     <string name="set_history_clear">Clear history</string>
     <string name="set_permissions">Permissions</string>
     <string name="set_permissions_note">Internet: only for the network diagnostics you start yourself (ping, DNS). Network state: to show whether you are on Wi-Fi or mobile data. Installed apps list: to find games and apps you may choose to stop; it never leaves your phone. Stop background processes: only for apps you confirm. FrameX reads no personal files.</string>
+    <string name="set_shizuku">Shizuku</string>
+    <string name="set_shizuku_details">Version %1$d · runs as %2$s · %3$s</string>
+    <string name="set_shizuku_service_on">service connected</string>
+    <string name="set_shizuku_service_off">service connecting…</string>
+    <string name="set_shizuku_request">Request permission</string>
+    <string name="set_shizuku_open">Open Shizuku</string>
+    <string name="set_shizuku_download">Open Shizuku download page</string>
 </resources>

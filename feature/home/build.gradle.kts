@@ -27,6 +27,7 @@ dependencies {
     implementation(project(":core:designsystem"))
     implementation(project(":core:datastore"))
     implementation(project(":core:monitoring"))
+    implementation(project(":core:shizuku"))
     implementation(project(":feature:optimize"))
     implementation(project(":feature:games"))
     implementation(project(":core:database"))

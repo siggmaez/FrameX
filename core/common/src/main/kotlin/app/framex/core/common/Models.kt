@@ -12,3 +12,6 @@ enum class OptimizationProfile { Balanced, Gaming, Performance, BatterySaver, Cu
 
 /** Individual optimization steps. Profiles are sets of these. Each one is only applied if the device supports it. */
 enum class OptAction { DoNotDisturb, StopBackgroundApps, GameModePerformance, GameModeBattery, BatterySaver }
+
+/** Everything FrameX can know about Shizuku. Only Ready allows privileged operations. */
+enum class ShizukuState { NotInstalled, NotRunning, Outdated, NeedsPermission, PermissionDenied, Ready }

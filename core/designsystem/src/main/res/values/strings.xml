@@ -7,4 +7,16 @@
     <string name="profile_performance">Performance</string>
     <string name="profile_battery_saver">Battery Saver</string>
     <string name="profile_custom">Custom</string>
+    <string name="shz_NotInstalled">Not installed</string>
+    <string name="shz_NotRunning">Installed, not running</string>
+    <string name="shz_Outdated">Version too old</string>
+    <string name="shz_NeedsPermission">Running, permission needed</string>
+    <string name="shz_PermissionDenied">Permission denied</string>
+    <string name="shz_Ready">Connected</string>
+    <string name="shz_note_NotInstalled">Optional. FrameX works without it; some optimizations and game FPS need it.</string>
+    <string name="shz_note_NotRunning">Open Shizuku and start it (wireless debugging or root).</string>
+    <string name="shz_note_Outdated">Update Shizuku to a newer version.</string>
+    <string name="shz_note_NeedsPermission">Allow FrameX in Shizuku to enable privileged features.</string>
+    <string name="shz_note_PermissionDenied">Permission was denied. Allow FrameX in the Shizuku app to enable privileged features.</string>
+    <string name="shz_note_Ready">Privileged features are available. Only a fixed list of operations is ever run.</string>
 </resources>

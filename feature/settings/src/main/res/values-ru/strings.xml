@@ -15,4 +15,11 @@
     <string name="set_history_clear">Очистить историю</string>
     <string name="set_permissions">Разрешения</string>
     <string name="set_permissions_note">Интернет: только для сетевой диагностики, которую вы запускаете сами (пинг, DNS). Состояние сети: чтобы показать Wi-Fi или мобильные данные. Список установленных приложений: чтобы найти игры и приложения, которые вы можете остановить; он не покидает телефон. Остановка фоновых процессов: только для приложений, которые вы подтвердите. FrameX не читает личные файлы.</string>
+    <string name="set_shizuku">Shizuku</string>
+    <string name="set_shizuku_details">Версия %1$d · работает как %2$s · %3$s</string>
+    <string name="set_shizuku_service_on">служба подключена</string>
+    <string name="set_shizuku_service_off">служба подключается…</string>
+    <string name="set_shizuku_request">Запросить разрешение</string>
+    <string name="set_shizuku_open">Открыть Shizuku</string>
+    <string name="set_shizuku_download">Открыть страницу загрузки Shizuku</string>
 </resources>

@@ -20,13 +20,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import app.framex.core.common.ShizukuState
+import app.framex.core.designsystem.label
+import app.framex.core.designsystem.note
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.framex.core.common.ThemeMode
 import app.framex.core.designsystem.FrameXCard
 
 @Composable
-fun SettingsScreen(contentPadding: PaddingValues, extra: @Composable () -> Unit = {}, vm: SettingsViewModel = hiltViewModel()) {
+fun SettingsScreen(contentPadding: PaddingValues, vm: SettingsViewModel = hiltViewModel()) {
     val s by vm.settings.collectAsStateWithLifecycle()
     LazyColumn(
         contentPadding = PaddingValues(
@@ -67,7 +72,7 @@ fun SettingsScreen(contentPadding: PaddingValues, extra: @Composable () -> Unit 
                 }
             }
         }
-        item { extra() }
+        item { ShizukuCard(vm) }
         item {
             FrameXCard {
                 Text(stringResource(R.string.set_history), style = MaterialTheme.typography.titleMedium)
@@ -106,3 +111,32 @@ private fun LanguageCard() {
 @Composable
 private fun Note(text: String) =
     Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+@Composable
+private fun ShizukuCard(vm: SettingsViewModel) {
+    val st by vm.shizuku.collectAsStateWithLifecycle()
+    val ctx = LocalContext.current
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.refreshShizuku() }
+    FrameXCard {
+        Text(stringResource(R.string.set_shizuku), style = MaterialTheme.typography.titleMedium)
+        Text(st.state.label(), style = MaterialTheme.typography.titleLarge)
+        Note(st.state.note())
+        if (st.state == ShizukuState.Ready) {
+            Note(stringResource(R.string.set_shizuku_details, st.serverVersion ?: 0, if (st.uid == 0) "root" else "shell",
+                stringResource(if (st.serviceConnected) R.string.set_shizuku_service_on else R.string.set_shizuku_service_off)))
+        }
+        when (st.state) {
+            ShizukuState.NeedsPermission, ShizukuState.PermissionDenied ->
+                androidx.compose.material3.Button(onClick = vm::requestShizuku) { Text(stringResource(R.string.set_shizuku_request)) }
+            ShizukuState.NotRunning, ShizukuState.Outdated ->
+                OutlinedButton(onClick = {
+                    ctx.packageManager.getLaunchIntentForPackage(app.framex.core.shizuku.ShizukuManager.SHIZUKU_PACKAGE)?.let { ctx.startActivity(it) }
+                }) { Text(stringResource(R.string.set_shizuku_open)) }
+            ShizukuState.NotInstalled ->
+                OutlinedButton(onClick = {
+                    ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://github.com/RikkaApps/Shizuku/releases")).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+                }) { Text(stringResource(R.string.set_shizuku_download)) }
+            ShizukuState.Ready -> {}
+        }
+    }
+}

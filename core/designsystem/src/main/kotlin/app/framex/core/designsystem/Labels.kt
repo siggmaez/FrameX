@@ -14,3 +14,23 @@ fun OptimizationProfile.label(): String = stringResource(
         OptimizationProfile.Custom -> R.string.profile_custom
     }
 )
+
+@Composable
+fun app.framex.core.common.ShizukuState.label(): String = stringResource(when (this) {
+    app.framex.core.common.ShizukuState.NotInstalled -> R.string.shz_NotInstalled
+    app.framex.core.common.ShizukuState.NotRunning -> R.string.shz_NotRunning
+    app.framex.core.common.ShizukuState.Outdated -> R.string.shz_Outdated
+    app.framex.core.common.ShizukuState.NeedsPermission -> R.string.shz_NeedsPermission
+    app.framex.core.common.ShizukuState.PermissionDenied -> R.string.shz_PermissionDenied
+    app.framex.core.common.ShizukuState.Ready -> R.string.shz_Ready
+})
+
+@Composable
+fun app.framex.core.common.ShizukuState.note(): String = stringResource(when (this) {
+    app.framex.core.common.ShizukuState.NotInstalled -> R.string.shz_note_NotInstalled
+    app.framex.core.common.ShizukuState.NotRunning -> R.string.shz_note_NotRunning
+    app.framex.core.common.ShizukuState.Outdated -> R.string.shz_note_Outdated
+    app.framex.core.common.ShizukuState.NeedsPermission -> R.string.shz_note_NeedsPermission
+    app.framex.core.common.ShizukuState.PermissionDenied -> R.string.shz_note_PermissionDenied
+    app.framex.core.common.ShizukuState.Ready -> R.string.shz_note_Ready
+})

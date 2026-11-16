@@ -31,7 +31,7 @@ class SystemMetricsSource @Inject constructor(@ApplicationContext private val co
             flow {
                 val cpu = CpuSampler(context.getString(R.string.mon_cpu_restricted), context.getString(R.string.mon_cpu_first_sample))
                 while (true) {
-                    emit(SystemSnapshot(readRam(), cpu.sample(), readBattery(), readDisplay(), readShizuku()))
+                    emit(SystemSnapshot(readRam(), cpu.sample(), readBattery(), readDisplay()))
                     delay(interval)
                 }
             }
@@ -89,11 +89,5 @@ class SystemMetricsSource @Inject constructor(@ApplicationContext private val co
         Metric.Unavailable(context.getString(R.string.mon_display_error))
     }
 
-    private fun readShizuku(): ShizukuInstall = try {
-        context.packageManager.getPackageInfo("moe.shizuku.privileged.api", 0)
-        ShizukuInstall.Installed
-    } catch (_: Exception) {
-        ShizukuInstall.NotInstalled
-    }
 
 }

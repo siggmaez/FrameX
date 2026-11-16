@@ -20,6 +20,7 @@ include(
     ":core:datastore",
     ":core:database",
     ":core:optimization",
+    ":core:shizuku",
     ":feature:optimize",
     ":feature:games",
     ":core:benchmark",

@@ -19,6 +19,7 @@ data class HomeUiState(
     val profile: OptimizationProfile = OptimizationProfile.Balanced,
     val active: app.framex.core.datastore.EngineSnapshot? = null,
     val lastSession: app.framex.core.database.GameSessionEntity? = null,
+    val shizuku: app.framex.core.common.ShizukuState = app.framex.core.common.ShizukuState.NotInstalled,
 )
 
 @HiltViewModel
@@ -27,6 +28,7 @@ class HomeViewModel @Inject constructor(
     source: SystemMetricsSource,
     store: app.framex.core.datastore.EngineStateStore,
     games: app.framex.core.database.GamesRepository,
+    shizuku: app.framex.core.shizuku.ShizukuManager,
 ) : ViewModel() {
     /** Upstream polling runs only while the screen is collected (WhileSubscribed). */
     val state: StateFlow<HomeUiState> = combine(
@@ -34,6 +36,12 @@ class HomeViewModel @Inject constructor(
         settings.settings,
         store.snapshot,
         games.sessions(1),
-    ) { snap, s, active, sessions -> HomeUiState(snap, s.selectedProfile, active, sessions.firstOrNull()) }
+        shizuku.status,
+    ) { values ->
+        @Suppress("UNCHECKED_CAST")
+        HomeUiState(values[0] as SystemSnapshot?, (values[1] as app.framex.core.datastore.AppSettings).selectedProfile,
+            values[2] as app.framex.core.datastore.EngineSnapshot?, (values[3] as List<app.framex.core.database.GameSessionEntity>).firstOrNull(),
+            (values[4] as app.framex.core.shizuku.ShizukuStatus).state)
+    }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 }

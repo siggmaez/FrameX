@@ -11,13 +11,10 @@ data class BatteryInfo(val temperatureC: Float, val levelPercent: Int?, val char
 
 data class DisplayRefresh(val currentHz: Float, val supportedHz: List<Float>)
 
-/** Shizuku detection here is install-only; running/permission state arrives with the Shizuku integration. */
-enum class ShizukuInstall { Installed, NotInstalled }
 
 data class SystemSnapshot(
     val ram: Metric<RamInfo>,
     val cpuLoad: Metric<Float>,
     val battery: Metric<BatteryInfo>,
     val display: Metric<DisplayRefresh>,
-    val shizuku: ShizukuInstall,
 )

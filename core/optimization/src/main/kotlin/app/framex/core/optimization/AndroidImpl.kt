@@ -117,24 +117,10 @@ class BatterySaverExecutor(private val context: Context, private val shell: Priv
     }
 }
 
-/** Default until Shizuku is connected: everything unavailable. */
-@Singleton
-class UnavailableShell @Inject constructor() : PrivilegedShell {
-    override fun isAvailable() = false
-    override suspend fun setGameMode(pkg: String, level: GameModeLevel) = ShellResult(false, "unavailable")
-    override suspend fun getGameMode(pkg: String): String? = null
-    override suspend fun setBatterySaver(on: Boolean) = ShellResult(false, "unavailable")
-    override suspend fun isBatterySaverOn(): Boolean? = null
-    override suspend fun surfaceFlingerLayers(): List<String>? = null
-    override suspend fun surfaceFlingerLatency(layer: String): String? = null
-}
 
 @Module
 @InstallIn(SingletonComponent::class)
 object OptimizationModule {
-    @Provides @Singleton
-    fun shell(impl: UnavailableShell): PrivilegedShell = impl
-
     @Provides @Singleton
     fun capabilities(impl: AndroidCapabilityProvider): CapabilityProvider = impl
 

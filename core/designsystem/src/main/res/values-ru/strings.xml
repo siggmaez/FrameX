@@ -7,4 +7,16 @@
     <string name="profile_performance">Производительность</string>
     <string name="profile_battery_saver">Экономия заряда</string>
     <string name="profile_custom">Свой</string>
+    <string name="shz_NotInstalled">Не установлен</string>
+    <string name="shz_NotRunning">Установлен, не запущен</string>
+    <string name="shz_Outdated">Версия слишком старая</string>
+    <string name="shz_NeedsPermission">Запущен, нужно разрешение</string>
+    <string name="shz_PermissionDenied">Разрешение отклонено</string>
+    <string name="shz_Ready">Подключён</string>
+    <string name="shz_note_NotInstalled">Необязательно. FrameX работает и без него; для части оптимизаций и FPS игр он нужен.</string>
+    <string name="shz_note_NotRunning">Откройте Shizuku и запустите его (беспроводная отладка или root).</string>
+    <string name="shz_note_Outdated">Обновите Shizuku до более новой версии.</string>
+    <string name="shz_note_NeedsPermission">Разрешите FrameX в Shizuku, чтобы включить привилегированные функции.</string>
+    <string name="shz_note_PermissionDenied">Разрешение отклонено. Разрешите FrameX в приложении Shizuku, чтобы включить привилегированные функции.</string>
+    <string name="shz_note_Ready">Привилегированные функции доступны. Выполняется только фиксированный список операций.</string>
 </resources>
