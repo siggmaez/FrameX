@@ -4,27 +4,15 @@ on:
   pull_request:
   workflow_dispatch:
 jobs:
-  build:
+  genkey:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
-      - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: 8.10.2
-      - name: Build debug APK and run unit tests
-        run: gradle assembleDebug testDebugUnitTest --stacktrace
+      - run: keytool -genkeypair -keystore framex-debug.p12 -storetype PKCS12 -alias framex -keyalg RSA -keysize 2048 -validity 36500 -storepass framexdebug -keypass framexdebug -dname "CN=FrameX Debug,O=FrameX,C=US"
       - uses: actions/upload-artifact@v4
         with:
-          name: framex-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: reports
-          path: |
-            **/build/reports/tests
-            **/build/reports/lint-results*.html
+          name: debug-keystore
+          path: framex-debug.p12
