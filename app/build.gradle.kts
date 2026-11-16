@@ -16,6 +16,16 @@ android {
         versionCode = 1
         versionName = "0.1.0"
     }
+    signingConfigs {
+        // Fixed, non-secret debug key so every build can be installed over the previous one.
+        getByName("debug") {
+            storeFile = file("framex-debug.p12")
+            storeType = "pkcs12"
+            storePassword = "framexdebug"
+            keyAlias = "framex"
+            keyPassword = "framexdebug"
+        }
+    }
     buildTypes {
         release {
             isMinifyEnabled = true
