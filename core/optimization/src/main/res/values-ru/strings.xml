@@ -1,0 +1,15 @@
+<resources>
+    <string name="opt_dnd_no_access">Доступ к режиму «Не беспокоить» не выдан</string>
+    <string name="opt_dnd_on">«Не беспокоить» включён (только важные)</string>
+    <string name="opt_dnd_not_confirmed">Android не подтвердил изменение</string>
+    <string name="opt_dnd_restored">«Не беспокоить» возвращён как было</string>
+    <string name="opt_no_previous">Предыдущее значение не сохранено</string>
+    <string name="opt_kill_done">Запрошена остановка приложений: %1$d. Свободная ОЗУ изменилась примерно на %2$d МБ (Android не подтверждает остановку по каждому приложению)</string>
+    <string name="opt_kill_nothing">Остановленные приложения вернуть нельзя, восстанавливать нечего</string>
+    <string name="opt_no_game">Игра не выбрана</string>
+    <string name="opt_game_mode_set">Игровой режим: %1$s</string>
+    <string name="opt_game_mode_restored">Игровой режим возвращён как было</string>
+    <string name="opt_not_confirmed">Система не подтвердила изменение</string>
+    <string name="opt_saver_on">Экономия заряда включена</string>
+    <string name="opt_saver_restored">Экономия заряда возвращена как была</string>
+</resources>

@@ -11,8 +11,9 @@
     <string name="home_refresh">Частота обновления</string>
     <string name="home_hz">%1$d Гц</string>
     <string name="home_supported">Поддерживается: %1$s Гц</string>
-    <string name="home_profile">Выбранный профиль</string>
-    <string name="home_profile_note">Профиль сохранён как ваш выбор, в систему он пока не применяется.</string>
+    <string name="home_profile">Текущий профиль</string>
+    <string name="home_profile_active">Применён к системе. Откройте «Оптимизацию», чтобы вернуть прежние настройки.</string>
+    <string name="home_profile_note">Профиль не применён. Выбран: %1$s.</string>
     <string name="home_shizuku">Shizuku</string>
     <string name="home_checking">Проверка…</string>
     <string name="home_shizuku_installed">Установлен</string>

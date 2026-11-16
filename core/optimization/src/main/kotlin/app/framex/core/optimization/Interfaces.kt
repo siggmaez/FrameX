@@ -1,0 +1,38 @@
+package app.framex.core.optimization
+
+import app.framex.core.common.OptAction
+import app.framex.core.datastore.EngineSnapshot
+
+interface ActionExecutor {
+    /** Applies [action] and validates the result by reading the state back where Android allows it. */
+    suspend fun apply(action: OptAction, request: ApplyRequest): ExecResult
+    suspend fun restore(action: OptAction, token: String?): ExecResult
+}
+
+interface CapabilityProvider { fun detect(): Map<OptAction, Capability> }
+
+interface EngineStorage {
+    suspend fun load(): EngineSnapshot?
+    suspend fun save(snapshot: EngineSnapshot)
+    suspend fun clear()
+}
+
+interface OperationLogger {
+    suspend fun log(profile: String, action: OptAction, status: ResultStatus, message: String)
+}
+
+data class ShellResult(val ok: Boolean, val output: String)
+
+/**
+ * The only privileged surface. Typed operations, not a free-form terminal.
+ * Implemented by the Shizuku integration; the default says "unavailable".
+ */
+interface PrivilegedShell {
+    fun isAvailable(): Boolean
+    suspend fun setGameMode(pkg: String, level: GameModeLevel): ShellResult
+    suspend fun getGameMode(pkg: String): String?
+    suspend fun setBatterySaver(on: Boolean): ShellResult
+    suspend fun isBatterySaverOn(): Boolean?
+    suspend fun surfaceFlingerLayers(): List<String>?
+    suspend fun surfaceFlingerLatency(layer: String): String?
+}

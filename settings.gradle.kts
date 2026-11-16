@@ -19,6 +19,8 @@ include(
     ":core:designsystem",
     ":core:datastore",
     ":core:database",
+    ":core:optimization",
+    ":feature:optimize",
     ":core:monitoring",
     ":feature:home",
     ":feature:monitor",

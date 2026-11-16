@@ -15,6 +15,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.framex.core.designsystem.FrameXCard
 import app.framex.core.designsystem.MetricCard
 import app.framex.core.designsystem.label
+import app.framex.feature.optimize.QuickBoostCard
 import app.framex.core.monitoring.ShizukuInstall
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -72,8 +73,8 @@ fun HomeScreen(contentPadding: PaddingValues, vm: HomeViewModel = hiltViewModel(
         item {
             FrameXCard {
                 Label(stringResource(R.string.home_profile))
-                Text(ui.profile.label(), style = MaterialTheme.typography.titleLarge)
-                Text(stringResource(R.string.home_profile_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text((ui.active?.profile ?: ui.profile).label(), style = MaterialTheme.typography.titleLarge)
+                Text(stringResource(if (ui.active != null) R.string.home_profile_active else R.string.home_profile_note, ui.profile.label()), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         item {

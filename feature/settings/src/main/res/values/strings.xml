@@ -14,5 +14,5 @@
     <string name="set_history_note">Graphs are kept on this device only while you use the Monitor screen. Up to 2000 samples per metric.</string>
     <string name="set_history_clear">Clear history</string>
     <string name="set_permissions">Permissions</string>
-    <string name="set_permissions_note">Internet: only for the network diagnostics you start yourself (ping, DNS). Network state: to show whether you are on Wi-Fi or mobile data. FrameX asks for no runtime permissions and reads no personal files.</string>
+    <string name="set_permissions_note">Internet: only for the network diagnostics you start yourself (ping, DNS). Network state: to show whether you are on Wi-Fi or mobile data. Installed apps list: to find games and apps you may choose to stop; it never leaves your phone. Stop background processes: only for apps you confirm. FrameX reads no personal files.</string>
 </resources>

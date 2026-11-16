@@ -11,9 +11,10 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
-@Database(entities = [MetricSampleEntity::class], version = 1, exportSchema = false)
+@Database(entities = [MetricSampleEntity::class, OptimizationLogEntity::class], version = 2, exportSchema = false)
 abstract class FrameXDatabase : RoomDatabase() {
     abstract fun metricSampleDao(): MetricSampleDao
+    abstract fun optimizationLogDao(): OptimizationLogDao
 }
 
 @Module
@@ -21,8 +22,13 @@ abstract class FrameXDatabase : RoomDatabase() {
 object DatabaseModule {
     @Provides @Singleton
     fun database(@ApplicationContext context: Context): FrameXDatabase =
-        Room.databaseBuilder(context, FrameXDatabase::class.java, "framex.db").build()
+        Room.databaseBuilder(context, FrameXDatabase::class.java, "framex.db")
+            .fallbackToDestructiveMigration() // development only: history is disposable
+            .build()
 
     @Provides
     fun metricSampleDao(db: FrameXDatabase): MetricSampleDao = db.metricSampleDao()
+
+    @Provides
+    fun optimizationLogDao(db: FrameXDatabase): OptimizationLogDao = db.optimizationLogDao()
 }

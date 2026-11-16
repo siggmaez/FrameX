@@ -9,3 +9,6 @@ sealed interface Metric<out T> {
 enum class ThemeMode { System, Light, Dark }
 
 enum class OptimizationProfile { Balanced, Gaming, Performance, BatterySaver, Custom }
+
+/** Individual optimization steps. Profiles are sets of these. Each one is only applied if the device supports it. */
+enum class OptAction { DoNotDisturb, StopBackgroundApps, GameModePerformance, GameModeBattery, BatterySaver }

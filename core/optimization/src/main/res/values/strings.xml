@@ -1,0 +1,15 @@
+<resources>
+    <string name="opt_dnd_no_access">Do Not Disturb access is not granted</string>
+    <string name="opt_dnd_on">Do Not Disturb set to priority only</string>
+    <string name="opt_dnd_not_confirmed">Android did not confirm the change</string>
+    <string name="opt_dnd_restored">Do Not Disturb restored</string>
+    <string name="opt_no_previous">No previous value saved</string>
+    <string name="opt_kill_done">Stop requested for %1$d apps. Available RAM changed by about %2$d MB (Android does not confirm per app)</string>
+    <string name="opt_kill_nothing">Stopped apps cannot be brought back; nothing to restore</string>
+    <string name="opt_no_game">No game selected</string>
+    <string name="opt_game_mode_set">Game mode set to %1$s</string>
+    <string name="opt_game_mode_restored">Game mode restored</string>
+    <string name="opt_not_confirmed">The system did not confirm the change</string>
+    <string name="opt_saver_on">Battery saver turned on</string>
+    <string name="opt_saver_restored">Battery saver restored</string>
+</resources>

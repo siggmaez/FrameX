@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
+import app.framex.core.common.OptAction
 import androidx.datastore.preferences.preferencesDataStore
 import app.framex.core.common.OptimizationProfile
 import app.framex.core.common.ThemeMode
@@ -17,9 +19,10 @@ data class AppSettings(
     val themeMode: ThemeMode = ThemeMode.System,
     val monitoringIntervalMs: Long = 2000L,
     val selectedProfile: OptimizationProfile = OptimizationProfile.Balanced,
+    val customActions: Set<OptAction> = setOf(OptAction.DoNotDisturb),
 )
 
-private val Context.settingsStore by preferencesDataStore(name = "framex_settings")
+internal val Context.settingsStore by preferencesDataStore(name = "framex_settings")
 
 @Singleton
 class SettingsRepository @Inject constructor(@ApplicationContext private val context: Context) {
@@ -27,6 +30,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         val theme = stringPreferencesKey("theme_mode")
         val interval = longPreferencesKey("monitoring_interval_ms")
         val profile = stringPreferencesKey("selected_profile")
+        val custom = stringSetPreferencesKey("custom_actions")
     }
 
     val settings: Flow<AppSettings> = context.settingsStore.data.map { p ->
@@ -35,10 +39,14 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
             monitoringIntervalMs = (p[Keys.interval] ?: 2000L).coerceIn(MIN_INTERVAL_MS, MAX_INTERVAL_MS),
             selectedProfile = p[Keys.profile]?.let { runCatching { OptimizationProfile.valueOf(it) }.getOrNull() }
                 ?: OptimizationProfile.Balanced,
+            customActions = p[Keys.custom]?.mapNotNull { runCatching { OptAction.valueOf(it) }.getOrNull() }?.toSet()
+                ?: setOf(OptAction.DoNotDisturb),
         )
     }
 
     suspend fun setThemeMode(mode: ThemeMode) { context.settingsStore.edit { it[Keys.theme] = mode.name } }
+    suspend fun setSelectedProfile(p: OptimizationProfile) { context.settingsStore.edit { it[Keys.profile] = p.name } }
+    suspend fun setCustomActions(a: Set<OptAction>) { context.settingsStore.edit { it[Keys.custom] = a.map { x -> x.name }.toSet() } }
     suspend fun setMonitoringInterval(ms: Long) {
         context.settingsStore.edit { it[Keys.interval] = ms.coerceIn(MIN_INTERVAL_MS, MAX_INTERVAL_MS) }
     }
