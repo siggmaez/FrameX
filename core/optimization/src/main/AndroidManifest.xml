@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Used only by the user-confirmed / automatic boost to end background processes of other apps. -->
+    <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
     <application>
         <!-- Optional. Only presses "Force stop" in the Settings app info page of apps the user's boost list names. -->
         <service

@@ -186,7 +186,8 @@ private fun Note(t: String) = Text(t, style = MaterialTheme.typography.bodySmall
 private fun AppIcon(pkg: String) {
     val ctx = LocalContext.current
     val icon by produceState<ImageBitmap?>(null, pkg) {
-        value = withContext(Dispatchers.IO) { runCatching { ctx.packageManager.getApplicationIcon(pkg).toBitmap(96, 96).asImageBitmap() }.getOrNull() }
+        val bmp = withContext(Dispatchers.IO) { runCatching { ctx.packageManager.getApplicationIcon(pkg).toBitmap(96, 96).asImageBitmap() }.getOrNull() }
+        value = bmp
     }
     icon?.let { Image(it, null, Modifier.size(40.dp)) } ?: androidx.compose.foundation.layout.Spacer(Modifier.size(40.dp))
 }

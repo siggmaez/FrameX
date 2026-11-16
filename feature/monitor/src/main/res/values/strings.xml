@@ -35,7 +35,7 @@
     <string name="th_level_shutdown">Shutdown</string>
     <string name="th_headroom">Thermal headroom</string>
     <string name="th_headroom_value">%1$d%% of throttling threshold</string>
-    <string name="th_headroom_note">At 100% Android starts throttling.</string>
+    <string name="th_headroom_note" formatted="false">At 100% Android starts throttling.</string>
     <string name="th_sensors">Thermal sensors</string>
     <string name="net_title">Internet diagnostics</string>
     <string name="net_note">Measures TCP connect time to a public server and DNS lookups. This is your internet connection, not the latency to any game server.</string>

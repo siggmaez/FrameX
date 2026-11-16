@@ -35,7 +35,7 @@
     <string name="th_level_shutdown">Выключение</string>
     <string name="th_headroom">Запас до троттлинга</string>
     <string name="th_headroom_value">%1$d%% от порога троттлинга</string>
-    <string name="th_headroom_note">На 100% Android начинает снижать частоты.</string>
+    <string name="th_headroom_note" formatted="false">На 100% Android начинает снижать частоты.</string>
     <string name="th_sensors">Датчики температуры</string>
     <string name="net_title">Диагностика интернета</string>
     <string name="net_note">Измеряет время TCP-соединения с публичным сервером и DNS-запросы. Это качество вашего интернета, а не задержка до игровых серверов.</string>

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Network diagnostics (ping/DNS) that the user starts manually, and connection type display. -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -9,7 +10,7 @@
     <!-- Lets the user-confirmed "stop background apps" action end other apps' background processes. -->
     <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
     <!-- Needed to list installed apps (games, apps that can be stopped). Nothing is uploaded. -->
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" tools:ignore="QueryAllPackagesPermission" />
     <!-- Optional, user-granted in system settings: the FPS overlay is drawn over other apps. -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <!-- Optional, user-granted in system settings: dim the screen during a game and restore it afterwards. -->

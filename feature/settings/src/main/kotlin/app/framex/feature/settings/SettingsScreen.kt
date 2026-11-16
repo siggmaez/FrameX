@@ -99,6 +99,7 @@ fun SettingsScreen(contentPadding: PaddingValues, vm: SettingsViewModel = hiltVi
 }
 
 @Composable
+@android.annotation.TargetApi(33)
 private fun LanguageCard() {
     val ctx = LocalContext.current
     val lm = remember { ctx.getSystemService(Context.LOCALE_SERVICE) as LocaleManager }
