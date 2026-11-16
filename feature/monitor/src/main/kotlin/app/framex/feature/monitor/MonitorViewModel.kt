@@ -9,6 +9,10 @@ import app.framex.core.datastore.SettingsRepository
 import app.framex.core.monitoring.DetailedMetricsSource
 import app.framex.core.monitoring.DetailedSnapshot
 import app.framex.core.monitoring.DnsResult
+import app.framex.core.monitoring.FrameStats
+import app.framex.core.optimization.PrivilegedShell
+import kotlinx.coroutines.delay
+import app.framex.core.database.GamesRepository
 import app.framex.core.monitoring.NetworkDiagnostics
 import app.framex.core.monitoring.PingStats
 import app.framex.core.monitoring.PingTarget
@@ -46,6 +50,8 @@ class MonitorViewModel @Inject constructor(
     detailedSource: DetailedMetricsSource,
     private val history: MetricHistoryRepository,
     private val network: NetworkDiagnostics,
+    private val shell: PrivilegedShell,
+    games: GamesRepository,
 ) : ViewModel() {
 
     /** Polls and records only while the Monitor screen is collected. */
@@ -72,6 +78,37 @@ class MonitorViewModel @Inject constructor(
         (s.battery as? Metric.Available)?.let { history.record(MetricType.BatteryTempC, it.value.temperatureC) }
     }
 
+
+    /** Latest recorded game session, to show its measured FPS (or why there is none). */
+    val lastSession = games.sessions(1).map { it.firstOrNull() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    val shizukuAvailable: Boolean get() = shell.isAvailable()
+
+    private val _frameTest = MutableStateFlow(FrameTestUi())
+    val frameTest: StateFlow<FrameTestUi> = _frameTest.asStateFlow()
+    private val frames = ArrayList<Float>(2048)
+
+    /** Called by the test canvas for every frame it receives. */
+    fun onFrame(ms: Float) { if (_frameTest.value.running) frames += ms }
+
+    fun startFrameTest(seconds: Int = 10) {
+        if (_frameTest.value.running) return
+        frames.clear()
+        _frameTest.value = FrameTestUi(running = true, secondsLeft = seconds)
+        viewModelScope.launch {
+            val steps = seconds * 2
+            repeat(steps) { i ->
+                delay(500)
+                var acc = 0f; var n = 0
+                for (k in frames.indices.reversed()) { acc += frames[k]; n++; if (acc >= 1000f) break }
+                _frameTest.update { it.copy(secondsLeft = seconds - (i + 1) / 2, liveFps = if (acc >= 500f) n * 1000f / acc else null) }
+            }
+            val all = frames.toList()
+            val step = (all.size / 300).coerceAtLeast(1)
+            _frameTest.value = FrameTestUi(false, 0, null, FrameStats.from(all), all.filterIndexed { i, _ -> i % step == 0 })
+        }
+    }
     fun setTarget(t: PingTarget) = _net.update { it.copy(target = t) }
 
     fun runDiagnostics() {
@@ -92,3 +129,12 @@ class MonitorViewModel @Inject constructor(
         }
     }
 }
+
+data class FrameTestUi(
+    val running: Boolean = false,
+    val secondsLeft: Int = 0,
+    val liveFps: Float? = null,
+    val stats: FrameStats? = null,
+    /** Frame times (ms) of the last run, thinned for the graph. */
+    val graph: List<Float> = emptyList(),
+)

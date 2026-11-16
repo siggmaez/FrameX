@@ -11,7 +11,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
-@Database(entities = [MetricSampleEntity::class, OptimizationLogEntity::class, GameProfileEntity::class, GameSessionEntity::class], version = 3, exportSchema = false)
+@Database(entities = [MetricSampleEntity::class, OptimizationLogEntity::class, GameProfileEntity::class, GameSessionEntity::class], version = 4, exportSchema = false)
 abstract class FrameXDatabase : RoomDatabase() {
     abstract fun metricSampleDao(): MetricSampleDao
     abstract fun optimizationLogDao(): OptimizationLogDao

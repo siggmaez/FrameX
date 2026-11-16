@@ -135,6 +135,12 @@ fun SessionCard(s: GameSessionEntity) {
         val prof = s.appliedProfile?.let { name -> OptimizationProfile.entries.firstOrNull { it.name == name }?.label() ?: name }
             ?: stringResource(R.string.g_no_profile_applied)
         Note(stringResource(R.string.g_session_detail, dur, prof))
+        if (s.endMs != null || s.avgFps != null) {
+            val fpsAvg = s.avgFps
+            if (fpsAvg != null) {
+                Note(stringResource(R.string.g_session_fps, String.format(Locale.US, "%.0f", fpsAvg), s.minFps?.let { String.format(Locale.US, "%.0f", it) } ?: "—", s.lowFps?.let { String.format(Locale.US, "%.0f", it) } ?: "—"))
+            } else Note(stringResource(R.string.g_session_fps_na))
+        }
         if (s.startTempC != null || s.maxTempC != null) {
             Note(stringResource(R.string.g_session_temp, s.startTempC?.let { String.format(Locale.US, "%.1f", it) } ?: "—", s.maxTempC?.let { String.format(Locale.US, "%.1f", it) } ?: "—"))
         }

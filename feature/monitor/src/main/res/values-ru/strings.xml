@@ -52,4 +52,25 @@
     <string name="net_dns_note">Используются уникальные имена, поэтому ответы не берутся из кэша. Проверяется только DNS-сервер, выданный вашей сетью.</string>
     <string name="net_history">История среднего пинга, мс (последние запусков: %1$d)</string>
     <string name="net_failed">Диагностика не удалась: %1$s</string>
+    <string name="tab_fps">FPS</string>
+    <string name="fps_test_title">Тест кадров (собственный рендер FrameX)</string>
+    <string name="fps_test_note">Рисует анимацию в FrameX и измеряет реальное время между кадрами. Это показывает, насколько плавно телефон рисует FrameX. Это не FPS какой-либо игры.</string>
+    <string name="fps_test_start">Запустить тест на 10 с</string>
+    <string name="fps_test_running">Идёт тест… %1$d с</string>
+    <string name="fps_label_measured">Измерено · тест FrameX</string>
+    <string name="fps_current">Сейчас %1$s FPS</string>
+    <string name="fps_avg">Средний</string>
+    <string name="fps_min">Минимальный (окно 1 с)</string>
+    <string name="fps_low">1%% low</string>
+    <string name="fps_frame_time">Время кадра</string>
+    <string name="fps_frame_time_value">в среднем %1$s мс · худший %2$s мс</string>
+    <string name="fps_stability">Стабильность</string>
+    <string name="fps_need_samples">нужно 100+ кадров</string>
+    <string name="fps_graph">Время кадра, мс</string>
+    <string name="fps_game_title">FPS игр</string>
+    <string name="fps_game_measured">Измерено через SurfaceFlinger, последняя сессия: средний %1$s · мин. %2$s · 1%% low %3$s</string>
+    <string name="fps_game_unavailable">Недоступно</string>
+    <string name="fps_game_need_shizuku">Android не позволяет обычным приложениям читать частоту кадров других приложений. Если подключён Shizuku, FrameX измеряет её автоматически во время игровой сессии, запущенной через автоопределение игр. Без Shizuku числа FPS не будет, и FrameX не станет его оценивать.</string>
+    <string name="fps_game_no_session">Shizuku подключён, но сессий с измеренным FPS пока нет.</string>
+    <string name="fps_game_estimates">Оценочный FPS: источники оценки не используются.</string>
 </resources>

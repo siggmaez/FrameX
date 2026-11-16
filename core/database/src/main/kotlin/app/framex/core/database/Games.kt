@@ -32,6 +32,10 @@ data class GameSessionEntity(
     val startTempC: Float? = null,
     val endTempC: Float? = null,
     val maxTempC: Float? = null,
+    /** Measured through SurfaceFlinger when Shizuku was connected; null means FPS was not measurable. */
+    val avgFps: Float? = null,
+    val minFps: Float? = null,
+    val lowFps: Float? = null,
 )
 
 @Dao

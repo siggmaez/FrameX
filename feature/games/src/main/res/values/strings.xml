@@ -28,4 +28,6 @@
     <string name="g_minutes">%1$d min</string>
     <string name="g_seconds">%1$d s</string>
     <string name="g_session_running">in progress</string>
+    <string name="g_session_fps">FPS measured (SurfaceFlinger): avg %1$s · min %2$s · 1%% low %3$s</string>
+    <string name="g_session_fps_na">FPS unavailable: measuring other apps needs Shizuku</string>
 </resources>

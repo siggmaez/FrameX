@@ -21,7 +21,12 @@ import app.framex.core.database.GameProfileEntity
 import app.framex.core.database.GameSessionEntity
 import app.framex.core.database.GamesRepository
 import app.framex.core.optimization.ApplyRequest
+import app.framex.core.monitoring.FrameCollector
+import app.framex.core.monitoring.FrameStats
+import app.framex.core.monitoring.SurfaceFlingerLatencyParser
+import app.framex.core.monitoring.SurfaceFlingerLayers
 import app.framex.core.optimization.OptimizationEngine
+import app.framex.core.optimization.PrivilegedShell
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
@@ -64,12 +69,16 @@ class GameWatcherService : Service() {
     @Inject lateinit var games: GamesRepository
     @Inject lateinit var engine: OptimizationEngine
     @Inject lateinit var state: WatcherState
+    @Inject lateinit var shell: PrivilegedShell
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val screenOn = MutableStateFlow(true)
     @Volatile private var profiles: Map<String, GameProfileEntity> = emptyMap()
     private var session: GameSessionEntity? = null
     private var appliedByUs = false
+    private var collector = FrameCollector()
+    private var layer: String? = null
+    private var layerAge = 0
 
     private val screenReceiver = object : BroadcastReceiver() {
         override fun onReceive(c: Context, i: Intent) {
@@ -129,6 +138,7 @@ class GameWatcherService : Service() {
             } else if (fg == s.packageName) {
                 missing = 0
                 updateTemp()
+                sampleFrames(s.packageName)
             } else if (fg != null && ++missing >= 3) {
                 endSession()
                 missing = 0
@@ -148,8 +158,22 @@ class GameWatcherService : Service() {
         val t = batteryTemp()
         val base = GameSessionEntity(packageName = p.packageName, label = p.label, startMs = System.currentTimeMillis(),
             appliedProfile = applied, startTempC = t, maxTempC = t)
+        collector = FrameCollector(); layer = null; layerAge = 0
         session = base.copy(id = games.startSession(base))
         notify(getString(R.string.games_notif_playing, p.label))
+    }
+
+    /** Real frame timestamps from SurfaceFlinger; only possible while Shizuku is connected. */
+    private suspend fun sampleFrames(pkg: String) {
+        if (!shell.isAvailable()) return
+        if (layer == null || ++layerAge > 30) {
+            layer = shell.surfaceFlingerLayers()?.let { SurfaceFlingerLayers.pick(it, pkg) }
+            layerAge = 0
+        }
+        val l = layer ?: return
+        val text = shell.surfaceFlingerLatency(l)
+        if (text == null) { layer = null; return }
+        collector.add(SurfaceFlingerLatencyParser.parse(text))
     }
 
     private suspend fun updateTemp() {
@@ -165,7 +189,9 @@ class GameWatcherService : Service() {
         val s = takeSession() ?: return
         if (appliedByUs) { engine.restore(); appliedByUs = false }
         val t = batteryTemp()
-        games.updateSession(s.copy(endMs = System.currentTimeMillis(), endTempC = t, maxTempC = maxOfNullable(s.maxTempC, t)))
+        val fps = FrameStats.from(collector.frameTimesMs)
+        games.updateSession(s.copy(endMs = System.currentTimeMillis(), endTempC = t, maxTempC = maxOfNullable(s.maxTempC, t),
+            avgFps = fps?.avgFps, minFps = fps?.minFps, lowFps = fps?.onePercentLowFps))
         notify(getString(R.string.games_notif_watching))
     }
 

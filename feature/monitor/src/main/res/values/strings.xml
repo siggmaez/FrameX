@@ -52,4 +52,25 @@
     <string name="net_dns_note">Uses unique names so answers are not cached. Only the DNS server your network assigned is tested.</string>
     <string name="net_history">Average ping history, ms (last %1$d runs)</string>
     <string name="net_failed">Diagnostics failed: %1$s</string>
+    <string name="tab_fps">FPS</string>
+    <string name="fps_test_title">Frame test (FrameX\'s own rendering)</string>
+    <string name="fps_test_note">Draws an animation in FrameX and measures the real time between frames. This shows how smoothly this phone renders FrameX. It is not the FPS of any game.</string>
+    <string name="fps_test_start">Start 10 s test</string>
+    <string name="fps_test_running">Testing… %1$d s</string>
+    <string name="fps_label_measured">Measured · FrameX test</string>
+    <string name="fps_current">Current %1$s FPS</string>
+    <string name="fps_avg">Average</string>
+    <string name="fps_min">Minimum (1 s window)</string>
+    <string name="fps_low">1%% low</string>
+    <string name="fps_frame_time">Frame time</string>
+    <string name="fps_frame_time_value">avg %1$s ms · worst %2$s ms</string>
+    <string name="fps_stability">Stability</string>
+    <string name="fps_need_samples">needs 100+ frames</string>
+    <string name="fps_graph">Frame time, ms</string>
+    <string name="fps_game_title">FPS of games</string>
+    <string name="fps_game_measured">Measured through SurfaceFlinger, last session the last session: avg %1$s · min %2$s · 1%% low %3$s</string>
+    <string name="fps_game_unavailable">Unavailable</string>
+    <string name="fps_game_need_shizuku">Android does not let ordinary apps read the frame rate of other apps. With Shizuku connected, FrameX measures it automatically during a game session you started with game detection. Without it there is no FPS number, and FrameX will not estimate one.</string>
+    <string name="fps_game_no_session">Shizuku is connected, but no session with measured FPS has been recorded yet.</string>
+    <string name="fps_game_estimates">Estimated FPS: no estimation source is used.</string>
 </resources>
