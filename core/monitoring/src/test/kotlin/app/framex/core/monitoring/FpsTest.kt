@@ -78,4 +78,13 @@ class FpsTest {
         assertEquals(60f, c.currentFps()!!, 1f)
         assertNull(FrameCollector().currentFps())
     }
+
+    @Test fun liveSamplesBuildFrameTimes() {
+        val c = FrameCollector()
+        (0..60).forEach { c.addSample(1_000_000_000L + it * 16_666_667L) }
+        assertEquals(60, c.frameTimesMs.size)
+        assertEquals(60f, c.currentFps()!!, 1f)
+        c.addSample(1_000_000_000L + 60 * 16_666_667L + 10_000_000_000L) // 10 s pause is not a frame
+        assertEquals(60, c.frameTimesMs.size)
+    }
 }

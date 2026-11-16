@@ -15,6 +15,7 @@ import app.framex.core.optimization.BackgroundAppsProvider
 import app.framex.core.optimization.FindingsReader
 import app.framex.core.optimization.GamePlanner
 import app.framex.core.optimization.LaunchPlan
+import app.framex.core.optimization.PrivilegedShell
 import app.framex.core.optimization.Profiles
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -46,6 +47,8 @@ data class GamesUiState(
     val hasUsageAccess: Boolean = false,
     val play: PlayStep? = null,
     val notice: PlayNotice? = null,
+    /** Set when the UI must show the system screen-capture dialog before starting this game. */
+    val captureFor: GameProfileEntity? = null,
 )
 
 @HiltViewModel
@@ -57,19 +60,22 @@ class GamesViewModel @Inject constructor(
     private val settings: SettingsRepository,
     private val findings: FindingsReader,
     private val apps: BackgroundAppsProvider,
+    private val shell: PrivilegedShell,
+    private val capture: CaptureFpsController,
 ) : ViewModel() {
     private val installed = MutableStateFlow<List<InstalledApp>?>(null)
     private val showAll = MutableStateFlow(false)
     private val usage = MutableStateFlow(watcher.hasUsageAccess())
     private val play = MutableStateFlow<PlayStep?>(null)
     private val notice = MutableStateFlow<PlayNotice?>(null)
+    private val captureFor = MutableStateFlow<GameProfileEntity?>(null)
 
     val state: StateFlow<GamesUiState> = combine(
-        repo.profiles(), installed, showAll, repo.sessions(30), watcher.state.running, usage, play, notice,
+        repo.profiles(), installed, showAll, repo.sessions(30), watcher.state.running, usage, play, notice, captureFor,
     ) { v ->
         @Suppress("UNCHECKED_CAST")
         GamesUiState(v[0] as List<GameProfileEntity>, v[1] as List<InstalledApp>?, v[2] as Boolean,
-            v[3] as List<GameSessionEntity>, v[4] as Boolean, v[5] as Boolean, v[6] as PlayStep?, v[7] as PlayNotice?)
+            v[3] as List<GameSessionEntity>, v[4] as Boolean, v[5] as Boolean, v[6] as PlayStep?, v[7] as PlayNotice?, v[8] as GameProfileEntity?)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GamesUiState())
 
     val autoAnalyze: StateFlow<Boolean> = settings.settings.map { it.autoAnalyzeOnPlay }
@@ -103,6 +109,26 @@ class GamesViewModel @Inject constructor(
                 notice.value = if (launchGame(g.packageName)) PlayNotice.NoUsageAccess else PlayNotice.CannotLaunch
                 return@launch
             }
+            // No Shizuku: the overlay can still show an ESTIMATED FPS if the user accepts screen capture for this session.
+            if (s.fpsOverlayEnabled && android.provider.Settings.canDrawOverlays(context) && !shell.isAvailable() && !capture.running.value) {
+                captureFor.value = g
+                return@launch
+            }
+            continuePlay(g)
+        }
+    }
+
+    /** Result of the system screen-capture dialog (the UI launched it because [GamesUiState.captureFor] was set). */
+    fun onCaptureResult(resultCode: Int, data: Intent?) {
+        val g = captureFor.value ?: return
+        captureFor.value = null
+        if (resultCode == android.app.Activity.RESULT_OK && data != null) capture.start(resultCode, data)
+        viewModelScope.launch { continuePlay(g) } // declined: play anyway, FPS stays n/a
+    }
+
+    private suspend fun continuePlay(g: GameProfileEntity) {
+        run {
+            val s = settings.settings.first()
             val plan = if (s.autoAnalyzeOnPlay) GamePlanner.plan(findings.read()) else LaunchPlan(profileOf(g), emptyList())
             if (plan.advisories.any { it.important }) play.value = PlayStep.Advice(g, plan)
             else proceed(g, plan.profile, s.customActions)

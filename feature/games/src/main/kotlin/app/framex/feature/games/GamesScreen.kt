@@ -52,6 +52,14 @@ fun GamesScreen(contentPadding: PaddingValues, vm: GamesViewModel = hiltViewMode
     val ui by vm.state.collectAsStateWithLifecycle()
     val autoAnalyze by vm.autoAnalyze.collectAsStateWithLifecycle()
     PlayDialogs(ui, vm)
+    val appCtx = LocalContext.current
+    val captureLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { r -> vm.onCaptureResult(r.resultCode, r.data) }
+    androidx.compose.runtime.LaunchedEffect(ui.captureFor) {
+        if (ui.captureFor != null) {
+            val mpm = appCtx.getSystemService(android.content.Context.MEDIA_PROJECTION_SERVICE) as android.media.projection.MediaProjectionManager
+            captureLauncher.launch(mpm.createScreenCaptureIntent())
+        }
+    }
     val ctx = LocalContext.current
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.refreshAccess() }
     val notifPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { vm.setWatching(true) }
@@ -156,7 +164,7 @@ fun SessionCard(s: GameSessionEntity) {
         if (s.endMs != null || s.avgFps != null) {
             val fpsAvg = s.avgFps
             if (fpsAvg != null) {
-                Note(stringResource(R.string.g_session_fps, String.format(Locale.US, "%.0f", fpsAvg), s.minFps?.let { String.format(Locale.US, "%.0f", it) } ?: "—", s.lowFps?.let { String.format(Locale.US, "%.0f", it) } ?: "—"))
+                Note(stringResource(if (s.fpsSource == "ScreenCapture") R.string.g_session_fps_est else R.string.g_session_fps, String.format(Locale.US, "%.0f", fpsAvg), s.minFps?.let { String.format(Locale.US, "%.0f", it) } ?: "—", s.lowFps?.let { String.format(Locale.US, "%.0f", it) } ?: "—"))
             } else Note(stringResource(R.string.g_session_fps_na))
         }
         if (s.startTempC != null || s.maxTempC != null) {

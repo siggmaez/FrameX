@@ -55,4 +55,8 @@
     <string name="g_stop_text">Профиль «%1$s» может остановить фоновые приложения перед игрой. Отметьте те, что нужно остановить. Они могут запуститься снова, а несохранённые данные в них могут пропасть. Системные приложения не показываются.</string>
     <string name="g_stop_none">Подходящих приложений не найдено.</string>
     <string name="g_stop_remember">Запомнить выбор для этой игры</string>
+    <string name="overlay_fps_est">FPS ~%1$d (оценка)</string>
+    <string name="g_session_fps_est">FPS ОЦЕНЁН по захвату экрана (примерно ±2): средний %1$s · мин. %2$s · 1%% low %3$s</string>
+    <string name="capture_channel">Захват экрана для оценки FPS</string>
+    <string name="capture_notif">Оцениваю FPS по обновлениям экрана</string>
 </resources>

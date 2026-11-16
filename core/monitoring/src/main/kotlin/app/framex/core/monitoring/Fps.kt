@@ -109,6 +109,15 @@ class FrameCollector {
         }
     }
 
+    /** One live frame timestamp (ns, monotonic), e.g. from a screen-capture callback. */
+    fun addSample(tsNs: Long) {
+        if (lastTs > 0) {
+            val ms = (tsNs - lastTs) / 1_000_000f
+            if (ms > 0f && ms < MAX_GAP_MS) times += ms
+        }
+        lastTs = tsNs
+    }
+
     /** FPS over the most recent second of recorded frames, or null if there is less than a second of data. */
     fun currentFps(): Float? {
         var acc = 0f

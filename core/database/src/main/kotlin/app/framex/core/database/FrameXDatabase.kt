@@ -13,7 +13,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
-@Database(entities = [MetricSampleEntity::class, OptimizationLogEntity::class, GameProfileEntity::class, GameSessionEntity::class, BenchmarkResultEntity::class], version = 6, exportSchema = false)
+@Database(entities = [MetricSampleEntity::class, OptimizationLogEntity::class, GameProfileEntity::class, GameSessionEntity::class, BenchmarkResultEntity::class], version = 7, exportSchema = false)
 abstract class FrameXDatabase : RoomDatabase() {
     abstract fun metricSampleDao(): MetricSampleDao
     abstract fun optimizationLogDao(): OptimizationLogDao
@@ -27,7 +27,7 @@ object DatabaseModule {
     @Provides @Singleton
     fun database(@ApplicationContext context: Context): FrameXDatabase =
         Room.databaseBuilder(context, FrameXDatabase::class.java, "framex.db")
-            .addMigrations(MIGRATION_5_6)
+            .addMigrations(MIGRATION_5_6, MIGRATION_6_7)
             .fallbackToDestructiveMigration() // development only: older schemas are disposable
             .build()
 
@@ -47,5 +47,11 @@ object DatabaseModule {
 val MIGRATION_5_6 = object : Migration(5, 6) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("ALTER TABLE game_profiles ADD COLUMN stopPackages TEXT NOT NULL DEFAULT ''")
+    }
+}
+
+val MIGRATION_6_7 = object : Migration(6, 7) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE game_sessions ADD COLUMN fpsSource TEXT")
     }
 }

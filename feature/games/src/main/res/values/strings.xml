@@ -55,4 +55,8 @@
     <string name="g_stop_text">Profile %1$s can stop background apps before the game. Tick the ones to stop. They may restart later and unsaved data in them can be lost. System apps are never listed.</string>
     <string name="g_stop_none">No eligible apps found.</string>
     <string name="g_stop_remember">Remember my choice for this game</string>
+    <string name="overlay_fps_est">FPS ~%1$d (est.)</string>
+    <string name="g_session_fps_est">FPS ESTIMATED from screen capture (about ±2): avg %1$s · min %2$s · 1%% low %3$s</string>
+    <string name="capture_channel">Screen capture for FPS estimate</string>
+    <string name="capture_notif">Estimating FPS from screen updates</string>
 </resources>

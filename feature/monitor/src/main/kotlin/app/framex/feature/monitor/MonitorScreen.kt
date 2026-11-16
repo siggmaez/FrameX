@@ -275,7 +275,7 @@ private fun FpsTab(vm: MonitorViewModel, pad: PaddingValues) {
                 val ls = last
                 if (ls?.avgFps != null) {
                     val f = { v: Float? -> v?.let { "%.0f".format(Locale.US, it) } ?: "—" }
-                    Text(stringResource(R.string.fps_game_measured, f(ls.avgFps), f(ls.minFps), f(ls.lowFps)), style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(if (ls.fpsSource == "ScreenCapture") R.string.fps_game_estimated else R.string.fps_game_measured, f(ls.avgFps), f(ls.minFps), f(ls.lowFps)), style = MaterialTheme.typography.bodyMedium)
                 } else {
                     Text(stringResource(R.string.fps_game_unavailable), style = MaterialTheme.typography.titleLarge)
                     Text(stringResource(if (vm.shizukuAvailable) R.string.fps_game_no_session else R.string.fps_game_need_shizuku), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

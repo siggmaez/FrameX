@@ -38,6 +38,8 @@ data class GameSessionEntity(
     val avgFps: Float? = null,
     val minFps: Float? = null,
     val lowFps: Float? = null,
+    /** "SurfaceFlinger" = measured; "ScreenCapture" = estimated from screen-capture frame updates. */
+    val fpsSource: String? = null,
 )
 
 @Dao

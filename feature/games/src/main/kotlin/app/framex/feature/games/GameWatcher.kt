@@ -86,6 +86,7 @@ class GameWatcherService : Service() {
     @Inject lateinit var state: WatcherState
     @Inject lateinit var shell: PrivilegedShell
     @Inject lateinit var settings: SettingsRepository
+    @Inject lateinit var capture: CaptureFpsController
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val screenOn = MutableStateFlow(true)
@@ -160,6 +161,8 @@ class GameWatcherService : Service() {
             }
             lastQuery = now
             state.purge()
+            // capture was started for a launch that never happened: do not keep recording the screen
+            if (session == null && capture.running.value && now - capture.startedAtMs > 90_000) capture.stop()
             val s = session
             val fg = foreground
             if (s == null) {
@@ -175,7 +178,7 @@ class GameWatcherService : Service() {
                 missing = 0
             }
             // 1 s while measuring frames (SurfaceFlinger keeps ~127 frames, so a slower poll would miss some at high FPS)
-            delay(if (session != null && shell.isAvailable()) 1000 else 2000)
+            delay(if (session != null && (shell.isAvailable() || capture.running.value)) 1000 else 2000)
         }
     }
 
@@ -194,6 +197,7 @@ class GameWatcherService : Service() {
         val base = GameSessionEntity(packageName = p.packageName, label = p.label, startMs = System.currentTimeMillis(),
             appliedProfile = applied, startTempC = t, maxTempC = t)
         collector = FrameCollector(); layer = null; layerAge = 0; lastFrameCount = 0; staleTicks = 0
+        capture.reset() // frames from before the game opened (FrameX, launcher) must not count
         session = base.copy(id = games.startSession(base))
         notify(getString(R.string.games_notif_playing, p.label))
         if (canOverlay()) { overlay.show(); refreshOverlay() }
@@ -212,15 +216,36 @@ class GameWatcherService : Service() {
         collector.add(SurfaceFlingerLatencyParser.parse(text))
     }
 
+    /** Measured through SurfaceFlinger if Shizuku is connected, else estimated from screen capture, else none. */
+    private enum class Source { Measured, Estimated, None }
+
+    private fun source(): Source = when {
+        shell.isAvailable() -> Source.Measured
+        capture.running.value -> Source.Estimated
+        else -> Source.None
+    }
+
+    private fun activeTimes(src: Source): List<Float> = when (src) {
+        Source.Measured -> collector.frameTimesMs
+        Source.Estimated -> capture.frameTimes()
+        Source.None -> emptyList()
+    }
+
     private fun refreshOverlay() {
         if (!canOverlay()) return
         val temp = batteryTemp()?.let { String.format(java.util.Locale.US, "%.1f °C", it) } ?: "—"
-        val fpsText = if (!shell.isAvailable()) getString(R.string.overlay_fps_na) else {
-            val count = collector.frameTimesMs.size
+        val src = source()
+        val fpsText = if (src == Source.None) getString(R.string.overlay_fps_na) else {
+            val count = activeTimes(src).size
             staleTicks = if (count == lastFrameCount) staleTicks + 1 else 0
             lastFrameCount = count
-            val fps = if (staleTicks >= 3) null else collector.currentFps() // no new frames for 3 s: do not show an old number
-            fps?.let { getString(R.string.overlay_fps, it.toInt()) } ?: getString(R.string.overlay_fps_wait)
+            // no new frames for 3 s: do not show an old number
+            val fps = if (staleTicks >= 3) null else if (src == Source.Measured) collector.currentFps() else capture.currentFps()
+            when {
+                fps == null -> getString(R.string.overlay_fps_wait)
+                src == Source.Estimated -> getString(R.string.overlay_fps_est, fps.toInt())
+                else -> getString(R.string.overlay_fps, fps.toInt())
+            }
         }
         overlay.update("$fpsText\n$temp")
     }
@@ -239,9 +264,12 @@ class GameWatcherService : Service() {
         overlay.hide()
         if (appliedByUs) { engine.restore(); appliedByUs = false }
         val t = batteryTemp()
-        val fps = FrameStats.from(collector.frameTimesMs)
+        val src = source()
+        val fps = FrameStats.from(activeTimes(src))
+        if (capture.running.value) capture.stop() // one consent = one session
         games.updateSession(s.copy(endMs = System.currentTimeMillis(), endTempC = t, maxTempC = maxOfNullable(s.maxTempC, t),
-            avgFps = fps?.avgFps, minFps = fps?.minFps, lowFps = fps?.onePercentLowFps))
+            avgFps = fps?.avgFps, minFps = fps?.minFps, lowFps = fps?.onePercentLowFps,
+            fpsSource = if (fps == null) null else if (src == Source.Measured) "SurfaceFlinger" else "ScreenCapture"))
         notify(getString(R.string.games_notif_watching))
     }
 
