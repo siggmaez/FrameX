@@ -21,6 +21,7 @@ include(
     ":core:database",
     ":core:optimization",
     ":feature:optimize",
+    ":feature:games",
     ":core:monitoring",
     ":feature:home",
     ":feature:monitor",

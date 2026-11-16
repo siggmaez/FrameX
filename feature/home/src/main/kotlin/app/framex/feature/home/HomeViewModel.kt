@@ -18,6 +18,7 @@ data class HomeUiState(
     val snapshot: SystemSnapshot? = null,
     val profile: OptimizationProfile = OptimizationProfile.Balanced,
     val active: app.framex.core.datastore.EngineSnapshot? = null,
+    val lastSession: app.framex.core.database.GameSessionEntity? = null,
 )
 
 @HiltViewModel
@@ -25,12 +26,14 @@ class HomeViewModel @Inject constructor(
     settings: SettingsRepository,
     source: SystemMetricsSource,
     store: app.framex.core.datastore.EngineStateStore,
+    games: app.framex.core.database.GamesRepository,
 ) : ViewModel() {
     /** Upstream polling runs only while the screen is collected (WhileSubscribed). */
     val state: StateFlow<HomeUiState> = combine(
         source.snapshots(settings.settings.map { it.monitoringIntervalMs }),
         settings.settings,
         store.snapshot,
-    ) { snap, s, active -> HomeUiState(snap, s.selectedProfile, active) }
+        games.sessions(1),
+    ) { snap, s, active, sessions -> HomeUiState(snap, s.selectedProfile, active, sessions.firstOrNull()) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 }

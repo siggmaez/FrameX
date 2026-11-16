@@ -33,6 +33,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import app.framex.feature.home.HomeScreen
+import app.framex.feature.games.GamesScreen
 import app.framex.feature.monitor.MonitorScreen
 import app.framex.feature.optimize.OptimizeScreen
 import app.framex.feature.settings.SettingsScreen
@@ -73,7 +74,7 @@ fun FrameXApp() {
         NavHost(nav, startDestination = Destination.Home.route) {
             composable(Destination.Home.route) { HomeScreen(padding) }
             composable(Destination.Optimize.route) { OptimizeScreen(padding) }
-            composable(Destination.Games.route) { NotBuiltYet(stringResource(R.string.nav_games), padding) }
+            composable(Destination.Games.route) { GamesScreen(padding) }
             composable(Destination.Monitor.route) { MonitorScreen(padding) }
             composable(Destination.Settings.route) { SettingsScreen(padding) }
         }

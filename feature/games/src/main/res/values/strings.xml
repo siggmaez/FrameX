@@ -1,0 +1,31 @@
+<resources>
+    <string name="games_channel">Game detection</string>
+    <string name="games_notif_watching">Watching for your games</string>
+    <string name="games_notif_playing">Game session: %1$s</string>
+    <string name="g_detect_title">Automatic game detection</string>
+    <string name="g_detect_note">Runs a visible notification service that you start yourself. It checks which app is in front every 2 seconds while the screen is on, and does nothing while it is off. It does not start by itself after a reboot and draws nothing over other apps.</string>
+    <string name="g_detect_switch">Detect my games</string>
+    <string name="g_need_usage">Needs \"Usage access\" so FrameX can see which app is in front.</string>
+    <string name="g_grant_usage">Open Usage access</string>
+    <string name="g_auto_note">When a selected game opens, its profile is applied; when you leave it, the previous settings are restored. Apps are never stopped automatically.</string>
+    <string name="g_my_games">My games</string>
+    <string name="g_none">No games selected yet. Add some below.</string>
+    <string name="g_profile">Profile</string>
+    <string name="g_auto_apply">Apply automatically</string>
+    <string name="g_remove">Remove</string>
+    <string name="g_installed">Installed games</string>
+    <string name="g_show_all">Show all apps</string>
+    <string name="g_add">Add</string>
+    <string name="g_loading">Loading apps…</string>
+    <string name="g_no_found">No games detected. Turn on \"Show all apps\" to pick any app.</string>
+    <string name="g_sessions">Session history</string>
+    <string name="g_sessions_empty">No sessions recorded</string>
+    <string name="g_session_line">%1$s · %2$s</string>
+    <string name="g_session_detail">Duration %1$s · profile %2$s</string>
+    <string name="g_session_temp">Battery %1$s → max %2$s °C</string>
+    <string name="g_no_profile_applied">none applied</string>
+    <string name="g_clear">Clear history</string>
+    <string name="g_minutes">%1$d min</string>
+    <string name="g_seconds">%1$d s</string>
+    <string name="g_session_running">in progress</string>
+</resources>

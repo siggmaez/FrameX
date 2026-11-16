@@ -1,0 +1,31 @@
+<resources>
+    <string name="games_channel">Определение игр</string>
+    <string name="games_notif_watching">Слежу за вашими играми</string>
+    <string name="games_notif_playing">Игровая сессия: %1$s</string>
+    <string name="g_detect_title">Автоопределение игр</string>
+    <string name="g_detect_note">Работает как служба с видимым уведомлением, которую вы запускаете сами. Пока экран включён, каждые 2 секунды проверяет, какое приложение на переднем плане; при выключенном экране ничего не делает. После перезагрузки сама не запускается и ничего не рисует поверх других приложений.</string>
+    <string name="g_detect_switch">Определять мои игры</string>
+    <string name="g_need_usage">Нужен «Доступ к статистике использования», чтобы FrameX видел, какое приложение на переднем плане.</string>
+    <string name="g_grant_usage">Открыть настройки доступа</string>
+    <string name="g_auto_note">Когда открывается выбранная игра, применяется её профиль, а когда вы выходите из неё, прежние настройки возвращаются. Приложения автоматически не останавливаются.</string>
+    <string name="g_my_games">Мои игры</string>
+    <string name="g_none">Игры ещё не выбраны. Добавьте их ниже.</string>
+    <string name="g_profile">Профиль</string>
+    <string name="g_auto_apply">Применять автоматически</string>
+    <string name="g_remove">Убрать</string>
+    <string name="g_installed">Установленные игры</string>
+    <string name="g_show_all">Показать все приложения</string>
+    <string name="g_add">Добавить</string>
+    <string name="g_loading">Загрузка приложений…</string>
+    <string name="g_no_found">Игры не найдены. Включите «Показать все приложения», чтобы выбрать любое.</string>
+    <string name="g_sessions">История сессий</string>
+    <string name="g_sessions_empty">Сессий пока нет</string>
+    <string name="g_session_line">%1$s · %2$s</string>
+    <string name="g_session_detail">Длительность %1$s · профиль: %2$s</string>
+    <string name="g_session_temp">Батарея %1$s → макс. %2$s °C</string>
+    <string name="g_no_profile_applied">не применялся</string>
+    <string name="g_clear">Очистить историю</string>
+    <string name="g_minutes">%1$d мин</string>
+    <string name="g_seconds">%1$d с</string>
+    <string name="g_session_running">идёт</string>
+</resources>

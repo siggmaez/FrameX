@@ -32,6 +32,7 @@ fun HomeScreen(contentPadding: PaddingValues, vm: HomeViewModel = hiltViewModel(
         ),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        item { QuickBoostCard() }
         item {
             FrameXCard {
                 Label(stringResource(R.string.home_device))
@@ -96,7 +97,9 @@ fun HomeScreen(contentPadding: PaddingValues, vm: HomeViewModel = hiltViewModel(
         item {
             FrameXCard {
                 Label(stringResource(R.string.home_recent))
-                Text(stringResource(R.string.home_no_sessions), style = MaterialTheme.typography.titleMedium)
+                val ls = ui.lastSession
+                if (ls == null) Text(stringResource(R.string.home_no_sessions), style = MaterialTheme.typography.titleMedium)
+                else app.framex.feature.games.SessionCard(ls)
             }
         }
     }
