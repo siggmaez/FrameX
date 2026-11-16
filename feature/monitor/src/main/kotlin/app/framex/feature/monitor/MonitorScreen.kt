@@ -35,7 +35,7 @@ import app.framex.core.monitoring.ThermalLevel
 import java.util.Locale
 import kotlin.math.roundToInt
 
-private val TAB_LABELS = listOf(R.string.tab_memory, R.string.tab_cpu, R.string.tab_thermal, R.string.tab_network, R.string.tab_fps)
+private val TAB_LABELS = listOf(R.string.tab_memory, R.string.tab_cpu, R.string.tab_thermal, R.string.tab_network, R.string.tab_fps, R.string.tab_bench)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,7 +51,8 @@ fun MonitorScreen(contentPadding: PaddingValues, vm: MonitorViewModel = hiltView
             1 -> CpuTab(vm, pad)
             2 -> ThermalTab(vm, pad)
             3 -> NetworkTab(vm, pad)
-            else -> FpsTab(vm, pad)
+            4 -> FpsTab(vm, pad)
+            else -> app.framex.feature.benchmark.BenchmarkTab(pad)
         }
     }
 }

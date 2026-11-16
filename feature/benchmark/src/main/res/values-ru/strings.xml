@@ -1,0 +1,29 @@
+<resources>
+    <string name="b_banner">Синтетические тесты с фиксированной нагрузкой. Они сравнивают это устройство с самим собой (до и после изменений). Баллы не равны FPS в играх и не предсказывают его.</string>
+    <string name="b_cpu">CPU</string>
+    <string name="b_ram">Память</string>
+    <string name="b_storage">Накопитель</string>
+    <string name="b_graphics">Графика</string>
+    <string name="b_cpu_note">Целочисленные и вещественные вычисления и решето простых чисел на одном ядре и на всех ядрах. 1000 баллов = фиксированная однопоточная нагрузка выполнена за одну секунду. Медиана трёх запусков.</string>
+    <string name="b_ram_note">Скорость копирования, чтения и записи на буферах по 32 МБ (МБ/с). Оценка равна скорости копирования. Медиана трёх запусков.</string>
+    <string name="b_storage_note">Записывает и читает файл 64 МБ в собственной папке FrameX (запись включает сброс на диск). Чтение часто идёт из кэша, поэтому может завышать реальную скорость. После теста файл удаляется.</string>
+    <string name="b_graphics_note">Рисует 1500 анимированных фигур 8 секунд и измеряет реальное время кадров в FrameX. Результат ограничен частотой обновления экрана и описывает только рендер FrameX.</string>
+    <string name="b_run">Запустить</string>
+    <string name="b_running">Выполняется…</string>
+    <string name="b_hot">Устройство горячее (%1$s °C). Сначала дайте ему остыть: результаты в жару ненадёжны, а нагрузка усугубит нагрев.</string>
+    <string name="b_failed">Тест не удался: %1$s</string>
+    <string name="b_history">Результаты</string>
+    <string name="b_empty">Результатов пока нет</string>
+    <string name="b_select_hint">Отметьте два результата одного теста, чтобы сравнить «до» и «после».</string>
+    <string name="b_compare">До / после</string>
+    <string name="b_before">До: %1$s</string>
+    <string name="b_after">После: %1$s</string>
+    <string name="b_change">Изменение: %1$s%%</string>
+    <string name="b_diff_device">Результаты получены на разных устройствах, сравнение не имеет смысла.</string>
+    <string name="b_diff_type">Выберите два результата одного теста.</string>
+    <string name="b_clear">Очистить результаты</string>
+    <string name="b_profile">профиль: %1$s</string>
+    <string name="b_no_profile">без профиля</string>
+    <string name="b_temp_start">температура в начале %1$s °C</string>
+    <string name="b_score">%1$s %2$s</string>
+</resources>

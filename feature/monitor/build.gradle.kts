@@ -29,6 +29,7 @@ dependencies {
     implementation(project(":core:database"))
     implementation(project(":core:monitoring"))
     implementation(project(":core:optimization"))
+    implementation(project(":feature:benchmark"))
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.hilt.navigation.compose)

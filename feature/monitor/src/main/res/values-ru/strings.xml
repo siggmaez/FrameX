@@ -53,6 +53,7 @@
     <string name="net_history">История среднего пинга, мс (последние запусков: %1$d)</string>
     <string name="net_failed">Диагностика не удалась: %1$s</string>
     <string name="tab_fps">FPS</string>
+    <string name="tab_bench">Бенчмарки</string>
     <string name="fps_test_title">Тест кадров (собственный рендер FrameX)</string>
     <string name="fps_test_note">Рисует анимацию в FrameX и измеряет реальное время между кадрами. Это показывает, насколько плавно телефон рисует FrameX. Это не FPS какой-либо игры.</string>
     <string name="fps_test_start">Запустить тест на 10 с</string>

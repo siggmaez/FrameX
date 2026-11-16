@@ -11,11 +11,12 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
-@Database(entities = [MetricSampleEntity::class, OptimizationLogEntity::class, GameProfileEntity::class, GameSessionEntity::class], version = 4, exportSchema = false)
+@Database(entities = [MetricSampleEntity::class, OptimizationLogEntity::class, GameProfileEntity::class, GameSessionEntity::class, BenchmarkResultEntity::class], version = 5, exportSchema = false)
 abstract class FrameXDatabase : RoomDatabase() {
     abstract fun metricSampleDao(): MetricSampleDao
     abstract fun optimizationLogDao(): OptimizationLogDao
     abstract fun gameDao(): GameDao
+    abstract fun benchmarkDao(): BenchmarkDao
 }
 
 @Module
@@ -35,4 +36,7 @@ object DatabaseModule {
 
     @Provides
     fun gameDao(db: FrameXDatabase): GameDao = db.gameDao()
+
+    @Provides
+    fun benchmarkDao(db: FrameXDatabase): BenchmarkDao = db.benchmarkDao()
 }

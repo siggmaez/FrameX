@@ -53,6 +53,7 @@
     <string name="net_history">Average ping history, ms (last %1$d runs)</string>
     <string name="net_failed">Diagnostics failed: %1$s</string>
     <string name="tab_fps">FPS</string>
+    <string name="tab_bench">Benchmarks</string>
     <string name="fps_test_title">Frame test (FrameX\'s own rendering)</string>
     <string name="fps_test_note">Draws an animation in FrameX and measures the real time between frames. This shows how smoothly this phone renders FrameX. It is not the FPS of any game.</string>
     <string name="fps_test_start">Start 10 s test</string>

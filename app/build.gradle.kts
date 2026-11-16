@@ -37,6 +37,7 @@ dependencies {
     implementation(project(":core:optimization"))
     implementation(project(":feature:optimize"))
     implementation(project(":feature:games"))
+    implementation(project(":feature:benchmark"))
     implementation(project(":feature:home"))
     implementation(project(":feature:monitor"))
     implementation(project(":feature:settings"))

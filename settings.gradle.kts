@@ -22,6 +22,8 @@ include(
     ":core:optimization",
     ":feature:optimize",
     ":feature:games",
+    ":core:benchmark",
+    ":feature:benchmark",
     ":core:monitoring",
     ":feature:home",
     ":feature:monitor",

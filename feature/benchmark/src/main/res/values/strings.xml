@@ -1,0 +1,29 @@
+<resources>
+    <string name="b_banner">Synthetic tests on fixed workloads. They compare this device with itself (before/after a change). A score is not game FPS and does not predict it.</string>
+    <string name="b_cpu">CPU</string>
+    <string name="b_ram">Memory</string>
+    <string name="b_storage">Storage</string>
+    <string name="b_graphics">Graphics</string>
+    <string name="b_cpu_note">Integer, floating-point and prime-sieve work on one core and on all cores. 1000 points = the fixed single-core workload done in one second. Median of 3 runs.</string>
+    <string name="b_ram_note">Copy, read and write bandwidth on 32 MB buffers (MB/s). The score is the copy speed. Median of 3 runs.</string>
+    <string name="b_storage_note">Writes and reads a 64 MB file in FrameX\'s own folder (write includes flushing to disk). The read is often served from cache, so it can overstate real read speed. The file is deleted afterwards.</string>
+    <string name="b_graphics_note">Draws 1500 animated shapes for 8 seconds and measures real frame times in FrameX. It is capped by your display refresh rate and measures FrameX rendering only.</string>
+    <string name="b_run">Run</string>
+    <string name="b_running">Running…</string>
+    <string name="b_hot">The device is hot (%1$s °C). Cool it down first; hot results are unreliable and heavy load makes it worse.</string>
+    <string name="b_failed">Test failed: %1$s</string>
+    <string name="b_history">Results</string>
+    <string name="b_empty">No results yet</string>
+    <string name="b_select_hint">Tick two results of the same test to compare before and after.</string>
+    <string name="b_compare">Before / after</string>
+    <string name="b_before">Before: %1$s</string>
+    <string name="b_after">After: %1$s</string>
+    <string name="b_change">Change: %1$s%%</string>
+    <string name="b_diff_device">These results come from different devices, so the comparison is not meaningful.</string>
+    <string name="b_diff_type">Pick two results of the same test.</string>
+    <string name="b_clear">Clear results</string>
+    <string name="b_profile">profile: %1$s</string>
+    <string name="b_no_profile">no profile</string>
+    <string name="b_temp_start">start temp %1$s °C</string>
+    <string name="b_score">%1$s %2$s</string>
+</resources>
