@@ -15,3 +15,23 @@ enum class OptAction { DoNotDisturb, StopBackgroundApps, LowLatencyWifi, ReduceB
 
 /** Everything FrameX can know about Shizuku. Only Ready allows privileged operations. */
 enum class ShizukuState { NotInstalled, NotRunning, Outdated, NeedsPermission, PermissionDenied, Ready }
+
+enum class ConnectionKind { Wifi, Mobile }
+
+/**
+ * Where FrameX may use the network. Only the diagnostics you start yourself ever use it.
+ * Local = FrameX makes no network connection at all.
+ */
+enum class NetworkMode {
+    Local, WifiOnly, MobileOnly, WifiAndMobile;
+
+    val allowed: List<ConnectionKind>
+        get() = when (this) {
+            Local -> emptyList()
+            WifiOnly -> listOf(ConnectionKind.Wifi)
+            MobileOnly -> listOf(ConnectionKind.Mobile)
+            WifiAndMobile -> listOf(ConnectionKind.Wifi, ConnectionKind.Mobile)
+        }
+
+    fun allows(kind: ConnectionKind) = kind in allowed
+}

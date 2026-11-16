@@ -30,6 +30,10 @@ import app.framex.core.designsystem.LineChart
 import app.framex.core.designsystem.MetricCard
 import app.framex.core.monitoring.Advisor
 import app.framex.core.monitoring.BatteryTempState
+import app.framex.core.common.ConnectionKind
+import app.framex.core.common.NetworkMode
+import app.framex.core.monitoring.NetResult
+import app.framex.core.monitoring.NetStatus
 import app.framex.core.monitoring.PingTarget
 import app.framex.core.monitoring.ThermalLevel
 import java.util.Locale
@@ -175,53 +179,6 @@ private fun levelRes(l: ThermalLevel) = when (l) {
     ThermalLevel.Shutdown -> R.string.th_level_shutdown
 }
 
-@Composable
-private fun NetworkTab(vm: MonitorViewModel, pad: PaddingValues) {
-    val n by vm.net.collectAsStateWithLifecycle()
-    val hist by vm.pingHistory.collectAsStateWithLifecycle()
-    LazyColumn(contentPadding = pad, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        item {
-            FrameXCard {
-                Text(stringResource(R.string.net_title), style = MaterialTheme.typography.titleMedium)
-                Text(stringResource(R.string.net_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    PingTarget.entries.forEach { t ->
-                        FilterChip(selected = n.target == t, onClick = { vm.setTarget(t) }, label = { Text(t.label) }, enabled = !n.running)
-                    }
-                }
-                Button(onClick = vm::runDiagnostics, enabled = !n.running) {
-                    Text(stringResource(if (n.running) R.string.net_running else R.string.net_run))
-                }
-            }
-        }
-        n.error?.let { e -> item { Warning(stringResource(R.string.net_failed, e)) } }
-        n.connection?.let { c -> item { MetricCard(stringResource(R.string.net_connection), c, valueText = { it }) } }
-        n.ping?.let { p ->
-            item {
-                val na = stringResource(R.string.na_short)
-                FrameXCard {
-                    Text(stringResource(R.string.net_ping_title, p.sent), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    if (p.avgMs == null) Text(stringResource(R.string.net_no_replies), style = MaterialTheme.typography.titleLarge)
-                    else {
-                        Text(stringResource(R.string.net_avg, p.avgMs!!.roundToInt()), style = MaterialTheme.typography.headlineMedium)
-                        Text(stringResource(R.string.net_ping_detail, p.minMs!!.roundToInt(), p.maxMs!!.roundToInt(),
-                            p.jitterMs?.let { "${it.roundToInt()}" } ?: na, p.lossPercent.roundToInt()), style = MaterialTheme.typography.bodyMedium)
-                    }
-                }
-            }
-        }
-        n.dns?.let { r ->
-            item {
-                FrameXCard {
-                    Text(stringResource(R.string.net_dns_title), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(r.avgMs?.let { stringResource(R.string.net_avg, it.roundToInt()) } ?: stringResource(R.string.net_dns_failed), style = MaterialTheme.typography.headlineMedium)
-                    Text(stringResource(R.string.net_dns_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-        }
-        item { HistoryCard(stringResource(R.string.net_history, hist.size), hist, null, null) }
-    }
-}
 
 @Composable
 private fun HistoryCard(title: String, values: List<Float>, min: Float?, max: Float?) {
@@ -291,5 +248,81 @@ private fun Stat(label: String, value: String) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(value, style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+@Composable
+private fun NetworkTab(vm: MonitorViewModel, pad: PaddingValues) {
+    val n by vm.net.collectAsStateWithLifecycle()
+    val mode by vm.networkMode.collectAsStateWithLifecycle()
+    val wifiHist by vm.pingHistory.collectAsStateWithLifecycle()
+    val mobileHist by vm.pingMobileHistory.collectAsStateWithLifecycle()
+    LazyColumn(contentPadding = pad, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        if (mode == NetworkMode.Local) {
+            item {
+                FrameXCard {
+                    Text(stringResource(R.string.net_local_title), style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.net_local_text), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        } else {
+            item {
+                FrameXCard {
+                    Text(stringResource(R.string.net_title), style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.net_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.net_data_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.net_connections), style = MaterialTheme.typography.labelLarge)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        mode.allowed.forEach { k ->
+                            FilterChip(selected = k in n.selected || mode.allowed.size == 1, onClick = { vm.toggleKind(k) },
+                                label = { Text(stringResource(if (k == ConnectionKind.Wifi) R.string.net_kind_wifi else R.string.net_kind_mobile)) }, enabled = !n.running && mode.allowed.size > 1)
+                        }
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        PingTarget.entries.forEach { t ->
+                            FilterChip(selected = n.target == t, onClick = { vm.setTarget(t) }, label = { Text(t.label) }, enabled = !n.running)
+                        }
+                    }
+                    Button(onClick = vm::runDiagnostics, enabled = !n.running) {
+                        Text(stringResource(if (n.running) R.string.net_running else R.string.net_run))
+                    }
+                }
+            }
+        }
+        n.results.forEach { (kind, r) ->
+            item(key = "res_$kind") { NetResultCard(kind, r) }
+        }
+        if (wifiHist.isNotEmpty()) item { HistoryCard(stringResource(R.string.net_history_wifi, wifiHist.size), wifiHist, null, null) }
+        if (mobileHist.isNotEmpty()) item { HistoryCard(stringResource(R.string.net_history_mobile, mobileHist.size), mobileHist, null, null) }
+    }
+}
+
+@Composable
+private fun NetResultCard(kind: ConnectionKind, r: NetResult) {
+    val na = stringResource(R.string.na_short)
+    val title = stringResource(if (kind == ConnectionKind.Wifi) R.string.net_kind_wifi else R.string.net_kind_mobile)
+    FrameXCard {
+        Text(title, style = MaterialTheme.typography.titleMedium)
+        when (r.status) {
+            NetStatus.Blocked -> Text(stringResource(R.string.net_blocked), color = MaterialTheme.colorScheme.error)
+            NetStatus.NoNetwork -> Text(stringResource(if (kind == ConnectionKind.Wifi) R.string.net_no_wifi else R.string.net_no_mobile), color = MaterialTheme.colorScheme.error)
+            NetStatus.Failed -> Text(stringResource(R.string.net_failed, r.message ?: ""), color = MaterialTheme.colorScheme.error)
+            NetStatus.Ok -> {
+                r.connection?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                r.ping?.let { p ->
+                    Text(stringResource(R.string.net_ping_title, p.sent), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (p.avgMs == null) Text(stringResource(R.string.net_no_replies), style = MaterialTheme.typography.titleLarge)
+                    else {
+                        Text(stringResource(R.string.net_avg, p.avgMs!!.roundToInt()), style = MaterialTheme.typography.headlineMedium)
+                        Text(stringResource(R.string.net_ping_detail, p.minMs!!.roundToInt(), p.maxMs!!.roundToInt(),
+                            p.jitterMs?.let { "${it.roundToInt()}" } ?: na, p.lossPercent.roundToInt()), style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+                r.dns?.let { d ->
+                    Text(stringResource(R.string.net_dns_title), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(d.avgMs?.let { stringResource(R.string.net_avg, it.roundToInt()) } ?: stringResource(R.string.net_dns_failed), style = MaterialTheme.typography.titleLarge)
+                }
+            }
+        }
     }
 }

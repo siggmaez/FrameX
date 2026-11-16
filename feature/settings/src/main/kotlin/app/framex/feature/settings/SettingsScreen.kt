@@ -6,6 +6,7 @@ import android.os.Build
 import android.os.LocaleList
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
@@ -75,6 +76,7 @@ fun SettingsScreen(contentPadding: PaddingValues, vm: SettingsViewModel = hiltVi
                 }
             }
         }
+        item { NetworkModeCard(s.networkMode, vm::setNetworkMode) }
         item { PlayCard(s.autoAnalyzeOnPlay, vm::setAutoAnalyze) }
         item { OverlayCard(s.fpsOverlayEnabled, vm::setOverlay) }
         item { ShizukuCard(vm) }
@@ -174,5 +176,26 @@ private fun OverlayCard(enabled: Boolean, onChange: (Boolean) -> Unit) {
                 ctx.startActivity(android.content.Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION, android.net.Uri.parse("package:${ctx.packageName}")).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
             }) { Text(stringResource(R.string.set_overlay_grant)) }
         }
+    }
+}
+
+@Composable
+private fun NetworkModeCard(mode: app.framex.core.common.NetworkMode, onChange: (app.framex.core.common.NetworkMode) -> Unit) {
+    FrameXCard {
+        Text(stringResource(R.string.set_net_title), style = MaterialTheme.typography.titleMedium)
+        Note(stringResource(R.string.set_net_note))
+        Row(Modifier.horizontalScroll(androidx.compose.foundation.rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            app.framex.core.common.NetworkMode.entries.forEach { m ->
+                FilterChip(selected = mode == m, onClick = { onChange(m) }, label = {
+                    Text(stringResource(when (m) {
+                        app.framex.core.common.NetworkMode.Local -> R.string.set_net_local
+                        app.framex.core.common.NetworkMode.WifiOnly -> R.string.set_net_wifi
+                        app.framex.core.common.NetworkMode.MobileOnly -> R.string.set_net_mobile
+                        app.framex.core.common.NetworkMode.WifiAndMobile -> R.string.set_net_both
+                    }))
+                })
+            }
+        }
+        Note(stringResource(if (mode == app.framex.core.common.NetworkMode.Local) R.string.set_net_local_note else R.string.set_net_online_note))
     }
 }

@@ -8,7 +8,7 @@ import androidx.room.PrimaryKey
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
 
-enum class MetricType { RamUsedPercent, CpuLoadPercent, BatteryTempC, PingMs }
+enum class MetricType { RamUsedPercent, CpuLoadPercent, BatteryTempC, PingMs, PingMobileMs }
 
 @Entity(tableName = "metric_samples", indices = [Index("type", "timestamp")])
 data class MetricSampleEntity(

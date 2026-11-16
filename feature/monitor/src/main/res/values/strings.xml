@@ -75,4 +75,15 @@
     <string name="fps_game_no_session">Shizuku is connected, but no session with measured FPS has been recorded yet.</string>
     <string name="fps_game_estimates">Estimated FPS: no estimation source is used.</string>
     <string name="fps_game_estimated">ESTIMATED from screen capture (about ±2), last session: avg %1$s · min %2$s · 1%% low %3$s</string>
+    <string name="net_local_title">Local mode</string>
+    <string name="net_local_text">FrameX is set to Local mode: it makes no network connection at all, so network tests are off. Everything else works as usual. Change this in Settings → Network mode.</string>
+    <string name="net_data_note">A test sends only a few kilobytes. On mobile data that counts toward your plan.</string>
+    <string name="net_connections">Test connections</string>
+    <string name="net_kind_wifi">Wi-Fi</string>
+    <string name="net_kind_mobile">Mobile data</string>
+    <string name="net_blocked">Blocked by the network mode in Settings</string>
+    <string name="net_no_wifi">Wi-Fi is not connected</string>
+    <string name="net_no_mobile">Mobile data is not available (turned off, no signal or no SIM)</string>
+    <string name="net_history_wifi">Wi-Fi average ping, ms (last %1$d runs)</string>
+    <string name="net_history_mobile">Mobile data average ping, ms (last %1$d runs)</string>
 </resources>

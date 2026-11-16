@@ -49,3 +49,18 @@ class DiagnosticsTest {
         assertEquals(20f, r.avgMs!!, 0.001f)
     }
 }
+
+class NetworkModeTest {
+    @Test fun localAllowsNothing() {
+        assertEquals(emptyList<app.framex.core.common.ConnectionKind>(), app.framex.core.common.NetworkMode.Local.allowed)
+        assertTrue(app.framex.core.common.ConnectionKind.entries.none { app.framex.core.common.NetworkMode.Local.allows(it) })
+    }
+
+    @Test fun singleAndCombinedModes() {
+        val W = app.framex.core.common.ConnectionKind.Wifi; val M = app.framex.core.common.ConnectionKind.Mobile
+        assertEquals(listOf(W), app.framex.core.common.NetworkMode.WifiOnly.allowed)
+        assertEquals(listOf(M), app.framex.core.common.NetworkMode.MobileOnly.allowed)
+        assertEquals(listOf(W, M), app.framex.core.common.NetworkMode.WifiAndMobile.allowed)
+        assertTrue(!app.framex.core.common.NetworkMode.WifiOnly.allows(M))
+    }
+}

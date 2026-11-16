@@ -75,4 +75,15 @@
     <string name="fps_game_no_session">Shizuku подключён, но сессий с измеренным FPS пока нет.</string>
     <string name="fps_game_estimates">Оценочный FPS: источники оценки не используются.</string>
     <string name="fps_game_estimated">ОЦЕНКА по захвату экрана (примерно ±2), последняя сессия: средний %1$s · мин. %2$s · 1%% low %3$s</string>
+    <string name="net_local_title">Локальный режим</string>
+    <string name="net_local_text">FrameX работает в локальном режиме: он не открывает никаких сетевых соединений, поэтому сетевые тесты выключены. Всё остальное работает как обычно. Изменить это можно в Настройки → Режим сети.</string>
+    <string name="net_data_note">Тест отправляет всего несколько килобайт. По мобильному интернету это расходует ваш трафик.</string>
+    <string name="net_connections">Проверяемые подключения</string>
+    <string name="net_kind_wifi">Wi-Fi</string>
+    <string name="net_kind_mobile">Мобильный интернет</string>
+    <string name="net_blocked">Заблокировано режимом сети в настройках</string>
+    <string name="net_no_wifi">Wi-Fi не подключён</string>
+    <string name="net_no_mobile">Мобильный интернет недоступен (выключен, нет сигнала или SIM)</string>
+    <string name="net_history_wifi">Средний пинг по Wi-Fi, мс (последние запусков: %1$d)</string>
+    <string name="net_history_mobile">Средний пинг по мобильной сети, мс (последние запусков: %1$d)</string>
 </resources>

@@ -8,13 +8,14 @@ import app.framex.core.database.MetricType
 import app.framex.core.datastore.SettingsRepository
 import app.framex.core.monitoring.DetailedMetricsSource
 import app.framex.core.monitoring.DetailedSnapshot
-import app.framex.core.monitoring.DnsResult
 import app.framex.core.monitoring.FrameStats
 import app.framex.core.optimization.PrivilegedShell
 import kotlinx.coroutines.delay
 import app.framex.core.database.GamesRepository
 import app.framex.core.monitoring.NetworkDiagnostics
-import app.framex.core.monitoring.PingStats
+import app.framex.core.common.ConnectionKind
+import app.framex.core.common.NetworkMode
+import app.framex.core.monitoring.NetResult
 import app.framex.core.monitoring.PingTarget
 import app.framex.core.monitoring.SystemMetricsSource
 import app.framex.core.monitoring.SystemSnapshot
@@ -35,10 +36,9 @@ data class LiveState(val snapshot: SystemSnapshot? = null, val detailed: Detaile
 data class NetworkUiState(
     val running: Boolean = false,
     val target: PingTarget = PingTarget.Cloudflare,
-    val connection: Metric<String>? = null,
-    val ping: PingStats? = null,
-    val dns: DnsResult? = null,
-    val error: String? = null,
+    /** Connections the user ticked for the next run (limited to what the network mode allows). */
+    val selected: Set<ConnectionKind> = setOf(ConnectionKind.Wifi),
+    val results: Map<ConnectionKind, NetResult> = emptyMap(),
 )
 
 private const val HISTORY_POINTS = 120
@@ -68,6 +68,11 @@ class MonitorViewModel @Inject constructor(
     val cpuHistory = series(MetricType.CpuLoadPercent)
     val tempHistory = series(MetricType.BatteryTempC)
     val pingHistory = series(MetricType.PingMs)
+    val pingMobileHistory = series(MetricType.PingMobileMs)
+
+    /** Where FrameX may use the network (Settings). */
+    val networkMode: StateFlow<NetworkMode> = settings.settings.map { it.networkMode }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), NetworkMode.WifiAndMobile)
 
     private val _net = MutableStateFlow(NetworkUiState())
     val net: StateFlow<NetworkUiState> = _net.asStateFlow()
@@ -109,20 +114,31 @@ class MonitorViewModel @Inject constructor(
             _frameTest.value = FrameTestUi(false, 0, null, FrameStats.from(all), all.filterIndexed { i, _ -> i % step == 0 })
         }
     }
+
     fun setTarget(t: PingTarget) = _net.update { it.copy(target = t) }
 
+    fun toggleKind(k: ConnectionKind) = _net.update { s ->
+        val next = if (k in s.selected) s.selected - k else s.selected + k
+        s.copy(selected = if (next.isEmpty()) s.selected else next) // always keep one ticked
+    }
+
+    /** Tests every ticked connection that the network mode allows, one after another. */
     fun runDiagnostics() {
         if (_net.value.running) return
         viewModelScope.launch {
-            _net.update { it.copy(running = true, error = null, connection = network.connection(), ping = null, dns = null) }
+            val mode = networkMode.value
+            val kinds = mode.allowed.filter { it in _net.value.selected }.ifEmpty { mode.allowed.take(1) }
+            if (kinds.isEmpty()) return@launch // Local mode: no connection is ever opened
+            _net.update { it.copy(running = true, results = emptyMap()) }
             try {
-                val ping = network.ping(_net.value.target)
-                ping.avgMs?.let { history.record(MetricType.PingMs, it) }
-                _net.update { it.copy(ping = ping) }
-                val dns = network.dnsBenchmark()
-                _net.update { it.copy(dns = dns) }
-            } catch (e: Exception) {
-                _net.update { it.copy(error = e.message ?: e.javaClass.simpleName) }
+                for (k in kinds) {
+                    val r = network.diagnose(k, _net.value.target, mode) { ping ->
+                        ping.avgMs?.let { ms ->
+                            viewModelScope.launch { history.record(if (k == ConnectionKind.Wifi) MetricType.PingMs else MetricType.PingMobileMs, ms) }
+                        }
+                    }
+                    _net.update { it.copy(results = it.results + (k to r)) }
+                }
             } finally {
                 _net.update { it.copy(running = false) }
             }

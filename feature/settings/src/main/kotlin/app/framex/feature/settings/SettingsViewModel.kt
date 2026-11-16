@@ -26,6 +26,7 @@ class SettingsViewModel @Inject constructor(
     fun refreshShizuku() = shizukuManager.refresh()
     fun requestShizuku() = shizukuManager.requestPermission()
     fun setAutoAnalyze(on: Boolean) { viewModelScope.launch { repo.setAutoAnalyzeOnPlay(on) } }
+    fun setNetworkMode(m: app.framex.core.common.NetworkMode) { viewModelScope.launch { repo.setNetworkMode(m) } }
     fun setOverlay(on: Boolean) { viewModelScope.launch { repo.setFpsOverlay(on) } }
     fun clearHistory() { viewModelScope.launch { history.clear() } }
     fun setInterval(ms: Long) { viewModelScope.launch { repo.setMonitoringInterval(ms) } }

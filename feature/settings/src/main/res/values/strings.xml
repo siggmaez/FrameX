@@ -14,7 +14,7 @@
     <string name="set_history_note">Graphs are kept on this device only while you use the Monitor screen. Up to 2000 samples per metric.</string>
     <string name="set_history_clear">Clear history</string>
     <string name="set_permissions">Permissions</string>
-    <string name="set_permissions_note">Internet: only for the network diagnostics you start yourself (ping, DNS). Network state: to show whether you are on Wi-Fi or mobile data. Installed apps list: to find games and apps you may choose to stop; it never leaves your phone. Stop background processes: only for apps you confirm. Draw over other apps: only for the FPS overlay. Change system settings: only to dim the screen during a game. Wake lock: only the Wi-Fi low-latency lock during a game. FrameX reads no personal files.</string>
+    <string name="set_permissions_note">Internet: only for the network diagnostics you start yourself (ping, DNS). Network state: to tell whether Wi-Fi or mobile data is available, and to run a test over the one you pick. In Local mode FrameX opens no connection. Installed apps list: to find games and apps you may choose to stop; it never leaves your phone. Stop background processes: only for apps you confirm. Draw over other apps: only for the FPS overlay. Change system settings: only to dim the screen during a game. Wake lock: only the Wi-Fi low-latency lock during a game. FrameX reads no personal files.</string>
     <string name="set_shizuku">Shizuku</string>
     <string name="set_shizuku_details">Version %1$d · runs as %2$s · %3$s</string>
     <string name="set_shizuku_service_on">service connected</string>
@@ -28,4 +28,12 @@
     <string name="set_overlay_note">A small draggable box over your game, no root needed. FPS is measured exactly when Shizuku is connected. Without it, pressing Play asks to capture the screen and the overlay shows an ESTIMATE (marked ~, about ±2 FPS) counted from real screen updates; if you decline, it shows n/a. It appears while a game from your list is running.</string>
     <string name="set_overlay_need">Needs the permission to draw over other apps.</string>
     <string name="set_overlay_grant">Allow drawing over apps</string>
+    <string name="set_net_title">Network mode</string>
+    <string name="set_net_note">Where FrameX may use the internet. Only the network tests you start yourself use it; nothing runs in the background.</string>
+    <string name="set_net_local">Local (no internet)</string>
+    <string name="set_net_wifi">Wi-Fi only</string>
+    <string name="set_net_mobile">Mobile data only</string>
+    <string name="set_net_both">Wi-Fi + mobile data</string>
+    <string name="set_net_local_note">FrameX makes no network connection at all. Monitoring, optimization, games, FPS and benchmarks all work offline.</string>
+    <string name="set_net_online_note">Network tests can run over the connections you allow. You choose Wi-Fi or mobile data (or both, to compare) for every test.</string>
 </resources>
