@@ -48,7 +48,7 @@ class FpsTest {
         val c = FrameCollector()
         c.add(listOf(0L, 16_000_000L, 32_000_000L).map { it + 1 })
         c.add(listOf(16_000_000L, 32_000_000L, 48_000_000L, 64_000_000L).map { it + 1 })
-        assertEquals(3, c.frameTimesMs.size)
+        assertEquals(4, c.frameTimesMs.size) // 5 distinct timestamps -> 4 intervals
         assertTrue(c.frameTimesMs.all { it > 15.9f && it < 16.1f })
     }
 
