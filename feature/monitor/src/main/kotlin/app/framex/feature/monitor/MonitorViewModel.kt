@@ -51,7 +51,7 @@ class MonitorViewModel @Inject constructor(
     /** Polls and records only while the Monitor screen is collected. */
     val live: StateFlow<LiveState> = source.snapshots(settings.settings.map { it.monitoringIntervalMs })
         .map { LiveState(it, detailedSource.read()) }
-        .onEach { record(it.snapshot) }
+        .onEach { s -> s.snapshot?.let { record(it) } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LiveState())
 
     private fun series(type: MetricType): StateFlow<List<Float>> =
