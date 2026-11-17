@@ -29,6 +29,10 @@ data class ShellResult(val ok: Boolean, val output: String)
  */
 interface PrivilegedShell {
     fun isAvailable(): Boolean
+
+    /** Brings the privileged link back if it was set up before and dropped. Default: nothing to do. */
+    suspend fun ensureReady() {}
+
     suspend fun setGameMode(pkg: String, level: GameModeLevel): ShellResult
     suspend fun getGameMode(pkg: String): String?
     suspend fun forceStop(pkg: String): ShellResult

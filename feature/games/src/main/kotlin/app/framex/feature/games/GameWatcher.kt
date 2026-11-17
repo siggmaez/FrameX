@@ -89,6 +89,7 @@ class GameWatcherService : Service() {
     @Inject lateinit var shell: PrivilegedShell
     @Inject lateinit var settings: SettingsRepository
     @Inject lateinit var capture: CaptureFpsController
+    @Inject lateinit var adb: app.framex.core.adb.AdbController
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val screenOn = MutableStateFlow(true)
@@ -119,6 +120,7 @@ class GameWatcherService : Service() {
         registerReceiver(screenReceiver, IntentFilter(Intent.ACTION_SCREEN_ON).apply { addAction(Intent.ACTION_SCREEN_OFF) })
         state.set(true)
         scope.launch { games.closeStaleSessions(System.currentTimeMillis()) }
+        scope.launch { adb.ensureConnected() }
         scope.launch { games.profiles().collect { list -> profiles = list.associateBy { it.packageName } } }
         scope.launch {
             settings.settings.collect { s ->

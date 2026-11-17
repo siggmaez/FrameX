@@ -37,4 +37,4 @@ enum class NetworkMode {
 }
 
 /** Look of the in-game overlay. */
-enum class OverlayStyle { Stealth, Minimal, Vengeance, Katana, Raven, Aurora }
+enum class OverlayStyle { Stealth, Minimal, Micro, Vengeance, Katana, Raven, Aurora, Neon, Retro, Glass, Sunset, Carbon, Frost }

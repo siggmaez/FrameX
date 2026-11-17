@@ -12,6 +12,13 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @javax.inject.Inject lateinit var adb: app.framex.core.adb.AdbController
+
+    override fun onStart() {
+        super.onStart()
+        adb.ensureConnectedAsync() // paired once = never again, even after the app was closed or the phone restarted
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

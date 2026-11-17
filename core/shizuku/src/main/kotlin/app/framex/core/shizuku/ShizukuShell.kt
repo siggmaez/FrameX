@@ -47,7 +47,7 @@ class ShizukuShell @Inject constructor(private val manager: ShizukuManager) : Ty
         val s = manager.shellService() ?: return ShellResult(false, "Shizuku is not connected")
         return withContext(Dispatchers.IO) {
             try {
-                withTimeout(8_000) {
+                withTimeout(20_000) {
                     val raw = s.exec(command)
                     ShellResult((raw.substringBefore('\n').toIntOrNull() ?: -1) == 0, raw.substringAfter('\n', "").trim())
                 }

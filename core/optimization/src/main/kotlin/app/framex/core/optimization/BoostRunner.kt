@@ -4,12 +4,18 @@ import android.app.ActivityManager
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.sync.withPermit
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -36,6 +42,9 @@ data class BoostProgress(
 /**
  * Stops the given apps and publishes real progress. Nothing here is staged: each row changes only when that app's
  * stop call returned, and force-stops are checked against Android's own "stopped" flag.
+ *
+ * With shell access the stops run in parallel, so a slow app (a big game) no longer holds up the others.
+ * The visible Settings automation (accessibility) has to go one app at a time.
  */
 @Singleton
 class BoostRunner @Inject constructor(@ApplicationContext private val context: Context, private val shell: PrivilegedShell) {
@@ -56,44 +65,61 @@ class BoostRunner @Inject constructor(@ApplicationContext private val context: C
     fun cancel() { cancel = true }
     fun dismiss() { _progress.value = null }
 
+    private fun setStatus(index: Int, status: ItemStatus) {
+        _progress.update { p -> p?.copy(items = p.items.mapIndexed { i, it -> if (i == index) it.copy(status = status) else it }) }
+    }
+
     suspend fun run(packages: List<String>): BoostProgress? = mutex.withLock {
         if (packages.isEmpty()) return null
         cancel = false
         AutomationHolder.cancelRequested = false
+        shell.ensureReady() // bring the shell link back first if it was paired before
         val method = bestMethod()
         val pm = context.packageManager
-        var items = packages.distinct().map { p ->
+        val items = packages.distinct().map { p ->
             BoostItem(p, runCatching { pm.getApplicationLabel(pm.getApplicationInfo(p, 0)).toString() }.getOrDefault(p))
         }
-        var state = BoostProgress(method, items, availMb())
-        _progress.value = state
-        val service = AutomationHolder.service
-        if (method == StopMethod.AccessibilityForceStop) service?.beginCover(items.size)
+        _progress.value = BoostProgress(method, items, availMb())
 
-        for ((i, item) in items.withIndex()) {
-            if (cancel || AutomationHolder.cancelRequested) { state = state.copy(cancelled = true); break }
-            state = update(state, i, ItemStatus.Working)
-            if (method == StopMethod.AccessibilityForceStop) service?.updateCover(i + 1, items.size, item.label)
-            val status = try { stopOne(method, item.packageName) } catch (_: Exception) { ItemStatus.Failed }
-            state = update(state, i, status)
+        if (method == StopMethod.AccessibilityForceStop) {
+            val service = AutomationHolder.service
+            service?.beginCover(items.size)
+            for ((i, item) in items.withIndex()) {
+                if (cancel || AutomationHolder.cancelRequested) break
+                setStatus(i, ItemStatus.Working)
+                service?.updateCover(i + 1, items.size, item.label)
+                setStatus(i, try { stopOne(method, item.packageName) } catch (_: Exception) { ItemStatus.Failed })
+            }
+            service?.endCover()
+        } else {
+            val gate = Semaphore(PARALLEL)
+            coroutineScope {
+                items.indices.map { i ->
+                    async {
+                        gate.withPermit {
+                            if (cancel) return@withPermit
+                            setStatus(i, ItemStatus.Working)
+                            setStatus(i, try { stopOne(method, items[i].packageName) } catch (_: Exception) { ItemStatus.Failed })
+                        }
+                    }
+                }.awaitAll()
+            }
         }
-        if (method == StopMethod.AccessibilityForceStop) service?.endCover()
-        delay(700) // let Android settle before measuring memory again
-        state = state.copy(ramAfterMb = availMb(), finished = true)
-        _progress.value = state
-        state
-    }
-
-    private fun update(s: BoostProgress, index: Int, status: ItemStatus): BoostProgress {
-        val next = s.copy(items = s.items.mapIndexed { i, it -> if (i == index) it.copy(status = status) else it })
-        _progress.value = next
-        return next
+        val wasCancelled = cancel || AutomationHolder.cancelRequested
+        delay(400) // let Android settle before measuring memory again
+        _progress.update { it?.copy(ramAfterMb = availMb(), finished = true, cancelled = wasCancelled) }
+        _progress.value
     }
 
     private suspend fun stopOne(method: StopMethod, pkg: String): ItemStatus = when (method) {
         StopMethod.ShizukuForceStop -> {
             val r = shell.forceStop(pkg)
-            if (!r.ok) ItemStatus.Failed else if (isStopped(pkg)) ItemStatus.Stopped else ItemStatus.Requested
+            // a slow app can outlast the command's timeout yet still die, so the flag decides, not the exit code
+            when {
+                waitStopped(pkg) -> ItemStatus.Stopped
+                r.ok -> ItemStatus.Requested
+                else -> ItemStatus.Failed
+            }
         }
         StopMethod.AccessibilityForceStop -> when (AutomationHolder.service?.forceStop(pkg)) {
             StopResult.Stopped -> ItemStatus.Stopped
@@ -107,6 +133,15 @@ class BoostRunner @Inject constructor(@ApplicationContext private val context: C
         }
     }
 
+    /** The "stopped" flag appears a moment after the process dies; heavy games need a little longer. */
+    private suspend fun waitStopped(pkg: String): Boolean {
+        repeat(STOP_POLLS) {
+            if (isStopped(pkg)) return true
+            delay(STOP_POLL_MS)
+        }
+        return false
+    }
+
     private fun isStopped(pkg: String) = runCatching {
         context.packageManager.getApplicationInfo(pkg, 0).flags and ApplicationInfo.FLAG_STOPPED != 0
     }.getOrDefault(false)
@@ -114,5 +149,11 @@ class BoostRunner @Inject constructor(@ApplicationContext private val context: C
     private fun availMb(): Long {
         val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         return ActivityManager.MemoryInfo().also { am.getMemoryInfo(it) }.availMem / 1_048_576
+    }
+
+    private companion object {
+        const val PARALLEL = 6
+        const val STOP_POLLS = 10
+        const val STOP_POLL_MS = 250L
     }
 }

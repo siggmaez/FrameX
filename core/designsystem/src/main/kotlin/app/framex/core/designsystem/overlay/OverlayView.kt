@@ -128,6 +128,8 @@ private class Spec(
     /** null = color by FPS level; otherwise this accent is always used for the FPS number and icon. */
     val fixedFps: Int?,
     val statusDot: Boolean = false,
+    val horizontal: Boolean = false,
+    val textSize: Float = 16f,
 )
 
 private fun specFor(style: OverlayStyle): Spec = when (style) {
@@ -148,6 +150,27 @@ private fun specFor(style: OverlayStyle): Spec = when (style) {
         { d -> PolyDrawable(listOf(0f to 0.35f, 0.10f to 0.10f, 0.22f to 0.28f, 0.36f to 0.06f, 0.50f to 0.22f, 0.64f to 0.06f, 0.78f to 0.28f, 0.90f to 0.10f, 1f to 0.35f,
             0.85f to 0.70f, 0.70f to 0.62f, 0.50f to 0.92f, 0.30f to 0.62f, 0.15f to 0.70f), 0xFF3A1D22.toInt(), 0xFF21100F.toInt(), 0xFF7A2A30.toInt(), 1 * d) },
         26, 14, 26, 18, 0xFFFFD9DA.toInt(), 0xFF9A7B7E.toInt(), 0xFFFF5A5F.toInt())
+    OverlayStyle.Micro -> Spec(
+        { d -> GradientDrawable().apply { setColor(0xE0101418.toInt()); cornerRadius = 100 * d; setStroke((1 * d).toInt().coerceAtLeast(1), 0xFF262C34.toInt()) } },
+        10, 5, 12, 5, 0xFFFFFFFF.toInt(), 0xFF8A94A0.toInt(), null, statusDot = true, horizontal = true, textSize = 13f)
+    OverlayStyle.Neon -> Spec(
+        { d -> GradientDrawable().apply { setColor(0xF00A0A14.toInt()); cornerRadius = 12 * d; setStroke((2 * d).toInt().coerceAtLeast(2), 0xFF00E5FF.toInt()) } },
+        12, 8, 14, 8, 0xFFFF4FD8.toInt(), 0xFF7A7A99.toInt(), 0xFF00E5FF.toInt())
+    OverlayStyle.Retro -> Spec(
+        { d -> GradientDrawable().apply { setColor(0xF00B1A0B.toInt()); cornerRadius = 2 * d; setStroke((2 * d).toInt().coerceAtLeast(2), 0xFF1F7F1F.toInt()) } },
+        10, 6, 12, 6, 0xFF7CFF7C.toInt(), 0xFF3FA03F.toInt(), 0xFF7CFF7C.toInt())
+    OverlayStyle.Glass -> Spec(
+        { d -> GradientDrawable().apply { setColor(0x80FFFFFF.toInt()); cornerRadius = 16 * d; setStroke((1 * d).toInt().coerceAtLeast(1), 0x99FFFFFF.toInt()) } },
+        12, 8, 14, 8, 0xFF101418.toInt(), 0xFF3A424C.toInt(), 0xFF101418.toInt())
+    OverlayStyle.Sunset -> Spec(
+        { d -> GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, intArrayOf(0xFFFF7A18.toInt(), 0xFFFF2E93.toInt())).apply { cornerRadius = 100 * d } },
+        16, 8, 18, 8, 0xFFFFFFFF.toInt(), 0xCCFFFFFF.toInt(), 0xFFFFFFFF.toInt())
+    OverlayStyle.Carbon -> Spec(
+        { d -> PolyDrawable(listOf(0.06f to 0f, 1f to 0f, 0.94f to 1f, 0f to 1f), 0xFF2A2A2E.toInt(), 0xFF111113.toInt(), 0xFFE10600.toInt(), 2 * d) },
+        20, 9, 20, 9, 0xFFF2F2F2.toInt(), 0xFF8A8A92.toInt(), 0xFFFF3B30.toInt())
+    OverlayStyle.Frost -> Spec(
+        { d -> GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(0xFF60A5FA.toInt(), 0xFF22D3EE.toInt())).apply { cornerRadius = 14 * d } },
+        14, 8, 16, 8, 0xFFFFFFFF.toInt(), 0xCCFFFFFF.toInt(), 0xFFFFFFFF.toInt())
     OverlayStyle.Aurora -> Spec(
         { d -> GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(0xFF7C3AED.toInt(), 0xFF2563EB.toInt())).apply { cornerRadius = 100 * d } },
         16, 8, 18, 8, 0xFFFFFFFF.toInt(), 0xCCFFFFFF.toInt(), 0xFFFFFFFF.toInt())
@@ -171,11 +194,11 @@ class OverlayView(context: Context, style: OverlayStyle) : LinearLayout(context)
     private val tempValue = value()
 
     private fun value() = TextView(context).apply {
-        setTextColor(spec.textColor); textSize = 16f; typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD); setPadding((6 * d).toInt(), 0, 0, 0)
+        setTextColor(spec.textColor); textSize = spec.textSize; typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD); setPadding((6 * d).toInt(), 0, 0, 0)
     }
 
     init {
-        orientation = VERTICAL
+        orientation = if (spec.horizontal) HORIZONTAL else VERTICAL
         background = spec.background(d)
         setPadding((spec.padL * d).toInt(), (spec.padT * d).toInt(), (spec.padR * d).toInt(), (spec.padB * d).toInt())
         val fpsRow = LinearLayout(context).apply {
@@ -184,7 +207,9 @@ class OverlayView(context: Context, style: OverlayStyle) : LinearLayout(context)
         }
         val tempRow = LinearLayout(context).apply { orientation = HORIZONTAL; gravity = Gravity.CENTER_VERTICAL; addView(tempIcon); addView(tempValue) }
         addView(fpsRow, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        addView(tempRow, LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = (3 * d).toInt() })
+        addView(tempRow, LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            if (spec.horizontal) marginStart = (10 * d).toInt() else topMargin = (3 * d).toInt()
+        })
     }
 
     fun setContent(c: OverlayContent) {

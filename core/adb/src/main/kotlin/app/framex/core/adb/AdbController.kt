@@ -7,7 +7,11 @@ import app.framex.core.optimization.ShellResult
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.muntashirakon.adb.AbsAdbConnectionManager
 import io.github.muntashirakon.adb.AdbPairingRequiredException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,6 +53,9 @@ class AdbController @Inject constructor(@ApplicationContext private val context:
     val status: StateFlow<AdbStatus> = _status.asStateFlow()
     @Volatile private var connected = false
     @Volatile private var viaTcp = false
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val ensureLock = Mutex()
+    @Volatile private var lastAttempt = 0L
 
     fun isConnected() = connected
     /** True once pairing or a connection worked at least once on this install. */
@@ -142,8 +149,27 @@ class AdbController @Inject constructor(@ApplicationContext private val context:
     /** Reconnects quietly if this phone was paired before and the link dropped: TCP first (no Wi-Fi needed), then wireless. */
     suspend fun ensureConnected() {
         if (connected || !hasPaired()) return
-        if (prefs.getBoolean(KEY_TCP, false) && connectTcp(waitForApproval = false)) return
-        connect()
+        if (!ensureLock.tryLock()) return // another reconnect is already running
+        try {
+            val now = System.currentTimeMillis()
+            if (now - lastAttempt < RETRY_GAP_MS) return
+            lastAttempt = now
+            val wantsTcp = prefs.getBoolean(KEY_TCP, false)
+            if (wantsTcp && connectTcp(waitForApproval = false)) return
+            // wireless debugging can only be reached over Wi-Fi: do not wait for a scan that cannot succeed
+            if (wifiConnected() && connect() && wantsTcp) enableTcpMode()
+        } finally {
+            if (!connected) _status.value = AdbStatus(AdbState.Disconnected)
+            ensureLock.unlock()
+        }
+    }
+
+    /** Fire-and-forget reconnect, for app start and other moments with no coroutine at hand. */
+    fun ensureConnectedAsync() { scope.launch { ensureConnected() } }
+
+    private fun wifiConnected(): Boolean {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+        return cm.allNetworks.any { cm.getNetworkCapabilities(it)?.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI) == true }
     }
 
     fun disconnect() {
@@ -157,7 +183,7 @@ class AdbController @Inject constructor(@ApplicationContext private val context:
     suspend fun run(command: String): ShellResult = withContext(Dispatchers.IO) {
         if (!connected) return@withContext ShellResult(false, "ADB is not connected")
         try {
-            withTimeout(8_000) {
+            withTimeout(20_000) {
                 val stream = manager.openStream("shell:" + AdbOutput.wrap(command))
                 try {
                     AdbOutput.parse(stream.openInputStream().use { String(it.readBytes(), Charsets.UTF_8) })
@@ -173,6 +199,7 @@ class AdbController @Inject constructor(@ApplicationContext private val context:
         const val KEY_PAIRED = "paired"
         const val KEY_TCP = "tcp_mode"
         const val DISCOVERY_MS = 6000L
+        const val RETRY_GAP_MS = 8_000L
         const val TCP_PORT = 5555
     }
 }
