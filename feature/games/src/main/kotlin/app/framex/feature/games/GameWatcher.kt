@@ -435,6 +435,8 @@ class GameWatcherService : Service() {
 
     private suspend fun endSession() {
         val s = takeSession() ?: return
+        stopTimeStats()
+        state.log("session ended: ${s.label}")
         overlay.hide()
         if (appliedByUs) { engine.restore(); appliedByUs = false }
         val t = batteryTemp()
