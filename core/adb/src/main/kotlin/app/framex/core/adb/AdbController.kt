@@ -56,6 +56,7 @@ class AdbController @Inject constructor(@ApplicationContext private val context:
     @Volatile private var viaTcp = false
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val ensureLock = Mutex()
+    private val cmdLock = Mutex()
     @Volatile private var lastAttempt = 0L
 
     fun isConnected() = connected
@@ -180,29 +181,41 @@ class AdbController @Inject constructor(@ApplicationContext private val context:
         _status.value = AdbStatus(AdbState.Disconnected)
     }
 
-    /** Runs one already-validated command (see Commands in core:shizuku). */
+    /**
+     * Runs one already-validated command (see Commands in core:shizuku).
+     *
+     * Opening the stream and reading it happen back to back in ONE task. They used to be split across two tasks;
+     * under the load of a running game the second task started late, the quick command had already finished and its
+     * stream was closed ("Stream closed."), so the answer was lost. Commands also run one at a time, and a closed
+     * stream gets one more try.
+     */
     suspend fun run(command: String): ShellResult {
         if (!connected) return ShellResult(false, "ADB is not connected")
-        val stream = try {
-            withContext(Dispatchers.IO) { manager.openStream("shell:" + AdbOutput.wrap(command)) }
-        } catch (e: Exception) {
-            if (!manager.isConnected) { connected = false; _status.value = AdbStatus(AdbState.Disconnected, e.message) }
-            return ShellResult(false, e.message ?: e.javaClass.simpleName)
+        return cmdLock.withLock {
+            var result = runOnce(command)
+            repeat(2) { if (!result.ok && result.output.startsWith("Stream closed")) { delay(150); result = runOnce(command) } }
+            result
         }
-        // The read blocks until the command ends and cannot be interrupted, so it runs on its own scope;
-        // on timeout the stream is closed, which frees the blocked read.
-        val read = scope.async { String(stream.openInputStream().use { it.readBytes() }, Charsets.UTF_8) }
+    }
+
+    private suspend fun runOnce(command: String): ShellResult {
+        val opened = java.util.concurrent.atomic.AtomicReference<io.github.muntashirakon.adb.AdbStream?>(null)
+        // the read blocks until the command ends and cannot be interrupted, so it runs on its own scope
+        val job = scope.async {
+            val stream = manager.openStream("shell:" + AdbOutput.wrap(command))
+            opened.set(stream)
+            try { String(stream.openInputStream().use { it.readBytes() }, Charsets.UTF_8) } finally { runCatching { stream.close() } }
+        }
         return try {
-            withTimeout(20_000) { AdbOutput.parse(read.await()) }
+            withTimeout(20_000) { AdbOutput.parse(job.await()) }
         } catch (e: TimeoutCancellationException) {
+            runCatching { opened.get()?.close() } // closing the stream frees the blocked read
+            job.cancel()
             ShellResult(false, "timed out")
         } catch (e: Exception) {
             // one broken stream is not a dropped link: only give up if ADB itself says it is no longer connected
             if (!manager.isConnected) { connected = false; _status.value = AdbStatus(AdbState.Disconnected, e.message) }
             ShellResult(false, e.message ?: e.javaClass.simpleName)
-        } finally {
-            runCatching { stream.close() }
-            read.cancel()
         }
     }
 

@@ -346,6 +346,14 @@ class GameWatcherService : Service() {
         if (canOverlay()) { overlay.show(); refreshOverlay() }
     }
 
+    private val debugByMode = LinkedHashMap<String, String>()
+
+    /** Keeps the last result of every measuring method, so the diagnostics show all of them, not only the latest. */
+    private fun dbg(text: String) {
+        debugByMode[sfMode.name] = text
+        state.setFpsDebug(debugByMode.entries.joinToString("\n— — —\n") { "[${it.key}] ${it.value}" })
+    }
+
     private var sampling = false
 
     /**
@@ -363,13 +371,13 @@ class GameWatcherService : Service() {
         scope.launch {
             try {
                 if (kotlinx.coroutines.withTimeoutOrNull(15_000) { sampleFrames(pkg); true } == null) {
-                    state.setFpsDebug("method=$sfMode: no answer from SurfaceFlinger within 15 s")
+                    dbg("method=$sfMode: no answer from SurfaceFlinger within 15 s")
                     noteEmpty() // a timeout is a failed round too, so the next method gets its turn
                 }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: Exception) {
-                state.setFpsDebug("measuring failed: ${e.javaClass.simpleName}: ${e.message}")
+                dbg("measuring failed: ${e.javaClass.simpleName}: ${e.message}")
                 noteEmpty()
             } finally {
                 sampling = false
@@ -383,7 +391,7 @@ class GameWatcherService : Service() {
      * and the one that works is remembered while the service runs.
      */
     private suspend fun sampleFrames(pkg: String) {
-        if (!shell.isAvailable()) { state.setFpsDebug("no shell access (Shizuku / wireless debugging not connected)"); return }
+        if (!shell.isAvailable()) { dbg("no shell access (Shizuku / wireless debugging not connected)"); return }
         var got = false
         if (sfMode != SfMode.Latency) {
             if (!tsEnabled) { shell.timeStatsEnable(); tsEnabled = true }
@@ -401,7 +409,7 @@ class GameWatcherService : Service() {
                 tsSamples++
             }
             val names = TimeStatsParser.layerNames(r.output).take(4)
-            state.setFpsDebug(buildString {
+            dbg(buildString {
                 append("method=$sfMode shell-ok=${r.ok} dump=${r.output.length} chars\n")
                 append("layers in dump=${TimeStatsParser.layerNames(r.output).size} first=$names\n")
                 append("game=$pkg match=${sample?.layer ?: "none"} frames=${sample?.totalFrames} avgFps=${sample?.averageFps} shown=${lastTsFps}")
@@ -422,7 +430,7 @@ class GameWatcherService : Service() {
                     got = collector.frameTimesMs.size > before
                 }
             }
-            state.setFpsDebug("method=latency layer=${layer ?: "not found"} timestamps parsed=$parsed frames kept=${collector.frameTimesMs.size}")
+            dbg("method=latency layer=${layer ?: "not found"} timestamps parsed=$parsed frames kept=${collector.frameTimesMs.size}")
         }
         if (got) modeEmpty = 0 else noteEmpty()
     }
