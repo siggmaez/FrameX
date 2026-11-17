@@ -1,0 +1,15 @@
+<resources>
+    <string name="adbp_channel">Сопряжение беспроводной отладки</string>
+    <string name="adbp_title">Сопряжение FrameX</string>
+    <string name="adbp_searching">Теперь откройте Настройки → Для разработчиков → Беспроводная отладка → «Подключить устройство с помощью кода сопряжения». Не закрывайте это окно.</string>
+    <string name="adbp_found">Окно сопряжения найдено. Потяните это уведомление вниз, нажмите «Ввести код сопряжения» и введите 6 цифр.</string>
+    <string name="adbp_action">Ввести код сопряжения</string>
+    <string name="adbp_input_label">6-значный код сопряжения</string>
+    <string name="adbp_pairing">Сопряжение…</string>
+    <string name="adbp_connecting">Сопряжено. Подключаюсь…</string>
+    <string name="adbp_done">Подключено. У FrameX теперь есть доступ к оболочке без Shizuku.</string>
+    <string name="adbp_paired_not_connected">Сопряжено, но подключиться пока не удалось. Убедитесь, что «Беспроводная отладка» включена, и нажмите «Подключить» в настройках FrameX.</string>
+    <string name="adbp_pair_failed">Сопряжение не удалось. Возможно, код неверный или окно сопряжения закрыто. Нажмите «Сопрячь» ещё раз.</string>
+    <string name="adbp_bad_code">Код должен состоять ровно из 6 цифр. Попробуйте ещё раз.</string>
+    <string name="adbp_timeout">Окно сопряжения не найдено. «Беспроводная отладка» должна быть включена, а телефон подключён к Wi-Fi. Нажмите «Сопрячь», чтобы повторить.</string>
+</resources>

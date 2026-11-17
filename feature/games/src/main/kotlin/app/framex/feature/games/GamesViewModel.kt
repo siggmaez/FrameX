@@ -63,6 +63,7 @@ class GamesViewModel @Inject constructor(
     private val shell: PrivilegedShell,
     private val capture: CaptureFpsController,
     private val runner: app.framex.core.optimization.BoostRunner,
+    private val adb: app.framex.core.adb.AdbController,
 ) : ViewModel() {
     private val installed = MutableStateFlow<List<InstalledApp>?>(null)
     private val showAll = MutableStateFlow(false)

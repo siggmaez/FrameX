@@ -19,7 +19,7 @@
     <string name="act_gm_batt">Игровой режим: экономия</string>
     <string name="act_saver">Экономия заряда</string>
     <string name="reason_policy">Нужен доступ FrameX к «Не беспокоить»</string>
-    <string name="reason_shizuku">Нужен Shizuku</string>
+    <string name="reason_shizuku">Нужен Shizuku или беспроводная отладка (Настройки)</string>
     <string name="reason_a12">Нужен Android 12 или новее</string>
     <string name="reason_target">Применяется для конкретной игры (экран «Игры»)</string>
     <string name="reason_none_selected">Не выбрано, что останавливать</string>
@@ -48,7 +48,7 @@
     <string name="reason_nowifi">На этом устройстве нет Wi-Fi</string>
     <string name="boost_title">Буст…</string>
     <string name="boost_done_title">Буст завершён</string>
-    <string name="boost_m_shizuku">Способ: настоящая принудительная остановка через Shizuku, после каждого приложения идёт проверка.</string>
+    <string name="boost_m_shizuku">Способ: настоящая принудительная остановка через доступ к оболочке (Shizuku или беспроводная отладка), после каждого приложения идёт проверка.</string>
     <string name="boost_m_accessibility">Способ: настоящая принудительная остановка через службу доступности, после каждого приложения идёт проверка.</string>
     <string name="boost_m_background">Способ: остановка фоновых процессов. Android не подтверждает её по каждому приложению; включите Shizuku или службу доступности в настройках для настоящей принудительной остановки.</string>
     <string name="boost_count">%1$d из %2$d</string>

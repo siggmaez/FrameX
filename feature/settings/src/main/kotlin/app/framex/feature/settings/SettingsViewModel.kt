@@ -19,6 +19,7 @@ class SettingsViewModel @Inject constructor(
     private val history: app.framex.core.database.MetricHistoryRepository,
     private val shizukuManager: app.framex.core.shizuku.ShizukuManager,
     private val runner: app.framex.core.optimization.BoostRunner,
+    private val adb: app.framex.core.adb.AdbController,
     private val appsProvider: app.framex.core.optimization.BackgroundAppsProvider,
 ) : ViewModel() {
     val settings: StateFlow<AppSettings> =
@@ -35,6 +36,11 @@ class SettingsViewModel @Inject constructor(
     fun setOverlay(on: Boolean) { viewModelScope.launch { repo.setFpsOverlay(on) } }
     fun setAutoStop(on: Boolean) { viewModelScope.launch { repo.setAutoStopBackground(on) } }
     fun setNeverStop(s: Set<String>) { viewModelScope.launch { repo.setNeverStopApps(s) } }
+    val adbStatus = adb.status
+    fun adbHasPaired() = adb.hasPaired()
+    fun adbStartPairing() = adb.startPairing()
+    fun adbConnect(port: Int? = null) { viewModelScope.launch { adb.connect(port) } }
+    fun adbDisconnect() = adb.disconnect()
     fun stopMethod() = runner.bestMethod()
     fun a11yBundled() = app.framex.core.optimization.AutomationHolder.isBundled(appContext)
     suspend fun userApps() = appsProvider.userApps()

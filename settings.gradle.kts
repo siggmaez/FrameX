@@ -10,6 +10,10 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven {
+            url = uri("https://jitpack.io")
+            content { includeGroupByRegex("com\\.github\\..*") }
+        }
     }
 }
 rootProject.name = "FrameX"
@@ -22,6 +26,7 @@ include(
     ":core:optimization",
     ":core:shizuku",
     ":core:a11yboost",
+    ":core:adb",
     ":feature:optimize",
     ":feature:games",
     ":core:benchmark",

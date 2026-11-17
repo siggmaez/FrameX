@@ -87,6 +87,7 @@ fun SettingsScreen(contentPadding: PaddingValues, vm: SettingsViewModel = hiltVi
         item { PlayCard(s.autoAnalyzeOnPlay, vm::setAutoAnalyze) }
         item { OverlayCard(s.fpsOverlayEnabled, vm::setOverlay, s.fpsCaptureEstimate, vm::setCaptureEstimate, s.overlayStyle, vm::setOverlayStyle) }
         item { ShizukuCard(vm) }
+        item { AdbCard(vm) }
         item {
             FrameXCard {
                 Text(stringResource(R.string.set_history), style = MaterialTheme.typography.titleMedium)

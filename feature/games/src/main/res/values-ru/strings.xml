@@ -29,7 +29,7 @@
     <string name="g_seconds">%1$d с</string>
     <string name="g_session_running">идёт</string>
     <string name="g_session_fps">FPS измерен (SurfaceFlinger): средний %1$s · мин. %2$s · 1%% low %3$s</string>
-    <string name="g_session_fps_na">FPS недоступен: измерение чужих приложений требует Shizuku</string>
+    <string name="g_session_fps_na">FPS недоступен: измерение чужих приложений требует Shizuku или беспроводной отладки</string>
     <string name="overlay_fps">FPS %1$d</string>
     <string name="overlay_fps_na">FPS н/д</string>
     <string name="overlay_fps_wait">FPS …</string>

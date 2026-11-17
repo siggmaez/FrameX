@@ -19,7 +19,7 @@
     <string name="act_gm_batt">Game mode: battery</string>
     <string name="act_saver">Battery saver</string>
     <string name="reason_policy">Needs Do Not Disturb access for FrameX</string>
-    <string name="reason_shizuku">Needs Shizuku</string>
+    <string name="reason_shizuku">Needs Shizuku or wireless debugging (Settings)</string>
     <string name="reason_a12">Needs Android 12 or newer</string>
     <string name="reason_target">Applies per game (Games screen)</string>
     <string name="reason_none_selected">Nothing selected to stop</string>
@@ -48,7 +48,7 @@
     <string name="reason_nowifi">No Wi-Fi on this device</string>
     <string name="boost_title">Boosting…</string>
     <string name="boost_done_title">Boost finished</string>
-    <string name="boost_m_shizuku">Method: real force-stop through Shizuku, each app checked afterwards.</string>
+    <string name="boost_m_shizuku">Method: real force-stop with shell access (Shizuku or wireless debugging), each app checked afterwards.</string>
     <string name="boost_m_accessibility">Method: real force-stop through the accessibility service, each app checked afterwards.</string>
     <string name="boost_m_background">Method: background process kill. Android does not confirm per app; turn on Shizuku or the accessibility service in Settings for a real force-stop.</string>
     <string name="boost_count">%1$d of %2$d</string>

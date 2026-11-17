@@ -1,0 +1,15 @@
+<resources>
+    <string name="adbp_channel">Wireless debugging pairing</string>
+    <string name="adbp_title">FrameX pairing</string>
+    <string name="adbp_searching">Now open Settings → Developer options → Wireless debugging → Pair device with pairing code. Keep that window open.</string>
+    <string name="adbp_found">Pairing window found. Pull this notification down, tap \"Enter pairing code\" and type the 6-digit code.</string>
+    <string name="adbp_action">Enter pairing code</string>
+    <string name="adbp_input_label">6-digit pairing code</string>
+    <string name="adbp_pairing">Pairing…</string>
+    <string name="adbp_connecting">Paired. Connecting…</string>
+    <string name="adbp_done">Connected. FrameX now has shell access without Shizuku.</string>
+    <string name="adbp_paired_not_connected">Paired, but could not connect yet. Make sure Wireless debugging is on, then press Connect in FrameX Settings.</string>
+    <string name="adbp_pair_failed">Pairing failed. The code may be wrong or the pairing window was closed. Tap Pair again.</string>
+    <string name="adbp_bad_code">The code must be exactly 6 digits. Try again.</string>
+    <string name="adbp_timeout">No pairing window found. Wireless debugging must be on and the phone must be on Wi-Fi. Tap Pair to try again.</string>
+</resources>

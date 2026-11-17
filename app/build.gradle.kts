@@ -50,6 +50,7 @@ dependencies {
     implementation(project(":core:database"))
     implementation(project(":core:optimization"))
     implementation(project(":core:shizuku"))
+    implementation(project(":core:adb"))
     implementation(project(":feature:optimize"))
     implementation(project(":feature:games"))
     implementation(project(":feature:benchmark"))
