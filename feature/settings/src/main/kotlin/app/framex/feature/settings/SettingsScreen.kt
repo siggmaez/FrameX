@@ -7,6 +7,10 @@ import android.os.LocaleList
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
@@ -80,7 +84,7 @@ fun SettingsScreen(contentPadding: PaddingValues, vm: SettingsViewModel = hiltVi
         item { NetworkModeCard(s.networkMode, vm::setNetworkMode) }
         item { AutoStopCard(s.autoStopBackground, s.neverStopApps, vm) }
         item { PlayCard(s.autoAnalyzeOnPlay, vm::setAutoAnalyze) }
-        item { OverlayCard(s.fpsOverlayEnabled, vm::setOverlay, s.fpsCaptureEstimate, vm::setCaptureEstimate) }
+        item { OverlayCard(s.fpsOverlayEnabled, vm::setOverlay, s.fpsCaptureEstimate, vm::setCaptureEstimate, s.overlayStyle, vm::setOverlayStyle) }
         item { ShizukuCard(vm) }
         item {
             FrameXCard {
@@ -163,7 +167,7 @@ private fun PlayCard(enabled: Boolean, onChange: (Boolean) -> Unit) {
 }
 
 @Composable
-private fun OverlayCard(enabled: Boolean, onChange: (Boolean) -> Unit, capture: Boolean, onCapture: (Boolean) -> Unit) {
+private fun OverlayCard(enabled: Boolean, onChange: (Boolean) -> Unit, capture: Boolean, onCapture: (Boolean) -> Unit, style: app.framex.core.common.OverlayStyle, onStyle: (app.framex.core.common.OverlayStyle) -> Unit) {
     val ctx = LocalContext.current
     var granted by remember { mutableStateOf(android.provider.Settings.canDrawOverlays(ctx)) }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { granted = android.provider.Settings.canDrawOverlays(ctx) }
@@ -173,6 +177,28 @@ private fun OverlayCard(enabled: Boolean, onChange: (Boolean) -> Unit, capture: 
             androidx.compose.material3.Switch(checked = enabled && granted, enabled = granted, onCheckedChange = onChange)
         }
         Note(stringResource(R.string.set_overlay_note))
+        Text(stringResource(R.string.set_style_title), style = MaterialTheme.typography.titleSmall)
+        Row(Modifier.horizontalScroll(androidx.compose.foundation.rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            app.framex.core.common.OverlayStyle.entries.forEach { st ->
+                val selected = st == style
+                androidx.compose.foundation.layout.Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp))
+                        .border(if (selected) 2.dp else 1.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant, androidx.compose.foundation.shape.RoundedCornerShape(14.dp))
+                        .clickable { onStyle(st) }
+                        .background(androidx.compose.ui.graphics.Color(0xFF0B0F14))
+                        .padding(10.dp),
+                ) {
+                    androidx.compose.ui.viewinterop.AndroidView(factory = { c ->
+                        app.framex.core.designsystem.overlay.OverlayView(c, st).apply {
+                            setContent(app.framex.core.designsystem.overlay.OverlayContent("120", "FPS", app.framex.core.designsystem.overlay.OverlayColors.GOOD, "36.4°C", app.framex.core.designsystem.overlay.OverlayColors.TEXT))
+                        }
+                    })
+                    Text(st.name, style = MaterialTheme.typography.labelMedium, color = androidx.compose.ui.graphics.Color.White, modifier = Modifier.padding(top = 6.dp))
+                }
+            }
+        }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.set_capture_title), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
             androidx.compose.material3.Switch(checked = capture && enabled && granted, enabled = granted && enabled, onCheckedChange = onCapture)

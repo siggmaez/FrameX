@@ -35,3 +35,6 @@ enum class NetworkMode {
 
     fun allows(kind: ConnectionKind) = kind in allowed
 }
+
+/** Look of the in-game overlay. */
+enum class OverlayStyle { Stealth, Minimal, Vengeance, Katana, Raven, Aurora }

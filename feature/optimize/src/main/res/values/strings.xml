@@ -61,4 +61,8 @@
     <string name="boost_summary">Stopped %1$d of %2$d apps. Available RAM changed by about %3$d MB.</string>
     <string name="boost_honest">This frees memory and background work. How much FPS it adds depends on the game and the device.</string>
     <string name="boost_close">Close</string>
+    <string name="tk_title">Task kill</string>
+    <string name="tk_text">Stops every eligible background app right now. Apps on your never-stop list, system apps, the keyboard, launcher, dialer and SMS are always skipped.</string>
+    <string name="tk_soft">Only a soft background kill is possible without Shizuku: Android does not allow a real force-stop of other apps to an ordinary app.</string>
+    <string name="tk_button">Kill tasks now</string>
 </resources>

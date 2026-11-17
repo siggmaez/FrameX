@@ -31,7 +31,8 @@ class BackgroundAppsProvider @Inject constructor(
 
     suspend fun eligible(excluding: Set<String> = emptySet()): List<BackgroundApp> = withContext(Dispatchers.IO) {
         val pm = context.packageManager
-        val protected = protectedPackages() + excluding + context.packageName
+        val never = settings.settings.first().neverStopApps // exclusions chosen in Settings are never offered or stopped
+        val protected = protectedPackages() + excluding + context.packageName + never
         pm.getInstalledApplications(PackageManager.GET_META_DATA)
             .asSequence()
             .filter { it.flags and ApplicationInfo.FLAG_SYSTEM == 0 }
@@ -49,6 +50,9 @@ class BackgroundAppsProvider @Inject constructor(
         return AppRanking.select(eligible(excluding), recentlyUsed(), never, limit)
     }
 
+
+    /** Everything eligible (no 24 h filter), for the one-tap task kill. Protected apps and the never-stop list are already excluded. */
+    suspend fun taskKillList(limit: Int): List<BackgroundApp> = eligible(emptySet()).take(limit)
     /** Every launchable user-installed app, for the "never stop" picker. */
     suspend fun userApps(): List<BackgroundApp> = withContext(Dispatchers.IO) {
         val pm = context.packageManager

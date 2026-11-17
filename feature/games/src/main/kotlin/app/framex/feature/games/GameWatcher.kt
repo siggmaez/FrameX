@@ -18,6 +18,8 @@ import android.os.IBinder
 import android.os.PowerManager
 import android.provider.Settings
 import app.framex.core.common.OptimizationProfile
+import app.framex.core.designsystem.overlay.OverlayColors
+import app.framex.core.designsystem.overlay.OverlayContent
 import app.framex.core.database.GameProfileEntity
 import app.framex.core.database.GameSessionEntity
 import app.framex.core.database.GamesRepository
@@ -121,6 +123,7 @@ class GameWatcherService : Service() {
         scope.launch {
             settings.settings.collect { s ->
                 overlayEnabled = s.fpsOverlayEnabled
+                overlay.setStyle(s.overlayStyle)
                 if (session != null) { if (canOverlay()) overlay.show() else overlay.hide() }
                 if (!overlayEnabled) overlay.hide()
             }

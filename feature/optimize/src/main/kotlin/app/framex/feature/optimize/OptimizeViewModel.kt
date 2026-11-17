@@ -74,6 +74,18 @@ class OptimizeViewModel @Inject constructor(
         OptimizeUiState(s.selectedProfile, s.customActions, l.capabilities, active, l.busy, l.report, log, l.confirm, l.smart)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), OptimizeUiState())
 
+    /** One tap: stop every eligible background app now. Never-stop and protected apps are skipped. */
+    fun taskKill() {
+        viewModelScope.launch {
+            local.update { it.copy(busy = true) }
+            val limit = if (runner.bestMethod() == app.framex.core.optimization.StopMethod.AccessibilityForceStop) 15 else 40
+            runner.run(apps.taskKillList(limit).map { it.packageName })
+            local.update { it.copy(busy = false) }
+        }
+    }
+
+    fun stopMethod() = runner.bestMethod()
+
     fun refreshCapabilities() = local.update { it.copy(capabilities = capabilities.detect()) }
 
     fun select(p: OptimizationProfile) { viewModelScope.launch { settings.setSelectedProfile(p) } }

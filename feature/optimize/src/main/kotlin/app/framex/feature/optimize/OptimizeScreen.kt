@@ -151,6 +151,18 @@ fun OptimizeScreen(contentPadding: PaddingValues, vm: OptimizeViewModel = hiltVi
                 }
             }
         }
+        item {
+            FrameXCard {
+                Text(stringResource(R.string.tk_title), style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.tk_text), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(when (vm.stopMethod()) {
+                    app.framex.core.optimization.StopMethod.ShizukuForceStop -> R.string.boost_m_shizuku
+                    app.framex.core.optimization.StopMethod.AccessibilityForceStop -> R.string.boost_m_accessibility
+                    app.framex.core.optimization.StopMethod.BackgroundKill -> R.string.tk_soft
+                }), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                OutlinedButton(onClick = vm::taskKill, enabled = !ui.busy) { Text(stringResource(R.string.tk_button)) }
+            }
+        }
         ui.report?.let { rep ->
             item {
                 FrameXCard {

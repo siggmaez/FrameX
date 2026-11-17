@@ -37,3 +37,18 @@ class MetricCardTest {
         rule.onNodeWithText("50%").assertDoesNotExist()
     }
 }
+
+class OverlayColorsTest {
+    @org.junit.Test fun fpsLevels() {
+        org.junit.Assert.assertEquals(app.framex.core.designsystem.overlay.OverlayColors.GOOD, app.framex.core.designsystem.overlay.OverlayColors.forFps(60))
+        org.junit.Assert.assertEquals(app.framex.core.designsystem.overlay.OverlayColors.WARN, app.framex.core.designsystem.overlay.OverlayColors.forFps(30))
+        org.junit.Assert.assertEquals(app.framex.core.designsystem.overlay.OverlayColors.BAD, app.framex.core.designsystem.overlay.OverlayColors.forFps(20))
+        org.junit.Assert.assertEquals(app.framex.core.designsystem.overlay.OverlayColors.NEUTRAL, app.framex.core.designsystem.overlay.OverlayColors.forFps(null))
+    }
+
+    @org.junit.Test fun tempLevelsMatchAdvice() {
+        org.junit.Assert.assertEquals(app.framex.core.designsystem.overlay.OverlayColors.TEXT, app.framex.core.designsystem.overlay.OverlayColors.forTemp(39.9f))
+        org.junit.Assert.assertEquals(app.framex.core.designsystem.overlay.OverlayColors.WARN, app.framex.core.designsystem.overlay.OverlayColors.forTemp(40f))
+        org.junit.Assert.assertEquals(app.framex.core.designsystem.overlay.OverlayColors.BAD, app.framex.core.designsystem.overlay.OverlayColors.forTemp(45f))
+    }
+}

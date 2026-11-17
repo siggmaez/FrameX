@@ -51,4 +51,5 @@
     <string name="set_stop_save">Сохранить</string>
     <string name="set_stop_cancel">Отмена</string>
     <string name="set_stop_a11y_absent">В этой сборке нет помощника на службе доступности, поэтому Google Play Protect её не блокирует. Настоящая принудительная остановка по-прежнему доступна через Shizuku. Для желающих есть отдельная сборка «буст» с помощником на службе доступности.</string>
+    <string name="set_style_title">Стиль оверлея</string>
 </resources>
