@@ -74,4 +74,16 @@
     <string name="adb_tcp_on_note">TCP mode is on: this works without Wi-Fi until the phone restarts. After a restart you need Wi-Fi once more (it can be a network without internet).</string>
     <string name="adb_tcp_off">Switch back to normal</string>
     <string name="adb_approve_note">Accept the \"Allow USB debugging?\" dialog for FrameX (tick \"Always allow\"). You have about a minute.</string>
+    <string name="set_scope_title">Show the overlay in</string>
+    <string name="set_scope_tracked">My games only</string>
+    <string name="set_scope_games">Any game</string>
+    <string name="set_scope_apps">Any app</string>
+    <string name="set_status_perm">Not showing: allow drawing over other apps first.</string>
+    <string name="set_status_usage">Not showing: FrameX needs Usage access to see which app is open (Games screen).</string>
+    <string name="set_status_running">The detection service is running. The overlay appears in the apps chosen above.</string>
+    <string name="set_status_stopped">The detection service is not running, so no overlay can appear. Android may have stopped it.</string>
+    <string name="set_status_start">Start the detection service</string>
+    <string name="set_keepalive">If the overlay disappears after a while, the phone is probably stopping FrameX in the background. On HyperOS open the app info and set Battery saver to \"No restrictions\", turn on Autostart, and lock FrameX in the recent apps.</string>
+    <string name="set_keepalive_battery">Battery optimization</string>
+    <string name="set_keepalive_app">FrameX app info</string>
 </resources>

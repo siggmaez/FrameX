@@ -85,7 +85,7 @@ fun SettingsScreen(contentPadding: PaddingValues, vm: SettingsViewModel = hiltVi
         item { NetworkModeCard(s.networkMode, vm::setNetworkMode) }
         item { AutoStopCard(s.autoStopBackground, s.neverStopApps, vm) }
         item { PlayCard(s.autoAnalyzeOnPlay, vm::setAutoAnalyze) }
-        item { OverlayCard(s.fpsOverlayEnabled, vm::setOverlay, s.fpsCaptureEstimate, vm::setCaptureEstimate, s.overlayStyle, vm::setOverlayStyle) }
+        item { OverlayCard(s.fpsOverlayEnabled, vm::setOverlay, s.fpsCaptureEstimate, vm::setCaptureEstimate, s.overlayStyle, vm::setOverlayStyle, s.overlayScope, vm::setOverlayScope, vm) }
         item { ShizukuCard(vm) }
         item { AdbCard(vm) }
         item {
@@ -169,7 +169,7 @@ private fun PlayCard(enabled: Boolean, onChange: (Boolean) -> Unit) {
 }
 
 @Composable
-private fun OverlayCard(enabled: Boolean, onChange: (Boolean) -> Unit, capture: Boolean, onCapture: (Boolean) -> Unit, style: app.framex.core.common.OverlayStyle, onStyle: (app.framex.core.common.OverlayStyle) -> Unit) {
+private fun OverlayCard(enabled: Boolean, onChange: (Boolean) -> Unit, capture: Boolean, onCapture: (Boolean) -> Unit, style: app.framex.core.common.OverlayStyle, onStyle: (app.framex.core.common.OverlayStyle) -> Unit, scope: app.framex.core.common.OverlayScope, onScope: (app.framex.core.common.OverlayScope) -> Unit, vm: SettingsViewModel) {
     val ctx = LocalContext.current
     var granted by remember { mutableStateOf(android.provider.Settings.canDrawOverlays(ctx)) }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { granted = android.provider.Settings.canDrawOverlays(ctx) }
@@ -179,6 +179,35 @@ private fun OverlayCard(enabled: Boolean, onChange: (Boolean) -> Unit, capture: 
             androidx.compose.material3.Switch(checked = enabled && granted, enabled = granted, onCheckedChange = onChange)
         }
         Note(stringResource(R.string.set_overlay_note))
+        Text(stringResource(R.string.set_scope_title), style = MaterialTheme.typography.titleSmall)
+        Row(Modifier.horizontalScroll(androidx.compose.foundation.rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            app.framex.core.common.OverlayScope.entries.forEach { sc ->
+                FilterChip(selected = sc == scope, onClick = { onScope(sc) }, label = {
+                    Text(stringResource(when (sc) {
+                        app.framex.core.common.OverlayScope.Tracked -> R.string.set_scope_tracked
+                        app.framex.core.common.OverlayScope.Games -> R.string.set_scope_games
+                        app.framex.core.common.OverlayScope.Apps -> R.string.set_scope_apps
+                    }))
+                })
+            }
+        }
+        val running by vm.watcherRunning.collectAsStateWithLifecycle()
+        var usage by remember { mutableStateOf(vm.hasUsageAccess()) }
+        LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { usage = vm.hasUsageAccess() }
+        Note(stringResource(when {
+            !granted -> R.string.set_status_perm
+            !usage -> R.string.set_status_usage
+            running -> R.string.set_status_running
+            else -> R.string.set_status_stopped
+        }))
+        if (granted && usage && !running) {
+            OutlinedButton(onClick = vm::startWatcher) { Text(stringResource(R.string.set_status_start)) }
+        }
+        Note(stringResource(R.string.set_keepalive))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = { ctx.startActivity(android.content.Intent(android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) }) { Text(stringResource(R.string.set_keepalive_battery)) }
+            OutlinedButton(onClick = { ctx.startActivity(android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.parse("package:${ctx.packageName}")).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) }) { Text(stringResource(R.string.set_keepalive_app)) }
+        }
         Text(stringResource(R.string.set_style_title), style = MaterialTheme.typography.titleSmall)
         Row(Modifier.horizontalScroll(androidx.compose.foundation.rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             app.framex.core.common.OverlayStyle.entries.forEach { st ->

@@ -29,6 +29,7 @@ dependencies {
     implementation(project(":core:database"))
     implementation(project(":core:shizuku"))
     implementation(project(":core:adb"))
+    implementation(project(":feature:games"))
     implementation(project(":core:optimization"))
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)

@@ -74,4 +74,16 @@
     <string name="adb_tcp_on_note">Режим TCP включён: работает без Wi-Fi до перезагрузки телефона. После перезагрузки нужен Wi-Fi ещё раз (подойдёт сеть без интернета).</string>
     <string name="adb_tcp_off">Вернуть обычный режим</string>
     <string name="adb_approve_note">Подтвердите диалог «Разрешить отладку по USB?» для FrameX (отметьте «Всегда разрешать»). У вас примерно минута.</string>
+    <string name="set_scope_title">Показывать оверлей в</string>
+    <string name="set_scope_tracked">Только «Мои игры»</string>
+    <string name="set_scope_games">Любой игре</string>
+    <string name="set_scope_apps">Любом приложении</string>
+    <string name="set_status_perm">Не показывается: сначала разрешите показ поверх других приложений.</string>
+    <string name="set_status_usage">Не показывается: FrameX нужен «Доступ к статистике использования», чтобы видеть, какое приложение открыто (экран «Игры»).</string>
+    <string name="set_status_running">Служба определения работает. Оверлей появляется в приложениях, выбранных выше.</string>
+    <string name="set_status_stopped">Служба определения не запущена, поэтому оверлей появиться не может. Возможно, Android её остановил.</string>
+    <string name="set_status_start">Запустить службу определения</string>
+    <string name="set_keepalive">Если оверлей через какое-то время пропадает, телефон, скорее всего, останавливает FrameX в фоне. В HyperOS откройте «О приложении», поставьте «Экономия заряда» → «Нет ограничений», включите «Автозапуск» и закрепите FrameX в списке недавних приложений.</string>
+    <string name="set_keepalive_battery">Оптимизация батареи</string>
+    <string name="set_keepalive_app">О приложении FrameX</string>
 </resources>

@@ -19,6 +19,7 @@ import android.os.PowerManager
 import android.provider.Settings
 import app.framex.core.common.OptAction
 import app.framex.core.common.OptimizationProfile
+import app.framex.core.common.OverlayScope
 import app.framex.core.designsystem.overlay.OverlayColors
 import app.framex.core.designsystem.overlay.OverlayContent
 import app.framex.core.database.GameProfileEntity
@@ -70,7 +71,26 @@ class WatcherState @Inject constructor() {
 }
 
 @Singleton
-class WatcherController @Inject constructor(@ApplicationContext private val context: Context, val state: WatcherState) {
+class WatcherController @Inject constructor(
+    @ApplicationContext private val context: Context,
+    val state: WatcherState,
+    private val settings: SettingsRepository,
+) {
+    private val io = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    /**
+     * The overlay needs the detection service. If the overlay is switched on and everything it needs is granted,
+     * (re)start the service. Called from the foreground (app start, switching the overlay on), where Android allows it.
+     */
+    fun startIfWantedAsync() {
+        io.launch {
+            val s = settings.settings.first()
+            if (s.fpsOverlayEnabled && android.provider.Settings.canDrawOverlays(context) && hasUsageAccess() && !state.running.value) {
+                android.os.Handler(android.os.Looper.getMainLooper()).post { runCatching { start() } }
+            }
+        }
+    }
+
     fun hasUsageAccess(): Boolean {
         val ops = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
         return ops.unsafeCheckOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(), context.packageName) == AppOpsManager.MODE_ALLOWED
@@ -98,6 +118,13 @@ class GameWatcherService : Service() {
     private val screenOn = MutableStateFlow(true)
     @Volatile private var profiles: Map<String, GameProfileEntity> = emptyMap()
     @Volatile private var overlayEnabled = false
+    @Volatile private var overlayScope = OverlayScope.Games
+    private var passivePkg: String? = null
+    private val gameCache = HashMap<String, Boolean>()
+    private val homePackages: Set<String> by lazy {
+        val home = packageManager.queryIntentActivities(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), 0).map { it.activityInfo.packageName }
+        (home + "com.android.systemui").toSet()
+    }
     private var session: GameSessionEntity? = null
     private var appliedByUs = false
     private var collector = FrameCollector()
@@ -128,12 +155,13 @@ class GameWatcherService : Service() {
         scope.launch {
             settings.settings.collect { s ->
                 overlayEnabled = s.fpsOverlayEnabled
+                overlayScope = s.overlayScope
                 overlay.setStyle(s.overlayStyle)
                 if (session != null) { if (canOverlay()) overlay.show() else overlay.hide() }
                 if (!overlayEnabled) overlay.hide()
             }
         }
-        scope.launch { screenOn.collect { on -> if (!on) endSession() } }
+        scope.launch { screenOn.collect { on -> if (!on) { endSession(); passivePkg = null; overlay.hide() } } }
         scope.launch { loop() }
     }
 
@@ -153,18 +181,23 @@ class GameWatcherService : Service() {
 
     private suspend fun loop() {
         val usm = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-        var lastQuery = System.currentTimeMillis() - 60_000
+        // look far back once, so a game that was already open when the service started is still found
+        var lastQuery = System.currentTimeMillis() - 3 * 3600_000L
         var foreground: String? = null
         var missing = 0
         while (scope.isActive) {
             screenOn.first { it }
             val now = System.currentTimeMillis()
             runCatching {
-                val events = usm.queryEvents(lastQuery, now)
+                // windows overlap by 3 s: usage events can be written a moment late and must not be lost
+                val events = usm.queryEvents(lastQuery - 3_000, now)
                 val e = UsageEvents.Event()
                 while (events.hasNextEvent()) {
                     events.getNextEvent(e)
-                    if (e.eventType == UsageEvents.Event.ACTIVITY_RESUMED) foreground = e.packageName
+                    when (e.eventType) {
+                        UsageEvents.Event.ACTIVITY_RESUMED -> foreground = e.packageName
+                        UsageEvents.Event.ACTIVITY_PAUSED, UsageEvents.Event.ACTIVITY_STOPPED -> if (foreground == e.packageName) foreground = null
+                    }
                 }
             }
             lastQuery = now
@@ -174,7 +207,8 @@ class GameWatcherService : Service() {
             val s = session
             val fg = foreground
             if (s == null) {
-                profiles[fg]?.let { startSession(it) }
+                val tracked = profiles[fg]
+                if (tracked != null) { passivePkg = null; startSession(tracked) } else passive(fg)
                 missing = 0
             } else if (fg == s.packageName) {
                 missing = 0
@@ -186,8 +220,37 @@ class GameWatcherService : Service() {
                 missing = 0
             }
             // 1 s while measuring frames (SurfaceFlinger keeps ~127 frames, so a slower poll would miss some at high FPS)
-            delay(if (session != null && (shell.isAvailable() || capture.running.value)) 1000 else 2000)
+            val measuring = session != null || passivePkg != null
+            delay(if (measuring && (shell.isAvailable() || capture.running.value)) 1000 else 2000)
         }
+    }
+
+    /** Overlay for apps that are not in "My games" (depending on the overlay scope). No profile, no session record. */
+    private suspend fun passive(fg: String?) {
+        val allowed = fg != null && fg != packageName && fg !in homePackages && canOverlay() && when (overlayScope) {
+            OverlayScope.Tracked -> false
+            OverlayScope.Games -> isGame(fg)
+            OverlayScope.Apps -> true
+        }
+        if (!allowed || fg == null) {
+            if (passivePkg != null) { passivePkg = null; overlay.hide() }
+            return
+        }
+        if (passivePkg != fg) {
+            passivePkg = fg
+            collector = FrameCollector(); layer = null; layerAge = 0; lastFrameCount = 0; staleTicks = 0
+            capture.reset()
+        }
+        sampleFrames(fg)
+        refreshOverlay()
+    }
+
+    private fun isGame(pkg: String): Boolean = gameCache.getOrPut(pkg) {
+        runCatching {
+            @Suppress("DEPRECATION")
+            val i = packageManager.getApplicationInfo(pkg, 0)
+            i.category == android.content.pm.ApplicationInfo.CATEGORY_GAME || i.flags and android.content.pm.ApplicationInfo.FLAG_IS_GAME != 0
+        }.getOrDefault(false)
     }
 
     private suspend fun startSession(p: GameProfileEntity) {

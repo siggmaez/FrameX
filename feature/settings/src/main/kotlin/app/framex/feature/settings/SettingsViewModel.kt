@@ -20,6 +20,7 @@ class SettingsViewModel @Inject constructor(
     private val shizukuManager: app.framex.core.shizuku.ShizukuManager,
     private val runner: app.framex.core.optimization.BoostRunner,
     private val adb: app.framex.core.adb.AdbController,
+    private val watcher: app.framex.feature.games.WatcherController,
     private val appsProvider: app.framex.core.optimization.BackgroundAppsProvider,
 ) : ViewModel() {
     val settings: StateFlow<AppSettings> =
@@ -33,7 +34,11 @@ class SettingsViewModel @Inject constructor(
     fun setNetworkMode(m: app.framex.core.common.NetworkMode) { viewModelScope.launch { repo.setNetworkMode(m) } }
     fun setCaptureEstimate(on: Boolean) { viewModelScope.launch { repo.setFpsCaptureEstimate(on) } }
     fun setOverlayStyle(s: app.framex.core.common.OverlayStyle) { viewModelScope.launch { repo.setOverlayStyle(s) } }
-    fun setOverlay(on: Boolean) { viewModelScope.launch { repo.setFpsOverlay(on) } }
+    fun setOverlay(on: Boolean) { viewModelScope.launch { repo.setFpsOverlay(on); if (on) watcher.startIfWantedAsync() } }
+    fun setOverlayScope(s: app.framex.core.common.OverlayScope) { viewModelScope.launch { repo.setOverlayScope(s) } }
+    val watcherRunning = watcher.state.running
+    fun startWatcher() { runCatching { watcher.start() } }
+    fun hasUsageAccess() = watcher.hasUsageAccess()
     fun setAutoStop(on: Boolean) { viewModelScope.launch { repo.setAutoStopBackground(on) } }
     fun setNeverStop(s: Set<String>) { viewModelScope.launch { repo.setNeverStopApps(s) } }
     val adbStatus = adb.status

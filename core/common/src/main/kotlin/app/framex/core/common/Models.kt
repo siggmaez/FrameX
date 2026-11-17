@@ -38,3 +38,6 @@ enum class NetworkMode {
 
 /** Look of the in-game overlay. */
 enum class OverlayStyle { Stealth, Minimal, Micro, Vengeance, Katana, Raven, Aurora, Neon, Retro, Glass, Sunset, Carbon, Frost }
+
+/** Where the overlay is shown: only your games, any game, or any app. */
+enum class OverlayScope { Tracked, Games, Apps }

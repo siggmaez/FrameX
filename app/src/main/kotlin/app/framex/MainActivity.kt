@@ -13,9 +13,11 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @javax.inject.Inject lateinit var adb: app.framex.core.adb.AdbController
+    @javax.inject.Inject lateinit var watcher: app.framex.feature.games.WatcherController
 
     override fun onStart() {
         super.onStart()
+        watcher.startIfWantedAsync() // keeps the FPS overlay alive if the system stopped the detection service
         adb.ensureConnectedAsync() // paired once = never again, even after the app was closed or the phone restarted
     }
 
