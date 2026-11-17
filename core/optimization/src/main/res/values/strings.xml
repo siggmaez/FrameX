@@ -23,9 +23,4 @@
     <string name="opt_method_shizuku">force-stop through Shizuku</string>
     <string name="opt_method_accessibility">force-stop through accessibility</string>
     <string name="opt_method_background">background kill</string>
-    <string name="a11y_label">FrameX boost</string>
-    <string name="a11y_description">Lets FrameX press \"Force stop\" in the Settings app info page of the apps your boost list names, while a boost is running. It reads nothing else and acts nowhere else.</string>
-    <string name="a11y_cover_title">FrameX boost…</string>
-    <string name="a11y_cover_line">Stopping %1$d of %2$d: %3$s</string>
-    <string name="a11y_cover_cancel">Cancel</string>
 </resources>

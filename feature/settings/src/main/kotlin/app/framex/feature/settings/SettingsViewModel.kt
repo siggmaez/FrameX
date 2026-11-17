@@ -14,6 +14,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
+    @dagger.hilt.android.qualifiers.ApplicationContext private val appContext: android.content.Context,
     private val repo: SettingsRepository,
     private val history: app.framex.core.database.MetricHistoryRepository,
     private val shizukuManager: app.framex.core.shizuku.ShizukuManager,
@@ -33,6 +34,7 @@ class SettingsViewModel @Inject constructor(
     fun setAutoStop(on: Boolean) { viewModelScope.launch { repo.setAutoStopBackground(on) } }
     fun setNeverStop(s: Set<String>) { viewModelScope.launch { repo.setNeverStopApps(s) } }
     fun stopMethod() = runner.bestMethod()
+    fun a11yBundled() = app.framex.core.optimization.AutomationHolder.isBundled(appContext)
     suspend fun userApps() = appsProvider.userApps()
     fun clearHistory() { viewModelScope.launch { history.clear() } }
     fun setInterval(ms: Long) { viewModelScope.launch { repo.setMonitoringInterval(ms) } }

@@ -1,0 +1,7 @@
+<resources>
+    <string name="a11y_label">Буст FrameX</string>
+    <string name="a11y_description">Позволяет FrameX нажимать «Остановить» на странице «О приложении» в настройках для приложений из списка буста, пока идёт буст. Больше ничего не читает и нигде больше не действует.</string>
+    <string name="a11y_cover_title">Буст FrameX…</string>
+    <string name="a11y_cover_line">Останавливаю %1$d из %2$d: %3$s</string>
+    <string name="a11y_cover_cancel">Отмена</string>
+</resources>

@@ -1,4 +1,4 @@
-package app.framex.core.optimization
+package app.framex.core.a11yboost
 
 import android.accessibilityservice.AccessibilityService
 import android.content.Context
@@ -17,16 +17,14 @@ import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import app.framex.core.optimization.AutomationHolder
+import app.framex.core.optimization.ForceStopAutomation
+import app.framex.core.optimization.StopResult
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
 
-enum class StopResult { Stopped, NotRunning, NotConfirmed, Failed }
 
-object AutomationHolder {
-    @Volatile var service: ForceStopAccessibilityService? = null
-    @Volatile var cancelRequested = false
-}
 
 /**
  * Optional. Opens the system "App info" page of one app at a time and presses "Force stop" and its confirmation,
@@ -34,7 +32,7 @@ object AutomationHolder {
  * running, only inside the Settings app, and never touches anything else. A full-screen progress cover with a
  * Cancel button is shown meanwhile.
  */
-class ForceStopAccessibilityService : AccessibilityService() {
+class ForceStopAccessibilityService : AccessibilityService(), ForceStopAutomation {
     private enum class Stage { Idle, WaitDetails, WaitConfirm }
 
     @Volatile private var stage = Stage.Idle
@@ -45,7 +43,7 @@ class ForceStopAccessibilityService : AccessibilityService() {
     private var line: TextView? = null
 
     override fun onServiceConnected() { super.onServiceConnected(); AutomationHolder.service = this }
-    override fun onUnbind(intent: Intent?): Boolean { AutomationHolder.service = null; endCover(); return super.onUnbind(intent) }
+    override fun onUnbind(intent: Intent?): Boolean { AutomationHolder.service = null; endCoverImpl(); return super.onUnbind(intent) }
     override fun onInterrupt() {}
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
@@ -86,7 +84,7 @@ class ForceStopAccessibilityService : AccessibilityService() {
     private fun finish(r: StopResult) { done?.complete(r) }
 
     /** Force-stops [pkg] through the Settings UI. The result is verified against Android's "stopped" flag. */
-    suspend fun forceStop(pkg: String): StopResult {
+    override suspend fun forceStop(pkg: String): StopResult {
         val d = CompletableDeferred<StopResult>()
         done = d
         stage = Stage.WaitDetails
@@ -110,8 +108,12 @@ class ForceStopAccessibilityService : AccessibilityService() {
         packageManager.getApplicationInfo(pkg, 0).flags and ApplicationInfo.FLAG_STOPPED != 0
     }.getOrDefault(false)
 
+
+    override fun beginCover(total: Int) { beginCoverImpl(total) }
+    override fun updateCover(index: Int, total: Int, label: String) { updateCoverImpl(index, total, label) }
+    override fun endCover() { endCoverImpl() }
     // ---- progress cover ----
-    fun beginCover(total: Int) = main.post {
+    private fun beginCoverImpl(total: Int) = main.post {
         if (cover != null) return@post
         val wm = getSystemService(Context.WINDOW_SERVICE) as WindowManager
         val d = resources.displayMetrics.density
@@ -132,9 +134,9 @@ class ForceStopAccessibilityService : AccessibilityService() {
         runCatching { wm.addView(box, lp); cover = box; title = t; line = l }
     }
 
-    fun updateCover(index: Int, total: Int, label: String) = main.post { line?.text = getString(R.string.a11y_cover_line, index, total, label) }
+    private fun updateCoverImpl(index: Int, total: Int, label: String) = main.post { line?.text = getString(R.string.a11y_cover_line, index, total, label) }
 
-    fun endCover() = main.post {
+    private fun endCoverImpl() = main.post {
         cover?.let { runCatching { (getSystemService(Context.WINDOW_SERVICE) as WindowManager).removeView(it) } }
         cover = null
     }

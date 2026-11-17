@@ -1,0 +1,17 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- Optional. Only presses "Force stop" in the Settings app info page while a boost runs. Only in the "boost" build. -->
+        <service
+            android:name=".ForceStopAccessibilityService"
+            android:exported="true"
+            android:label="@string/a11y_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/framex_force_stop_service" />
+        </service>
+    </application>
+</manifest>

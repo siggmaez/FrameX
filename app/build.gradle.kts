@@ -6,6 +6,9 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+// The accessibility helper is built only with -PwithA11y=true, so the normal APK declares no accessibility service.
+val withA11y = (project.findProperty("withA11y") as String?) == "true"
+
 android {
     namespace = "app.framex"
     compileSdk = 35
@@ -14,7 +17,7 @@ android {
         minSdk = 29
         targetSdk = 35
         versionCode = 1
-        versionName = "0.1.0"
+        versionName = if (withA11y) "0.1.0-boost" else "0.1.0"
     }
     signingConfigs {
         // Fixed, non-secret debug key so every build can be installed over the previous one.
@@ -40,6 +43,7 @@ android {
 }
 
 dependencies {
+    if (withA11y) implementation(project(":core:a11yboost"))
     implementation(project(":core:common"))
     implementation(project(":core:designsystem"))
     implementation(project(":core:datastore"))

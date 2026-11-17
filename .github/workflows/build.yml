@@ -15,15 +15,19 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.10.2
-      - name: Build debug APK and run unit tests
+      - name: Build standard debug APK, release (R8) and run unit tests
         run: gradle assembleDebug assembleRelease testDebugUnitTest --stacktrace
+      - name: Keep the standard APK
+        run: mkdir -p dist && cp app/build/outputs/apk/debug/*.apk dist/FrameX-debug.apk
       - name: Lint (report only)
         continue-on-error: true
         run: gradle lintDebug --continue
+      - name: Build "boost" APK (with the optional accessibility helper)
+        run: gradle :app:assembleDebug -PwithA11y=true --stacktrace && cp app/build/outputs/apk/debug/*.apk dist/FrameX-boost-debug.apk
       - uses: actions/upload-artifact@v4
         with:
           name: framex-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: dist/*.apk
       - uses: actions/upload-artifact@v4
         if: always()
         with:

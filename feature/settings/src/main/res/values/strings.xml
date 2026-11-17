@@ -48,4 +48,5 @@
     <string name="set_stop_never_text">Ticked apps are skipped by every automatic boost.</string>
     <string name="set_stop_save">Save</string>
     <string name="set_stop_cancel">Cancel</string>
+    <string name="set_stop_a11y_absent">This build has no accessibility helper, so Google Play Protect does not block it. Shizuku still gives a real force-stop. A separate \"boost\" build with the accessibility helper exists for people who want it.</string>
 </resources>

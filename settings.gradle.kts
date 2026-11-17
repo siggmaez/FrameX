@@ -21,6 +21,7 @@ include(
     ":core:database",
     ":core:optimization",
     ":core:shizuku",
+    ":core:a11yboost",
     ":feature:optimize",
     ":feature:games",
     ":core:benchmark",

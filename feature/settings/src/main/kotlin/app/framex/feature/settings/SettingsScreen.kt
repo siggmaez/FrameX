@@ -220,7 +220,9 @@ private fun AutoStopCard(enabled: Boolean, never: Set<String>, vm: SettingsViewM
             app.framex.core.optimization.StopMethod.AccessibilityForceStop -> R.string.set_stop_m_accessibility
             app.framex.core.optimization.StopMethod.BackgroundKill -> R.string.set_stop_m_background
         }))
-        if (method == app.framex.core.optimization.StopMethod.BackgroundKill) {
+        if (method == app.framex.core.optimization.StopMethod.BackgroundKill && !vm.a11yBundled()) {
+            Note(stringResource(R.string.set_stop_a11y_absent))
+        } else if (method == app.framex.core.optimization.StopMethod.BackgroundKill) {
             Note(stringResource(R.string.set_stop_a11y_hint))
             OutlinedButton(onClick = {
                 ctx.startActivity(android.content.Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
