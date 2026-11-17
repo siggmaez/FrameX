@@ -4,7 +4,7 @@
 # Wireless-debugging client and its crypto helpers use reflection / JNI.
 -keep class io.github.muntashirakon.adb.** { *; }
 -keep class org.conscrypt.** { *; }
--keep class sun.security.** { *; }
+-keep class android.sun.** { *; }
 -dontwarn org.conscrypt.**
--dontwarn sun.security.**
+-dontwarn android.sun.**
 -dontwarn org.bouncycastle.**
