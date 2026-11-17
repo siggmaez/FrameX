@@ -233,6 +233,7 @@ class GameWatcherService : Service() {
         var missing = 0
         while (scope.isActive) {
             screenOn.first { it }
+            try {
             val now = System.currentTimeMillis()
             runCatching {
                 // windows overlap by 3 s: usage events can be written a moment late and must not be lost
@@ -266,11 +267,16 @@ class GameWatcherService : Service() {
             } else if (fg == s.packageName) {
                 missing = 0
                 updateTemp()
-                sampleFrames(s.packageName)
                 refreshOverlay()
+                sampleAsync(s.packageName)
             } else if (fg != null && ++missing >= 3) {
                 endSession()
                 missing = 0
+            }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                state.log("error: ${e.javaClass.simpleName}: ${e.message}") // a failure in one round must not stop the service
             }
             // 1 s while measuring frames (SurfaceFlinger keeps ~127 frames, so a slower poll would miss some at high FPS)
             val measuring = session != null || passivePkg != null
@@ -294,8 +300,8 @@ class GameWatcherService : Service() {
             collector = FrameCollector(); layer = null; layerAge = 0; lastFrameCount = 0; staleTicks = 0; tsSamples = 0; lastTsFps = null; modeEmpty = 0; lastSampleAt = android.os.SystemClock.elapsedRealtime()
             capture.reset()
         }
-        sampleFrames(fg)
         refreshOverlay()
+        sampleAsync(fg)
     }
 
     private fun isGame(pkg: String): Boolean = gameCache.getOrPut(pkg) {
@@ -307,6 +313,7 @@ class GameWatcherService : Service() {
     }
 
     private suspend fun startSession(p: GameProfileEntity) {
+        if (canOverlay()) overlay.show() // visible at once; the profile below may take a few seconds
         val armed = state.take(p.packageName)
         val profile = armed?.profile
             ?: if (p.autoApply) runCatching { OptimizationProfile.valueOf(p.profile) }.getOrDefault(OptimizationProfile.Gaming) else null
@@ -336,6 +343,30 @@ class GameWatcherService : Service() {
         notify(getString(R.string.games_notif_playing, p.label))
         state.log("session started: ${p.label}${if (applied != null) ", boost applied" else ""}")
         if (canOverlay()) { overlay.show(); refreshOverlay() }
+    }
+
+    private var sampling = false
+
+    /**
+     * Measures in its own task, with a hard 6 s limit, so a slow or stuck SurfaceFlinger answer can never hold up the
+     * overlay or the foreground detection. Only one measurement runs at a time.
+     */
+    private fun sampleAsync(pkg: String) {
+        if (sampling) return
+        sampling = true
+        scope.launch {
+            try {
+                if (kotlinx.coroutines.withTimeoutOrNull(6_000) { sampleFrames(pkg); true } == null) {
+                    state.setFpsDebug("measuring timed out after 6 s: SurfaceFlinger did not answer")
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                state.setFpsDebug("measuring failed: ${e.javaClass.simpleName}: ${e.message}")
+            } finally {
+                sampling = false
+            }
+        }
     }
 
     /**
