@@ -233,21 +233,26 @@ class GameWatcherService : Service() {
 
     private fun refreshOverlay() {
         if (!canOverlay()) return
-        val temp = batteryTemp()?.let { String.format(java.util.Locale.US, "%.1f °C", it) } ?: "—"
+        val tempC = batteryTemp()
+        val temp = tempC?.let { String.format(java.util.Locale.US, "%.1f°C", it) } ?: "—"
         val src = source()
-        val fpsText = if (src == Source.None) getString(R.string.overlay_fps_na) else {
+        var value = "—"
+        var unit = getString(R.string.overlay_unit_na)
+        var fpsInt: Int? = null
+        if (src != Source.None) {
             val count = activeTimes(src).size
             staleTicks = if (count == lastFrameCount) staleTicks + 1 else 0
             lastFrameCount = count
             // no new frames for 3 s: do not show an old number
             val fps = if (staleTicks >= 3) null else if (src == Source.Measured) collector.currentFps() else capture.currentFps()
-            when {
-                fps == null -> getString(R.string.overlay_fps_wait)
-                src == Source.Estimated -> getString(R.string.overlay_fps_est, fps.toInt())
-                else -> getString(R.string.overlay_fps, fps.toInt())
+            if (fps == null) unit = getString(R.string.overlay_unit_wait)
+            else {
+                fpsInt = fps.toInt()
+                value = if (src == Source.Estimated) "~$fpsInt" else "$fpsInt"
+                unit = getString(if (src == Source.Estimated) R.string.overlay_unit_est else R.string.overlay_unit)
             }
         }
-        overlay.update("$fpsText\n$temp")
+        overlay.update(OverlayContent(value, unit, OverlayColors.forFps(fpsInt), temp, OverlayColors.forTemp(tempC)))
     }
 
     private suspend fun updateTemp() {

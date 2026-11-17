@@ -30,6 +30,7 @@ class SettingsViewModel @Inject constructor(
     fun requestShizuku() = shizukuManager.requestPermission()
     fun setAutoAnalyze(on: Boolean) { viewModelScope.launch { repo.setAutoAnalyzeOnPlay(on) } }
     fun setNetworkMode(m: app.framex.core.common.NetworkMode) { viewModelScope.launch { repo.setNetworkMode(m) } }
+    fun setCaptureEstimate(on: Boolean) { viewModelScope.launch { repo.setFpsCaptureEstimate(on) } }
     fun setOverlay(on: Boolean) { viewModelScope.launch { repo.setFpsOverlay(on) } }
     fun setAutoStop(on: Boolean) { viewModelScope.launch { repo.setAutoStopBackground(on) } }
     fun setNeverStop(s: Set<String>) { viewModelScope.launch { repo.setNeverStopApps(s) } }

@@ -59,4 +59,8 @@
     <string name="g_session_fps_est">FPS ОЦЕНЁН по захвату экрана (примерно ±2): средний %1$s · мин. %2$s · 1%% low %3$s</string>
     <string name="capture_channel">Захват экрана для оценки FPS</string>
     <string name="capture_notif">Оцениваю FPS по обновлениям экрана</string>
+    <string name="overlay_unit">FPS</string>
+    <string name="overlay_unit_est">FPS оц.</string>
+    <string name="overlay_unit_na">FPS н/д</string>
+    <string name="overlay_unit_wait">FPS …</string>
 </resources>

@@ -71,7 +71,7 @@
     <string name="fps_game_title">FPS игр</string>
     <string name="fps_game_measured">Измерено через SurfaceFlinger, последняя сессия: средний %1$s · мин. %2$s · 1%% low %3$s</string>
     <string name="fps_game_unavailable">Недоступно</string>
-    <string name="fps_game_need_shizuku">Android не позволяет обычным приложениям читать частоту кадров других приложений. При подключённом Shizuku FrameX измеряет её точно. Без него при нажатии «Играть» с включённым оверлеем можно оценить её по захвату экрана (помечается как оценка).</string>
+    <string name="fps_game_need_shizuku">Android не позволяет обычным приложениям читать частоту кадров других приложений. При подключённом Shizuku FrameX измеряет её точно. Без него можно включить оценку по захвату экрана в настройках (помечается как оценка).</string>
     <string name="fps_game_no_session">Shizuku подключён, но сессий с измеренным FPS пока нет.</string>
     <string name="fps_game_estimates">Оценочный FPS: источники оценки не используются.</string>
     <string name="fps_game_estimated">ОЦЕНКА по захвату экрана (примерно ±2), последняя сессия: средний %1$s · мин. %2$s · 1%% low %3$s</string>

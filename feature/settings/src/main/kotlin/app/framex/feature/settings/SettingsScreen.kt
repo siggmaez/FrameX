@@ -80,7 +80,7 @@ fun SettingsScreen(contentPadding: PaddingValues, vm: SettingsViewModel = hiltVi
         item { NetworkModeCard(s.networkMode, vm::setNetworkMode) }
         item { AutoStopCard(s.autoStopBackground, s.neverStopApps, vm) }
         item { PlayCard(s.autoAnalyzeOnPlay, vm::setAutoAnalyze) }
-        item { OverlayCard(s.fpsOverlayEnabled, vm::setOverlay) }
+        item { OverlayCard(s.fpsOverlayEnabled, vm::setOverlay, s.fpsCaptureEstimate, vm::setCaptureEstimate) }
         item { ShizukuCard(vm) }
         item {
             FrameXCard {
@@ -163,7 +163,7 @@ private fun PlayCard(enabled: Boolean, onChange: (Boolean) -> Unit) {
 }
 
 @Composable
-private fun OverlayCard(enabled: Boolean, onChange: (Boolean) -> Unit) {
+private fun OverlayCard(enabled: Boolean, onChange: (Boolean) -> Unit, capture: Boolean, onCapture: (Boolean) -> Unit) {
     val ctx = LocalContext.current
     var granted by remember { mutableStateOf(android.provider.Settings.canDrawOverlays(ctx)) }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { granted = android.provider.Settings.canDrawOverlays(ctx) }
@@ -173,6 +173,11 @@ private fun OverlayCard(enabled: Boolean, onChange: (Boolean) -> Unit) {
             androidx.compose.material3.Switch(checked = enabled && granted, enabled = granted, onCheckedChange = onChange)
         }
         Note(stringResource(R.string.set_overlay_note))
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.set_capture_title), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+            androidx.compose.material3.Switch(checked = capture && enabled && granted, enabled = granted && enabled, onCheckedChange = onCapture)
+        }
+        Note(stringResource(R.string.set_capture_note))
         if (!granted) {
             Note(stringResource(R.string.set_overlay_need))
             OutlinedButton(onClick = {

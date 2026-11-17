@@ -24,6 +24,8 @@ data class AppSettings(
     /** When on, the Play button analyses the device and picks the profile; when off it uses the game's saved profile. */
     val autoAnalyzeOnPlay: Boolean = true,
     val fpsOverlayEnabled: Boolean = false,
+    /** Off by default: only when on may Play ask for screen capture to ESTIMATE FPS (no Shizuku). */
+    val fpsCaptureEstimate: Boolean = false,
     /** Play / Quick Boost stop eligible background apps by themselves, without asking each time. */
     val autoStopBackground: Boolean = true,
     /** Apps that are never stopped (messengers, music, ...). Editable in Settings. */
@@ -42,6 +44,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         val custom = stringSetPreferencesKey("custom_actions")
         val autoAnalyze = booleanPreferencesKey("auto_analyze_on_play")
         val overlay = booleanPreferencesKey("fps_overlay")
+        val captureEstimate = booleanPreferencesKey("fps_capture_estimate")
         val autoStop = booleanPreferencesKey("auto_stop_background")
         val neverStop = stringSetPreferencesKey("never_stop_apps")
         val netMode = stringPreferencesKey("network_mode")
@@ -57,6 +60,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
                 ?: setOf(OptAction.DoNotDisturb),
             autoAnalyzeOnPlay = p[Keys.autoAnalyze] ?: true,
             fpsOverlayEnabled = p[Keys.overlay] ?: false,
+            fpsCaptureEstimate = p[Keys.captureEstimate] ?: false,
             autoStopBackground = p[Keys.autoStop] ?: true,
             neverStopApps = p[Keys.neverStop] ?: DEFAULT_NEVER_STOP,
             networkMode = p[Keys.netMode]?.let { runCatching { app.framex.core.common.NetworkMode.valueOf(it) }.getOrNull() }
@@ -71,6 +75,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
     suspend fun setNetworkMode(m: app.framex.core.common.NetworkMode) { context.settingsStore.edit { it[Keys.netMode] = m.name } }
     suspend fun setAutoStopBackground(on: Boolean) { context.settingsStore.edit { it[Keys.autoStop] = on } }
     suspend fun setNeverStopApps(s: Set<String>) { context.settingsStore.edit { it[Keys.neverStop] = s } }
+    suspend fun setFpsCaptureEstimate(on: Boolean) { context.settingsStore.edit { it[Keys.captureEstimate] = on } }
     suspend fun setFpsOverlay(on: Boolean) { context.settingsStore.edit { it[Keys.overlay] = on } }
     suspend fun setMonitoringInterval(ms: Long) {
         context.settingsStore.edit { it[Keys.interval] = ms.coerceIn(MIN_INTERVAL_MS, MAX_INTERVAL_MS) }

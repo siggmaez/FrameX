@@ -71,7 +71,7 @@
     <string name="fps_game_title">FPS of games</string>
     <string name="fps_game_measured">Measured through SurfaceFlinger, last session the last session: avg %1$s · min %2$s · 1%% low %3$s</string>
     <string name="fps_game_unavailable">Unavailable</string>
-    <string name="fps_game_need_shizuku">Android does not let ordinary apps read the frame rate of other apps. With Shizuku connected, FrameX measures it exactly. Without it, pressing Play with the overlay on can estimate it from screen capture (marked as an estimate).</string>
+    <string name="fps_game_need_shizuku">Android does not let ordinary apps read the frame rate of other apps. With Shizuku connected, FrameX measures it exactly. Without it, you can turn on the screen-capture estimate in Settings (marked as an estimate).</string>
     <string name="fps_game_no_session">Shizuku is connected, but no session with measured FPS has been recorded yet.</string>
     <string name="fps_game_estimates">Estimated FPS: no estimation source is used.</string>
     <string name="fps_game_estimated">ESTIMATED from screen capture (about ±2), last session: avg %1$s · min %2$s · 1%% low %3$s</string>

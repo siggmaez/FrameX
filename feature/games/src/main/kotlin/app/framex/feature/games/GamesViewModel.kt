@@ -111,7 +111,7 @@ class GamesViewModel @Inject constructor(
                 return@launch
             }
             // No Shizuku: the overlay can still show an ESTIMATED FPS if the user accepts screen capture for this session.
-            if (s.fpsOverlayEnabled && android.provider.Settings.canDrawOverlays(context) && !shell.isAvailable() && !capture.running.value) {
+            if (s.fpsOverlayEnabled && s.fpsCaptureEstimate && android.provider.Settings.canDrawOverlays(context) && !shell.isAvailable() && !capture.running.value) {
                 captureFor.value = g
                 return@launch
             }

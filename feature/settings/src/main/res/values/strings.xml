@@ -25,7 +25,9 @@
     <string name="set_play_title">Analyse before Play</string>
     <string name="set_play_note">When on, the Play button in Games checks temperature, memory, battery saver and refresh rate, then picks the profile. When off, it applies the game\'s own saved profile.</string>
     <string name="set_overlay_title">FPS overlay</string>
-    <string name="set_overlay_note">A small draggable box over your game, no root needed. FPS is measured exactly when Shizuku is connected. Without it, pressing Play asks to capture the screen and the overlay shows an ESTIMATE (marked ~, about ±2 FPS) counted from real screen updates; if you decline, it shows n/a. It appears while a game from your list is running.</string>
+    <string name="set_overlay_note">A small draggable box over your game, no root needed, with FPS and battery temperature. FPS is measured exactly when Shizuku is connected; otherwise it shows n/a unless you turn on the screen-capture estimate below. It appears while a game from your list is running.</string>
+    <string name="set_capture_title">Estimate FPS by screen capture</string>
+    <string name="set_capture_note">Off by default. When on and Shizuku is not connected, Play asks to capture the screen so FrameX can count how often the picture changes (an estimate, about ±2 FPS, marked ~). Nothing is recorded or saved. You are asked every time.</string>
     <string name="set_overlay_need">Needs the permission to draw over other apps.</string>
     <string name="set_overlay_grant">Allow drawing over apps</string>
     <string name="set_net_title">Network mode</string>

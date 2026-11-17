@@ -1,0 +1,6 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+    <!-- thermometer: stem + bulb, with scale ticks -->
+    <path android:pathData="M12,2 A2.5,2.5 0 0 0 9.5,4.5 L9.5,12.8 A4.5,4.5 0 1 0 14.5,12.8 L14.5,4.5 A2.5,2.5 0 0 0 12,2 Z" android:fillColor="#FFFFFFFF" />
+    <path android:pathData="M17,5 L19.5,5 M17,8 L19.5,8 M17,11 L19.5,11" android:strokeColor="#FFFFFFFF" android:strokeWidth="1.8" android:strokeLineCap="round" />
+</vector>

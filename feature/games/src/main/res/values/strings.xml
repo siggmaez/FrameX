@@ -59,4 +59,8 @@
     <string name="g_session_fps_est">FPS ESTIMATED from screen capture (about ±2): avg %1$s · min %2$s · 1%% low %3$s</string>
     <string name="capture_channel">Screen capture for FPS estimate</string>
     <string name="capture_notif">Estimating FPS from screen updates</string>
+    <string name="overlay_unit">FPS</string>
+    <string name="overlay_unit_est">FPS est.</string>
+    <string name="overlay_unit_na">FPS n/a</string>
+    <string name="overlay_unit_wait">FPS …</string>
 </resources>
