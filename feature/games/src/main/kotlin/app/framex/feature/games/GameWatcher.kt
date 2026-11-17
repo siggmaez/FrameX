@@ -143,8 +143,9 @@ class GameWatcherService : Service() {
     @Volatile private var overlayScope = OverlayScope.Games
     @Volatile private var styleNow = app.framex.core.common.OverlayStyle.Stealth
     private var passivePkg: String? = null
-    private enum class SfMode { TimeStats, Latency }
-    private var sfMode = SfMode.TimeStats
+    private enum class SfMode { TimeStatsLight, TimeStats, Latency }
+    private var sfMode = SfMode.TimeStatsLight
+    private var lastSampleStart = 0L
     private var tsEnabled = false
     private var modeEmpty = 0
     private var tsSamples = 0
@@ -353,16 +354,23 @@ class GameWatcherService : Service() {
      */
     private fun sampleAsync(pkg: String) {
         if (sampling) return
+        // SurfaceFlinger dumps are heavy while a game runs: every 3 s is enough (the overlay still updates every second)
+        val gap = if (sfMode == SfMode.Latency) 1_000L else 3_000L
+        val now = android.os.SystemClock.elapsedRealtime()
+        if (now - lastSampleStart < gap) return
+        lastSampleStart = now
         sampling = true
         scope.launch {
             try {
-                if (kotlinx.coroutines.withTimeoutOrNull(6_000) { sampleFrames(pkg); true } == null) {
-                    state.setFpsDebug("measuring timed out after 6 s: SurfaceFlinger did not answer")
+                if (kotlinx.coroutines.withTimeoutOrNull(15_000) { sampleFrames(pkg); true } == null) {
+                    state.setFpsDebug("method=$sfMode: no answer from SurfaceFlinger within 15 s")
+                    noteEmpty() // a timeout is a failed round too, so the next method gets its turn
                 }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: Exception) {
                 state.setFpsDebug("measuring failed: ${e.javaClass.simpleName}: ${e.message}")
+                noteEmpty()
             } finally {
                 sampling = false
             }
@@ -377,9 +385,9 @@ class GameWatcherService : Service() {
     private suspend fun sampleFrames(pkg: String) {
         if (!shell.isAvailable()) { state.setFpsDebug("no shell access (Shizuku / wireless debugging not connected)"); return }
         var got = false
-        if (sfMode == SfMode.TimeStats) {
+        if (sfMode != SfMode.Latency) {
             if (!tsEnabled) { shell.timeStatsEnable(); tsEnabled = true }
-            val r = shell.timeStatsDumpClear()
+            val r = shell.timeStatsDumpClear(light = sfMode == SfMode.TimeStatsLight)
             val sample = TimeStatsParser.parse(r.output, pkg)
             val now = android.os.SystemClock.elapsedRealtime()
             val elapsedS = (now - lastSampleAt) / 1000f
@@ -394,7 +402,7 @@ class GameWatcherService : Service() {
             }
             val names = TimeStatsParser.layerNames(r.output).take(4)
             state.setFpsDebug(buildString {
-                append("method=TimeStats shell-ok=${r.ok} dump=${r.output.length} chars\n")
+                append("method=$sfMode shell-ok=${r.ok} dump=${r.output.length} chars\n")
                 append("layers in dump=${TimeStatsParser.layerNames(r.output).size} first=$names\n")
                 append("game=$pkg match=${sample?.layer ?: "none"} frames=${sample?.totalFrames} avgFps=${sample?.averageFps} shown=${lastTsFps}")
                 if (r.output.length < 300) append("\nreply: ${r.output.replace('\n', ' ')}")
@@ -416,12 +424,20 @@ class GameWatcherService : Service() {
             }
             state.setFpsDebug("method=latency layer=${layer ?: "not found"} timestamps parsed=$parsed frames kept=${collector.frameTimesMs.size}")
         }
-        if (got) modeEmpty = 0
-        else if (++modeEmpty >= SWITCH_AFTER) {
-            modeEmpty = 0
-            sfMode = if (sfMode == SfMode.TimeStats) SfMode.Latency else SfMode.TimeStats
-            layer = null; layerMissing = false
+        if (got) modeEmpty = 0 else noteEmpty()
+    }
+
+    /** A round that produced nothing, or timed out: after [SWITCH_AFTER] of them, try the next measuring method. */
+    private fun noteEmpty() {
+        if (++modeEmpty < SWITCH_AFTER) return
+        modeEmpty = 0
+        sfMode = when (sfMode) {
+            SfMode.TimeStatsLight -> SfMode.TimeStats
+            SfMode.TimeStats -> SfMode.Latency
+            SfMode.Latency -> SfMode.TimeStatsLight
         }
+        layer = null; layerMissing = false
+        state.log("measuring method now: $sfMode")
     }
 
     private fun stopTimeStats() {
@@ -455,13 +471,13 @@ class GameWatcherService : Service() {
         var unit = getString(R.string.overlay_unit_noshell) // no shell access and no capture: say why, not just "n/a"
         var fpsInt: Int? = null
         if (src != Source.None) {
-            val count = if (src == Source.Measured && sfMode == SfMode.TimeStats) tsSamples else activeTimes(src).size
+            val count = if (src == Source.Measured && sfMode != SfMode.Latency) tsSamples else activeTimes(src).size
             staleTicks = if (count == lastFrameCount) staleTicks + 1 else 0
             lastFrameCount = count
             // no new frames for 3 s: do not show an old number
             val fps = when {
-                staleTicks >= 3 -> null
-                src == Source.Measured && sfMode == SfMode.TimeStats -> lastTsFps
+                staleTicks >= 9 -> null
+                src == Source.Measured && sfMode != SfMode.Latency -> lastTsFps
                 src == Source.Measured -> collector.currentFps()
                 else -> capture.currentFps()
             }
@@ -523,7 +539,7 @@ class GameWatcherService : Service() {
     companion object {
         const val ACTION_TEST = "app.framex.feature.games.TEST_OVERLAY"
         const val CHANNEL = "game_watcher"
-        const val SWITCH_AFTER = 5
+        const val SWITCH_AFTER = 3
 
         const val ID = 1001
     }

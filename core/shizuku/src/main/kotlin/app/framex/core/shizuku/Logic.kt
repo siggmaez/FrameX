@@ -79,6 +79,8 @@ object Commands {
     const val TIMESTATS_ENABLE = "dumpsys SurfaceFlinger --timestats -enable"
     const val TIMESTATS_DISABLE = "dumpsys SurfaceFlinger --timestats -disable"
     /** Two plain calls instead of combined flags, so it works however the flags are handled. */
+    /** Only the busiest few layers: a much smaller dump for SurfaceFlinger to build while a game is running. */
+    const val TIMESTATS_DUMP_CLEAR_LIGHT = "dumpsys SurfaceFlinger --timestats -dump -maxlayers 6; dumpsys SurfaceFlinger --timestats -clear"
     const val TIMESTATS_DUMP_CLEAR = "dumpsys SurfaceFlinger --timestats -dump; dumpsys SurfaceFlinger --timestats -clear"
     fun setBatterySaver(on: Boolean) = "settings put global low_power ${if (on) 1 else 0}"
     const val GET_BATTERY_SAVER = "settings get global low_power"

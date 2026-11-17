@@ -43,7 +43,7 @@ class CompositeShell @Inject constructor(private val shizuku: ShizukuShell, priv
     override suspend fun backgroundDataRestricted() = pick().backgroundDataRestricted()
     override suspend fun setBackgroundDataRestricted(on: Boolean) = pick().setBackgroundDataRestricted(on)
     override suspend fun timeStatsEnable() = pick().timeStatsEnable()
-    override suspend fun timeStatsDumpClear() = pick().timeStatsDumpClear()
+    override suspend fun timeStatsDumpClear(light: Boolean) = pick().timeStatsDumpClear(light)
     override suspend fun timeStatsDisable() = pick().timeStatsDisable()
     override suspend fun setBatterySaver(on: Boolean) = pick().setBatterySaver(on)
     override suspend fun isBatterySaverOn() = pick().isBatterySaverOn()

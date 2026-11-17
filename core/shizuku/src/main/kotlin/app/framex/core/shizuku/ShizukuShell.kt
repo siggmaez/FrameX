@@ -41,7 +41,7 @@ abstract class TypedShell : PrivilegedShell {
     override suspend fun setBackgroundDataRestricted(on: Boolean) = exec(Commands.setDataSaver(on))
 
     override suspend fun timeStatsEnable() = exec(Commands.TIMESTATS_ENABLE)
-    override suspend fun timeStatsDumpClear() = exec(Commands.TIMESTATS_DUMP_CLEAR)
+    override suspend fun timeStatsDumpClear(light: Boolean) = exec(if (light) Commands.TIMESTATS_DUMP_CLEAR_LIGHT else Commands.TIMESTATS_DUMP_CLEAR)
     override suspend fun timeStatsDisable() = exec(Commands.TIMESTATS_DISABLE)
     override suspend fun setBatterySaver(on: Boolean) = exec(Commands.setBatterySaver(on))
 
