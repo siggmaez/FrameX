@@ -37,7 +37,7 @@ class FpsOverlay(private val context: Context) {
 
     private fun attach() {
         val v = OverlayView(context, style)
-        last?.let { v.setContent(it) }
+        last?.let { v.setContent(it) } // the window is measured with this text already in place
         var startX = 0; var startY = 0; var downX = 0f; var downY = 0f
         v.setOnTouchListener { view, e ->
             when (e.action) {
@@ -58,6 +58,17 @@ class FpsOverlay(private val context: Context) {
         view = null
     }
 
+
+    /**
+     * Changes the content and then makes Android measure the window again. A WRAP_CONTENT overlay window can keep the
+     * size of its first (empty) layout otherwise, which cut the picture and hid the numbers.
+     */
+    private fun relayout(change: (OverlayView) -> Unit) {
+        val v = view ?: return
+        change(v)
+        v.requestLayout()
+        runCatching { wm.updateViewLayout(v, params) }
+    }
     fun show() { handler.post { if (view == null) attach() } }
 
     /** Switches the look; if the overlay is showing it is rebuilt in place. */
@@ -71,7 +82,7 @@ class FpsOverlay(private val context: Context) {
 
     fun update(c: OverlayContent) {
         last = c
-        handler.post { view?.setContent(c) }
+        handler.post { relayout { it.setContent(c) } }
     }
 
     fun hide() { handler.post { detach() } }

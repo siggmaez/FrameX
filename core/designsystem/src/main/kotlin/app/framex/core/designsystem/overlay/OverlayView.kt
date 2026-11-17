@@ -130,6 +130,8 @@ private class Spec(
     val statusDot: Boolean = false,
     val horizontal: Boolean = false,
     val textSize: Float = 16f,
+    /** Smallest width in dp: shapes such as the sword need length even when the text is short. */
+    val minWidthDp: Int = 0,
 )
 
 private fun specFor(style: OverlayStyle): Spec = when (style) {
@@ -145,7 +147,7 @@ private fun specFor(style: OverlayStyle): Spec = when (style) {
         26, 14, 26, 16, 0xFFE6EAF0.toInt(), 0xFF7C8590.toInt(), 0xFF2EC8F0.toInt())
     OverlayStyle.Katana -> Spec(
         { d -> KatanaDrawable(d) },
-        34 + 7 + 10, 9, 18, 9, 0xFF23232B.toInt(), 0xFF6B6B78.toInt(), 0xFF23232B.toInt())
+        34 + 7 + 10, 9, 18, 9, 0xFF23232B.toInt(), 0xFF6B6B78.toInt(), 0xFF23232B.toInt(), minWidthDp = 190)
     OverlayStyle.Raven -> Spec(
         { d -> PolyDrawable(listOf(0f to 0.35f, 0.10f to 0.10f, 0.22f to 0.28f, 0.36f to 0.06f, 0.50f to 0.22f, 0.64f to 0.06f, 0.78f to 0.28f, 0.90f to 0.10f, 1f to 0.35f,
             0.85f to 0.70f, 0.70f to 0.62f, 0.50f to 0.92f, 0.30f to 0.62f, 0.15f to 0.70f), 0xFF3A1D22.toInt(), 0xFF21100F.toInt(), 0xFF7A2A30.toInt(), 1 * d) },
@@ -200,6 +202,7 @@ class OverlayView(context: Context, style: OverlayStyle) : LinearLayout(context)
     init {
         orientation = if (spec.horizontal) HORIZONTAL else VERTICAL
         background = spec.background(d)
+        if (spec.minWidthDp > 0) minimumWidth = (spec.minWidthDp * d).toInt()
         setPadding((spec.padL * d).toInt(), (spec.padT * d).toInt(), (spec.padR * d).toInt(), (spec.padB * d).toInt())
         val fpsRow = LinearLayout(context).apply {
             orientation = HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
