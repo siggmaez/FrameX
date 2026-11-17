@@ -40,6 +40,33 @@ object Commands {
         return "i=0; for p in ${pkgs.joinToString(" ")}; do am force-stop \"\$p\" & i=\$((i+1)); if [ \$((i % 6)) -eq 0 ]; then wait; fi; done; wait"
     }
 
+
+    /** 0.3..0.9 in steps of 0.05, as the game-mode downscale intervention expects it ("0.7", "0.85"). */
+    fun formatScale(scale: Float): String {
+        val r = (Math.round(scale.coerceIn(0.3f, 0.9f) * 20) / 20.0)
+        return String.format(java.util.Locale.US, "%.2f", r).trimEnd('0').trimEnd('.')
+    }
+
+    fun setDownscale(pkg: String, scale: Float): String? =
+        if (isValidPackage(pkg)) "cmd game set --mode performance --downscale ${formatScale(scale)} $pkg" else null
+
+    fun resetGameConfig(pkg: String): String? = if (isValidPackage(pkg)) "cmd game reset $pkg" else null
+
+    fun setFixedPerformance(on: Boolean) = "cmd power set-fixed-performance-mode-enabled ${if (on) "true" else "false"}"
+
+    const val GET_REFRESH = "settings get system min_refresh_rate; settings get system peak_refresh_rate"
+
+    fun setRefreshRate(hz: Int): String? =
+        if (hz in 30..240) "settings put system min_refresh_rate $hz; settings put system peak_refresh_rate $hz" else null
+
+    private val SETTING_VALUE = Regex("^(null|[0-9]+(\\.[0-9]+)?)$")
+
+    /** Puts the two refresh-rate overrides back exactly as they were ("null" = delete the override). */
+    fun restoreRefreshRate(min: String, peak: String): String? {
+        if (!SETTING_VALUE.matches(min) || !SETTING_VALUE.matches(peak)) return null
+        fun one(key: String, v: String) = if (v == "null") "settings delete system $key" else "settings put system $key $v"
+        return one("min_refresh_rate", min) + "; " + one("peak_refresh_rate", peak)
+    }
     fun setBatterySaver(on: Boolean) = "settings put global low_power ${if (on) 1 else 0}"
     const val GET_BATTERY_SAVER = "settings get global low_power"
     const val LIST_LAYERS = "dumpsys SurfaceFlinger --list"
@@ -54,6 +81,10 @@ object Parsers {
 
     /** The mode that is *active*, not the list of available ones. Null if the output has no such field. */
     fun currentGameMode(output: String): String? = CURRENT_MODE.find(output)?.groupValues?.get(1)?.lowercase()
+
+    /** Two lines: the min and the peak override, "null" when unset. */
+    fun refreshSettings(output: String): Pair<String, String>? =
+        output.lines().map { it.trim() }.filter { it.isNotEmpty() }.takeIf { it.size >= 2 }?.let { it[0] to it[1] }
 
     fun batterySaverOn(output: String): Boolean? = when (output.trim()) { "1" -> true; "0" -> false; else -> null }
 }

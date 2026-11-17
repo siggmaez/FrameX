@@ -26,6 +26,14 @@ abstract class TypedShell : PrivilegedShell {
 
     override suspend fun forceStopMany(pkgs: List<String>) = exec(Commands.forceStopMany(pkgs))
 
+
+    override suspend fun setDownscale(pkg: String, scale: Float) = exec(Commands.setDownscale(pkg, scale))
+    override suspend fun resetGameConfig(pkg: String) = exec(Commands.resetGameConfig(pkg))
+    override suspend fun setFixedPerformance(on: Boolean) = exec(Commands.setFixedPerformance(on))
+    override suspend fun refreshRateSettings(): Pair<String, String>? =
+        exec(Commands.GET_REFRESH).takeIf { it.ok }?.let { Parsers.refreshSettings(it.output) }
+    override suspend fun setRefreshRate(hz: Int) = exec(Commands.setRefreshRate(hz))
+    override suspend fun restoreRefreshRate(min: String, peak: String) = exec(Commands.restoreRefreshRate(min, peak))
     override suspend fun setBatterySaver(on: Boolean) = exec(Commands.setBatterySaver(on))
 
     override suspend fun isBatterySaverOn(): Boolean? =

@@ -23,4 +23,13 @@
     <string name="opt_method_shizuku">force-stop through Shizuku</string>
     <string name="opt_method_accessibility">force-stop through accessibility</string>
     <string name="opt_method_background">background kill</string>
+    <string name="opt_no_scale">No render scale given</string>
+    <string name="opt_scale_set">Render resolution set to %1$d%% for this game (Android does not say whether the game honours it; see the measured FPS)</string>
+    <string name="opt_scale_restored">Render resolution restored</string>
+    <string name="opt_fixed_on">Fixed performance mode requested</string>
+    <string name="opt_fixed_off">Fixed performance mode switched off</string>
+    <string name="opt_no_display">Could not read the screen\'s refresh rates</string>
+    <string name="opt_refresh_set">Screen locked to %1$d Hz</string>
+    <string name="opt_refresh_ignored">This phone ignores the refresh-rate setting (still %1$d Hz), so it was put back</string>
+    <string name="opt_refresh_restored">Refresh rate setting restored</string>
 </resources>

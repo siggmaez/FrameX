@@ -29,6 +29,8 @@ import app.framex.core.monitoring.FrameStats
 import app.framex.core.monitoring.SurfaceFlingerLatencyParser
 import app.framex.core.monitoring.SurfaceFlingerLayers
 import app.framex.core.optimization.ApplyRequest
+import app.framex.core.optimization.BoostLevel
+import app.framex.core.optimization.GameBoosts
 import app.framex.core.optimization.OptimizationEngine
 import app.framex.core.optimization.PrivilegedShell
 import dagger.hilt.android.AndroidEntryPoint
@@ -191,16 +193,25 @@ class GameWatcherService : Service() {
         val armed = state.take(p.packageName)
         val profile = armed?.profile
             ?: if (p.autoApply) runCatching { OptimizationProfile.valueOf(p.profile) }.getOrDefault(OptimizationProfile.Gaming) else null
+        // this game's own boost level; Off = nothing extra
+        val level = runCatching { BoostLevel.valueOf(p.boostLevel) }.getOrDefault(BoostLevel.Off)
+        val boost = GameBoosts.plan(p.packageName, level)
         var applied: String? = null
-        if (profile != null && profile != OptimizationProfile.Balanced) {
-            // Apps are stopped only if the user approved them (Play button confirmation or a remembered list).
+        if ((profile != null && profile != OptimizationProfile.Balanced) || (boost != null && (profile != null || armed != null))) {
+            // Apps are stopped only if the user approved them (Play button confirmation, a remembered list or the automatic boost).
             val custom = settings.settings.first().customActions
-            val report = engine.apply(profile, ApplyRequest(targetPackage = p.packageName, stopPackages = armed?.stopPackages.orEmpty(), customActions = custom))
-            if (report.anyApplied) { applied = profile.name; appliedByUs = true }
+            val report = engine.apply(
+                profile ?: OptimizationProfile.Balanced,
+                ApplyRequest(
+                    targetPackage = p.packageName, stopPackages = armed?.stopPackages.orEmpty(), customActions = custom,
+                    extraActions = boost?.extraActions.orEmpty(), renderScale = boost?.renderScale,
+                ),
+            )
+            if (report.anyApplied) { applied = (profile ?: OptimizationProfile.Balanced).name; appliedByUs = true }
         }
         val t = batteryTemp()
         val base = GameSessionEntity(packageName = p.packageName, label = p.label, startMs = System.currentTimeMillis(),
-            appliedProfile = applied, startTempC = t, maxTempC = t)
+            appliedProfile = applied, startTempC = t, maxTempC = t, boostLevel = if (applied != null) level.name else BoostLevel.Off.name)
         collector = FrameCollector(); layer = null; layerAge = 0; lastFrameCount = 0; staleTicks = 0
         capture.reset() // frames from before the game opened (FrameX, launcher) must not count
         session = base.copy(id = games.startSession(base))

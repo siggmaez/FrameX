@@ -80,4 +80,24 @@ class ShizukuTest {
         assertEquals("standard", Parsers.currentGameMode("Current game mode: STANDARD"))
         assertNull(Parsers.currentGameMode("available modes: [standard, performance]"))
     }
+
+    @Test fun downscaleCommandFormatsAndValidates() {
+        assertEquals("0.7", Commands.formatScale(0.7f))
+        assertEquals("0.85", Commands.formatScale(0.85f))
+        assertEquals("0.9", Commands.formatScale(1.0f))   // clamped
+        assertEquals("0.3", Commands.formatScale(0.1f))
+        assertEquals("cmd game set --mode performance --downscale 0.8 com.g.a", Commands.setDownscale("com.g.a", 0.8f))
+        assertNull(Commands.setDownscale("com.g.a; reboot", 0.8f))
+        assertEquals("cmd game reset com.g.a", Commands.resetGameConfig("com.g.a"))
+    }
+
+    @Test fun refreshRateCommands() {
+        assertEquals("settings put system min_refresh_rate 90; settings put system peak_refresh_rate 90", Commands.setRefreshRate(90))
+        assertNull(Commands.setRefreshRate(5)); assertNull(Commands.setRefreshRate(500))
+        assertEquals("settings delete system min_refresh_rate; settings put system peak_refresh_rate 60.0", Commands.restoreRefreshRate("null", "60.0"))
+        assertNull(Commands.restoreRefreshRate("90; reboot", "null"))
+        assertEquals("90.0" to "null", Parsers.refreshSettings("90.0\nnull\n"))
+        assertNull(Parsers.refreshSettings("90.0"))
+        assertEquals("cmd power set-fixed-performance-mode-enabled true", Commands.setFixedPerformance(true))
+    }
 }

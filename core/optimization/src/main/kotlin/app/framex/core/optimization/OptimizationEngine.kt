@@ -20,7 +20,7 @@ class OptimizationEngine(
         storage.load()?.let { results += restoreInternal(it) }
         val caps = capabilities.detect()
         val tokens = LinkedHashMap<OptAction, String?>()
-        for (action in Profiles.actionsFor(profile, request.customActions)) {
+        for (action in Profiles.actionsFor(profile, request.customActions) + request.extraActions) {
             val cap = caps[action] ?: Capability.Unsupported(UnsupportedReason.Unknown)
             val result = when {
                 cap is Capability.Unsupported -> ActionResult(action, ResultStatus.Skipped, "", cap.reason)
@@ -71,5 +71,5 @@ class OptimizationEngine(
         return out
     }
 
-    private fun OptAction.needsTarget() = this == OptAction.GameModePerformance || this == OptAction.GameModeBattery
+    private fun OptAction.needsTarget() = this == OptAction.GameModePerformance || this == OptAction.GameModeBattery || this == OptAction.RenderScale
 }

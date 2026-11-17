@@ -37,6 +37,14 @@ interface PrivilegedShell {
     suspend fun getGameMode(pkg: String): String?
     suspend fun forceStop(pkg: String): ShellResult
     suspend fun forceStopMany(pkgs: List<String>): ShellResult
+    /** Game-mode render resolution for one game (Android 13+). */
+    suspend fun setDownscale(pkg: String, scale: Float): ShellResult
+    suspend fun resetGameConfig(pkg: String): ShellResult
+    suspend fun setFixedPerformance(on: Boolean): ShellResult
+    /** "min|peak" refresh-rate overrides currently stored ("null" = not set), or null if unreadable. */
+    suspend fun refreshRateSettings(): Pair<String, String>?
+    suspend fun setRefreshRate(hz: Int): ShellResult
+    suspend fun restoreRefreshRate(min: String, peak: String): ShellResult
     suspend fun setBatterySaver(on: Boolean): ShellResult
     suspend fun isBatterySaverOn(): Boolean?
     suspend fun surfaceFlingerLayers(): List<String>?

@@ -145,6 +145,9 @@ object OptimizationModule {
             OptAction.GameModePerformance to game,
             OptAction.GameModeBattery to game,
             OptAction.BatterySaver to BatterySaverExecutor(context, shell),
+            OptAction.RenderScale to RenderScaleExecutor(context, shell),
+            OptAction.FixedPerformance to FixedPerformanceExecutor(context, shell),
+            OptAction.RefreshLock to RefreshLockExecutor(context, shell),
         )
         return OptimizationEngine(executors, capabilities, StoreStorage(store), RoomLogger(log))
     }
@@ -224,5 +227,73 @@ class FindingsReader @Inject constructor(@ApplicationContext private val context
             (context.getSystemService(Context.DISPLAY_SERVICE) as android.hardware.display.DisplayManager).getDisplay(android.view.Display.DEFAULT_DISPLAY)
         }.getOrNull()
         return Findings(temp, charging, ram, pm.isPowerSaveMode, d?.refreshRate, d?.supportedModes?.maxOfOrNull { it.refreshRate }, shell.isAvailable())
+    }
+}
+
+/** Lowers one game's render resolution through Android 13+ game-mode interventions. Put back with a reset. */
+class RenderScaleExecutor(private val context: Context, private val shell: PrivilegedShell) : ActionExecutor {
+    override suspend fun apply(action: OptAction, request: ApplyRequest): ExecResult {
+        val pkg = request.targetPackage ?: return ExecResult(ResultStatus.Failed, context.getString(R.string.opt_no_game))
+        val scale = request.renderScale ?: return ExecResult(ResultStatus.Failed, context.getString(R.string.opt_no_scale))
+        val r = shell.setDownscale(pkg, scale)
+        if (!r.ok) return ExecResult(ResultStatus.Failed, r.output.take(120))
+        // Android accepts the request but does not report whether this game honours it; measured FPS shows the effect.
+        return ExecResult(ResultStatus.Applied, context.getString(R.string.opt_scale_set, Math.round(scale * 100)), pkg)
+    }
+
+    override suspend fun restore(action: OptAction, token: String?): ExecResult {
+        val pkg = token ?: return ExecResult(ResultStatus.Failed, context.getString(R.string.opt_no_previous))
+        val r = shell.resetGameConfig(pkg)
+        return ExecResult(if (r.ok) ResultStatus.Restored else ResultStatus.Failed,
+            if (r.ok) context.getString(R.string.opt_scale_restored) else r.output.take(120))
+    }
+}
+
+/** Asks the system for fixed performance mode (no power-saving frequency dips) where the phone supports it. */
+class FixedPerformanceExecutor(private val context: Context, private val shell: PrivilegedShell) : ActionExecutor {
+    override suspend fun apply(action: OptAction, request: ApplyRequest): ExecResult {
+        val r = shell.setFixedPerformance(true)
+        return if (r.ok) ExecResult(ResultStatus.Applied, context.getString(R.string.opt_fixed_on), "1")
+        else ExecResult(ResultStatus.Failed, r.output.take(120).ifEmpty { context.getString(R.string.opt_not_confirmed) })
+    }
+
+    override suspend fun restore(action: OptAction, token: String?): ExecResult {
+        val r = shell.setFixedPerformance(false)
+        return ExecResult(if (r.ok) ResultStatus.Restored else ResultStatus.Failed,
+            if (r.ok) context.getString(R.string.opt_fixed_off) else r.output.take(120))
+    }
+}
+
+/**
+ * Locks the screen to its highest refresh rate. Validated: if Android does not actually report that rate afterwards
+ * (some phones ignore these settings), the previous values are put back and the action is reported as failed.
+ */
+class RefreshLockExecutor(private val context: Context, private val shell: PrivilegedShell) : ActionExecutor {
+    private fun display() = runCatching {
+        (context.getSystemService(Context.DISPLAY_SERVICE) as android.hardware.display.DisplayManager).getDisplay(android.view.Display.DEFAULT_DISPLAY)
+    }.getOrNull()
+
+    override suspend fun apply(action: OptAction, request: ApplyRequest): ExecResult {
+        val d = display()
+        val hz = request.refreshHz ?: d?.supportedModes?.maxOfOrNull { Math.round(it.refreshRate) }
+            ?: return ExecResult(ResultStatus.Failed, context.getString(R.string.opt_no_display))
+        val previous = shell.refreshRateSettings() ?: return ExecResult(ResultStatus.Failed, context.getString(R.string.opt_not_confirmed))
+        val token = "${previous.first}|${previous.second}"
+        val r = shell.setRefreshRate(hz)
+        if (!r.ok) return ExecResult(ResultStatus.Failed, r.output.take(120))
+        delay(900) // the display needs a moment to switch mode
+        val now = display()?.refreshRate ?: 0f
+        if (now >= hz - 1f) return ExecResult(ResultStatus.Applied, context.getString(R.string.opt_refresh_set, hz), token)
+        shell.restoreRefreshRate(previous.first, previous.second) // not honoured on this phone: leave no trace
+        return ExecResult(ResultStatus.Failed, context.getString(R.string.opt_refresh_ignored, Math.round(now)))
+    }
+
+    override suspend fun restore(action: OptAction, token: String?): ExecResult {
+        val p = token?.split('|')
+        val min = p?.getOrNull(0); val peak = p?.getOrNull(1)
+        if (min == null || peak == null) return ExecResult(ResultStatus.Failed, context.getString(R.string.opt_no_previous))
+        val r = shell.restoreRefreshRate(min, peak)
+        return ExecResult(if (r.ok) ResultStatus.Restored else ResultStatus.Failed,
+            if (r.ok) context.getString(R.string.opt_refresh_restored) else r.output.take(120))
     }
 }

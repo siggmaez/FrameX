@@ -20,6 +20,8 @@ data class GameProfileEntity(
     val autoApply: Boolean,
     /** Comma-separated packages the user approved to stop when playing; empty = ask. */
     val stopPackages: String = "",
+    /** Off / Safe / Strong / Max: how far this game's boost goes. */
+    val boostLevel: String = "Strong",
 )
 
 @Entity(tableName = "game_sessions")
@@ -40,6 +42,8 @@ data class GameSessionEntity(
     val lowFps: Float? = null,
     /** "SurfaceFlinger" = measured; "ScreenCapture" = estimated from screen-capture frame updates. */
     val fpsSource: String? = null,
+    /** Boost level used for this session (null on sessions recorded before boosts existed). */
+    val boostLevel: String? = null,
 )
 
 @Dao

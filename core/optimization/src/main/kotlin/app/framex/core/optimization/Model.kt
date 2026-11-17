@@ -3,7 +3,7 @@ package app.framex.core.optimization
 import app.framex.core.common.OptAction
 import app.framex.core.common.OptimizationProfile
 
-enum class UnsupportedReason { NeedsPolicyAccess, NeedsShizuku, NeedsAndroid12, NeedsTargetGame, NeedsWriteSettings, NoWifi, Unknown }
+enum class UnsupportedReason { NeedsPolicyAccess, NeedsShizuku, NeedsAndroid12, NeedsAndroid13, NeedsTargetGame, NeedsWriteSettings, NoWifi, Unknown }
 
 sealed interface Capability {
     data object Supported : Capability
@@ -18,6 +18,12 @@ data class ApplyRequest(
     /** Packages the user confirmed to stop. */
     val stopPackages: List<String> = emptyList(),
     val customActions: Set<OptAction> = emptySet(),
+    /** Added on top of the profile's own actions (used by game boosts). */
+    val extraActions: Set<OptAction> = emptySet(),
+    /** Render resolution factor for [OptAction.RenderScale], e.g. 0.85. */
+    val renderScale: Float? = null,
+    /** Refresh rate for [OptAction.RefreshLock]; null = the highest the screen supports. */
+    val refreshHz: Int? = null,
 )
 
 enum class ResultStatus { Applied, Restored, Failed, Skipped }
@@ -59,6 +65,17 @@ object CapabilityEvaluator {
         OptAction.GameModePerformance to game(shellAvailable, sdk),
         OptAction.GameModeBattery to game(shellAvailable, sdk),
         OptAction.BatterySaver to if (shellAvailable) Capability.Supported else Capability.Unsupported(UnsupportedReason.NeedsShizuku),
+        OptAction.RenderScale to when {
+            sdk < 33 -> Capability.Unsupported(UnsupportedReason.NeedsAndroid13)
+            !shellAvailable -> Capability.Unsupported(UnsupportedReason.NeedsShizuku)
+            else -> Capability.Supported
+        },
+        OptAction.FixedPerformance to when {
+            sdk < 31 -> Capability.Unsupported(UnsupportedReason.NeedsAndroid12)
+            !shellAvailable -> Capability.Unsupported(UnsupportedReason.NeedsShizuku)
+            else -> Capability.Supported
+        },
+        OptAction.RefreshLock to if (shellAvailable) Capability.Supported else Capability.Unsupported(UnsupportedReason.NeedsShizuku),
     )
 
     private fun game(shell: Boolean, sdk: Int): Capability = when {

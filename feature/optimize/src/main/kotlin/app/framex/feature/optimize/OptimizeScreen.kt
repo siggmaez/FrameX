@@ -56,6 +56,9 @@ private fun OptAction.title() = stringResource(when (this) {
     OptAction.GameModePerformance -> R.string.act_gm_perf
     OptAction.GameModeBattery -> R.string.act_gm_batt
     OptAction.BatterySaver -> R.string.act_saver
+    OptAction.RenderScale -> R.string.act_scale
+    OptAction.FixedPerformance -> R.string.act_fixed
+    OptAction.RefreshLock -> R.string.act_refresh
 })
 
 @Composable
@@ -63,6 +66,7 @@ private fun UnsupportedReason?.text() = stringResource(when (this) {
     UnsupportedReason.NeedsPolicyAccess -> R.string.reason_policy
     UnsupportedReason.NeedsShizuku -> R.string.reason_shizuku
     UnsupportedReason.NeedsAndroid12 -> R.string.reason_a12
+    UnsupportedReason.NeedsAndroid13 -> R.string.reason_a13
     UnsupportedReason.NeedsTargetGame -> R.string.reason_target
     UnsupportedReason.NeedsWriteSettings -> R.string.reason_write
     UnsupportedReason.NoWifi -> R.string.reason_nowifi

@@ -65,4 +65,8 @@
     <string name="tk_text">Stops every eligible background app right now. Apps on your never-stop list, system apps, the keyboard, launcher, dialer and SMS are always skipped.</string>
     <string name="tk_soft">Only a soft background kill is possible without Shizuku: Android does not allow a real force-stop of other apps to an ordinary app.</string>
     <string name="tk_button">Kill tasks now</string>
+    <string name="act_scale">Lower the game\'s render resolution</string>
+    <string name="act_fixed">Fixed performance mode</string>
+    <string name="act_refresh">Lock the highest refresh rate</string>
+    <string name="reason_a13">Needs Android 13 or newer</string>
 </resources>

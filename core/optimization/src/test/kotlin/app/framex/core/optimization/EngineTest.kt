@@ -148,4 +148,39 @@ class EngineTest {
         assertEquals(listOf("b.two", "c.three"), AppRanking.select(a, emptyMap(), setOf("a.one"), limit = 5).map { it.packageName })
         assertEquals(listOf("b.two"), AppRanking.select(a, emptyMap(), emptySet(), limit = 1).map { it.packageName })
     }
+
+    @Test fun gameBoostPlans() {
+        assertNull(GameBoosts.plan("com.supercell.brawlstars", BoostLevel.Off))
+        val safe = GameBoosts.plan("com.supercell.brawlstars", BoostLevel.Safe)!!
+        assertEquals(setOf(OptAction.RefreshLock), safe.extraActions); assertNull(safe.renderScale)
+        val strong = GameBoosts.plan("com.supercell.brawlstars", BoostLevel.Strong)!!
+        assertTrue(OptAction.FixedPerformance in strong.extraActions && OptAction.RenderScale in strong.extraActions)
+        assertEquals(0.9f, strong.renderScale!!, 0f)
+        assertEquals(0.8f, GameBoosts.plan("com.supercell.brawlstars", BoostLevel.Max)!!.renderScale!!, 0f)
+        assertEquals(60, strong.spec.knownCapFps)
+    }
+
+    @Test fun unknownGamesUseGenericBoostAndSpecializedAreFlagged() {
+        assertTrue(GameBoosts.isSpecialized("com.roblox.client"))
+        assertTrue(!GameBoosts.isSpecialized("com.some.game"))
+        assertEquals("generic", GameBoosts.specFor("com.some.game").id)
+        assertEquals(0.75f, GameBoosts.plan("com.some.game", BoostLevel.Max)!!.renderScale!!, 0f)
+    }
+
+    @Test fun extraActionsAreAppliedOnTopOfTheProfileAndRenderScaleNeedsAGame() = runTest {
+        val ex = FakeExec(); val e = engine(ex, MemStorage(), Log())
+        val rep = e.apply(OptimizationProfile.Balanced, ApplyRequest(extraActions = setOf(OptAction.RefreshLock, OptAction.RenderScale), renderScale = 0.8f))
+        assertEquals(ResultStatus.Applied, rep.results.first { it.action == OptAction.RefreshLock }.status)
+        assertEquals(UnsupportedReason.NeedsTargetGame, rep.results.first { it.action == OptAction.RenderScale }.reason)
+        val rep2 = engine(FakeExec(), MemStorage(), Log()).apply(OptimizationProfile.Balanced, ApplyRequest("com.g.a", extraActions = setOf(OptAction.RenderScale), renderScale = 0.8f))
+        assertEquals(ResultStatus.Applied, rep2.results.single().status)
+    }
+
+    @Test fun newCapabilitiesNeedTheRightAndroid() {
+        val old = CapabilityEvaluator.evaluate(true, true, 32)
+        assertEquals(Capability.Unsupported(UnsupportedReason.NeedsAndroid13), old[OptAction.RenderScale])
+        assertEquals(Capability.Supported, old[OptAction.FixedPerformance])
+        assertEquals(Capability.Supported, CapabilityEvaluator.evaluate(true, true, 33)[OptAction.RenderScale])
+        assertEquals(Capability.Unsupported(UnsupportedReason.NeedsShizuku), CapabilityEvaluator.evaluate(true, false, 35)[OptAction.RefreshLock])
+    }
 }

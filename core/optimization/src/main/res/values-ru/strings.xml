@@ -23,4 +23,13 @@
     <string name="opt_method_shizuku">принудительная остановка через Shizuku</string>
     <string name="opt_method_accessibility">принудительная остановка через службу доступности</string>
     <string name="opt_method_background">остановка фоновых процессов</string>
+    <string name="opt_no_scale">Масштаб рендера не задан</string>
+    <string name="opt_scale_set">Разрешение рендера для этой игры: %1$d%% (Android не сообщает, учитывает ли игра это; смотрите измеренный FPS)</string>
+    <string name="opt_scale_restored">Разрешение рендера возвращено</string>
+    <string name="opt_fixed_on">Режим фиксированной производительности запрошен</string>
+    <string name="opt_fixed_off">Режим фиксированной производительности выключен</string>
+    <string name="opt_no_display">Не удалось прочитать частоты экрана</string>
+    <string name="opt_refresh_set">Экран зафиксирован на %1$d Гц</string>
+    <string name="opt_refresh_ignored">Этот телефон игнорирует настройку частоты (всё ещё %1$d Гц), поэтому она возвращена</string>
+    <string name="opt_refresh_restored">Настройка частоты экрана возвращена</string>
 </resources>

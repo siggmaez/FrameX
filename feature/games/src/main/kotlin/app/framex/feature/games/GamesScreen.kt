@@ -114,6 +114,7 @@ fun GamesScreen(contentPadding: PaddingValues, vm: GamesViewModel = hiltViewMode
                 if (g.stopPackages.isNotBlank()) {
                     TextButton(onClick = { vm.forgetStopList(g) }) { Text(stringResource(R.string.g_forget_stop)) }
                 }
+                BoostSection(g, ui.sessions.filter { it.packageName == g.packageName }) { vm.setBoostLevel(g, it) }
                 Note(stringResource(R.string.g_profile))
                 Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OptimizationProfile.entries.forEach { p ->
