@@ -151,7 +151,10 @@ class GameWatcherService : Service() {
     private var tsSamples = 0
     private var lastTsFps: Float? = null
     private var layerMissing = false
+    private var listedCount: Int? = null
     private var lastSampleAt = 0L
+    private var lastShellGoodAt = 0L
+    private var targetStartedAt = 0L
     private val gameCache = HashMap<String, Boolean>()
     private val homePackages: Set<String> by lazy {
         val home = packageManager.queryIntentActivities(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), 0).map { it.activityInfo.packageName }
@@ -298,7 +301,7 @@ class GameWatcherService : Service() {
         }
         if (passivePkg != fg) {
             passivePkg = fg
-            collector = FrameCollector(); layer = null; layerAge = 0; lastFrameCount = 0; staleTicks = 0; tsSamples = 0; lastTsFps = null; modeEmpty = 0; lastSampleAt = android.os.SystemClock.elapsedRealtime()
+            collector = FrameCollector(); layer = null; layerAge = 0; lastFrameCount = 0; staleTicks = 0; tsSamples = 0; lastTsFps = null; modeEmpty = 0; lastSampleAt = android.os.SystemClock.elapsedRealtime(); lastShellGoodAt = 0L; targetStartedAt = lastSampleAt
             capture.reset()
         }
         refreshOverlay()
@@ -338,7 +341,7 @@ class GameWatcherService : Service() {
         val t = batteryTemp()
         val base = GameSessionEntity(packageName = p.packageName, label = p.label, startMs = System.currentTimeMillis(),
             appliedProfile = applied, startTempC = t, maxTempC = t, boostLevel = if (applied != null && boost != null) level.name else BoostLevel.Off.name)
-        collector = FrameCollector(); layer = null; layerAge = 0; lastFrameCount = 0; staleTicks = 0; tsSamples = 0; lastTsFps = null; modeEmpty = 0; lastSampleAt = android.os.SystemClock.elapsedRealtime()
+        collector = FrameCollector(); layer = null; layerAge = 0; lastFrameCount = 0; staleTicks = 0; tsSamples = 0; lastTsFps = null; modeEmpty = 0; lastSampleAt = android.os.SystemClock.elapsedRealtime(); lastShellGoodAt = 0L; targetStartedAt = lastSampleAt
         capture.reset() // frames from before the game opened (FrameX, launcher) must not count
         session = base.copy(id = games.startSession(base))
         notify(getString(R.string.games_notif_playing, p.label))
@@ -393,6 +396,7 @@ class GameWatcherService : Service() {
     private suspend fun sampleFrames(pkg: String) {
         if (!shell.isAvailable()) { dbg("no shell access (Shizuku / wireless debugging not connected)"); return }
         var got = false
+        val t0 = android.os.SystemClock.elapsedRealtime()
         if (sfMode != SfMode.Latency) {
             if (!tsEnabled) { shell.timeStatsEnable(); tsEnabled = true }
             val r = shell.timeStatsDumpClear(light = sfMode == SfMode.TimeStatsLight)
@@ -402,6 +406,7 @@ class GameWatcherService : Service() {
             lastSampleAt = now
             if (sample != null && sample.totalFrames > 0) {
                 got = true
+                lastShellGoodAt = android.os.SystemClock.elapsedRealtime()
                 // the dump's own average if present, otherwise frames shown since the previous dump / seconds since then
                 val fps = sample.averageFps ?: if (elapsedS in 0.3f..6f) sample.totalFrames / elapsedS else null
                 fps?.let { lastTsFps = it }
@@ -410,14 +415,16 @@ class GameWatcherService : Service() {
             }
             val names = TimeStatsParser.layerNames(r.output).take(4)
             dbg(buildString {
-                append("method=$sfMode shell-ok=${r.ok} dump=${r.output.length} chars\n")
+                append("method=$sfMode shell-ok=${r.ok} dump=${r.output.length} chars took=${android.os.SystemClock.elapsedRealtime() - t0} ms\n")
                 append("layers in dump=${TimeStatsParser.layerNames(r.output).size} first=$names\n")
                 append("game=$pkg match=${sample?.layer ?: "none"} frames=${sample?.totalFrames} avgFps=${sample?.averageFps} shown=${lastTsFps}")
                 if (r.output.length < 300) append("\nreply: ${r.output.replace('\n', ' ')}")
             })
         } else {
             if (layer == null || ++layerAge > 30) {
-                layer = shell.surfaceFlingerLayers()?.let { SurfaceFlingerLayers.pick(it, pkg) }
+                val listed = shell.surfaceFlingerLayers()
+                listedCount = listed?.size
+                layer = listed?.let { SurfaceFlingerLayers.pick(it, pkg) }
                 layerAge = 0
             }
             layerMissing = layer == null
@@ -428,9 +435,10 @@ class GameWatcherService : Service() {
                     val before = collector.frameTimesMs.size
                     parsed = SurfaceFlingerLatencyParser.parse(text).also { collector.add(it) }.size
                     got = collector.frameTimesMs.size > before
+                    if (got) lastShellGoodAt = android.os.SystemClock.elapsedRealtime()
                 }
             }
-            dbg("method=latency layer=${layer ?: "not found"} timestamps parsed=$parsed frames kept=${collector.frameTimesMs.size}")
+            dbg("method=latency layers listed=${listedCount ?: "listing failed"} layer=${layer ?: "not found"} timestamps parsed=$parsed frames kept=${collector.frameTimesMs.size} took=${android.os.SystemClock.elapsedRealtime() - t0} ms")
         }
         if (got) modeEmpty = 0 else noteEmpty()
     }
@@ -457,10 +465,20 @@ class GameWatcherService : Service() {
     /** Measured through SurfaceFlinger if Shizuku is connected, else estimated from screen capture, else none. */
     private enum class Source { Measured, Estimated, None }
 
-    private fun source(): Source = when {
-        shell.isAvailable() -> Source.Measured
-        capture.running.value -> Source.Estimated
-        else -> Source.None
+    /**
+     * Measured (SurfaceFlinger through the shell) while the shell keeps answering; if it stops answering for a while
+     * (a running game can starve background commands) the screen-capture ESTIMATE takes over when it is running.
+     */
+    private fun source(): Source {
+        val now = android.os.SystemClock.elapsedRealtime()
+        val shellOk = shell.isAvailable()
+        val fresh = shellOk && (if (lastShellGoodAt > 0) now - lastShellGoodAt < 9_000 else now - targetStartedAt < 10_000)
+        return when {
+            fresh -> Source.Measured
+            capture.running.value -> Source.Estimated
+            shellOk -> Source.Measured
+            else -> Source.None
+        }
     }
 
     private fun activeTimes(src: Source): List<Float> = when (src) {

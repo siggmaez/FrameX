@@ -27,7 +27,7 @@
     <string name="set_overlay_title">FPS overlay</string>
     <string name="set_overlay_note">A small draggable box over your game, no root needed, with FPS and battery temperature. FPS is measured exactly when Shizuku or wireless debugging is connected; otherwise it shows n/a unless you turn on the screen-capture estimate below. It appears while a game from your list is running.</string>
     <string name="set_capture_title">Estimate FPS by screen capture</string>
-    <string name="set_capture_note">Off by default. When on and neither Shizuku nor wireless debugging is connected, Play asks to capture the screen so FrameX can count how often the picture changes (an estimate, about ±2 FPS, marked ~). Nothing is recorded or saved. You are asked every time.</string>
+    <string name="set_capture_note">Off by default. When on, Play asks to capture the screen so FrameX can count how often the picture changes (an estimate, about ±2 FPS, marked ~). It is used when there is no shell access, and also as a backup when measuring through the shell does not answer (a running game can starve those commands). Nothing is recorded or saved. You are asked every time.</string>
     <string name="set_overlay_need">Needs the permission to draw over other apps.</string>
     <string name="set_overlay_grant">Allow drawing over apps</string>
     <string name="set_net_title">Network mode</string>
