@@ -102,5 +102,5 @@
     <string name="gb_does_refresh_hz">• Locks the screen to %1$d Hz, the rate that suits this game (put back afterwards; skipped if the phone ignores it).</string>
     <string name="gb_does_ping">• Adds the Wi-Fi low-latency modes (this game is ping-sensitive).</string>
     <string name="gb_no_scale">• No resolution cut: this game is not limited by the graphics chip, so it would only blur the picture.</string>
-    <string name="gb_does_dim">• Max also dims the screen to about 30% so the phone runs cooler (needs the permission to change system settings).</string>
+    <string name="gb_does_dim" formatted="false">• Max also dims the screen to about 30% so the phone runs cooler (needs the permission to change system settings).</string>
 </resources>
