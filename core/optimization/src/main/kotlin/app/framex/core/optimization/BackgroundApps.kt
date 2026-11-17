@@ -72,6 +72,8 @@ class BackgroundAppsProvider @Inject constructor(
     private fun protectedPackages(): Set<String> {
         val pm = context.packageManager
         val out = HashSet<String>()
+        // the shell providers FrameX itself depends on, and the user's own agent app
+        out += setOf("moe.shizuku.privileged.api", "cat.narezany.margycode")
         pm.queryIntentActivities(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), 0).forEach { out += it.activityInfo.packageName }
         Settings.Secure.getString(context.contentResolver, Settings.Secure.DEFAULT_INPUT_METHOD)?.substringBefore('/')?.let { out += it }
         (context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager)

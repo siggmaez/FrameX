@@ -61,7 +61,10 @@ private fun BoostScreen(p: BoostProgress, onCancel: () -> Unit, onClose: () -> U
                 LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     items(p.items, key = { it.packageName }) { item ->
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(item.label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                            androidx.compose.foundation.layout.Column(Modifier.weight(1f)) {
+                                Text(item.label, style = MaterialTheme.typography.bodyLarge)
+                                item.detail?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
+                            }
                             Text(stringResource(when (item.status) {
                                 ItemStatus.Pending -> R.string.boost_s_pending
                                 ItemStatus.Working -> R.string.boost_s_working

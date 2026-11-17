@@ -32,6 +32,7 @@ class CompositeShell @Inject constructor(private val shizuku: ShizukuShell, priv
     override suspend fun setGameMode(pkg: String, level: GameModeLevel) = pick().setGameMode(pkg, level)
     override suspend fun getGameMode(pkg: String) = pick().getGameMode(pkg)
     override suspend fun forceStop(pkg: String) = pick().forceStop(pkg)
+    override suspend fun forceStopMany(pkgs: List<String>) = pick().forceStopMany(pkgs)
     override suspend fun setBatterySaver(on: Boolean) = pick().setBatterySaver(on)
     override suspend fun isBatterySaverOn() = pick().isBatterySaverOn()
     override suspend fun surfaceFlingerLayers() = pick().surfaceFlingerLayers()

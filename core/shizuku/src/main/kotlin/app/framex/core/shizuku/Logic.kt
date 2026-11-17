@@ -31,6 +31,15 @@ object Commands {
 
     fun forceStop(pkg: String): String? = if (isValidPackage(pkg)) "am force-stop $pkg" else null
 
+    /**
+     * Stops many apps with ONE command: the shell runs them in groups of 6 at the same time, so one slow app
+     * does not hold up the rest and only one ADB stream is needed. Every name is validated first.
+     */
+    fun forceStopMany(pkgs: List<String>): String? {
+        if (pkgs.isEmpty() || pkgs.size > 60 || !pkgs.all { isValidPackage(it) }) return null
+        return "i=0; for p in ${pkgs.joinToString(" ")}; do am force-stop \"\$p\" & i=\$((i+1)); if [ \$((i % 6)) -eq 0 ]; then wait; fi; done; wait"
+    }
+
     fun setBatterySaver(on: Boolean) = "settings put global low_power ${if (on) 1 else 0}"
     const val GET_BATTERY_SAVER = "settings get global low_power"
     const val LIST_LAYERS = "dumpsys SurfaceFlinger --list"

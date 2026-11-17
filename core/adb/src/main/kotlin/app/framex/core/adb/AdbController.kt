@@ -190,7 +190,8 @@ class AdbController @Inject constructor(@ApplicationContext private val context:
                 } finally { runCatching { stream.close() } }
             }
         } catch (e: Exception) {
-            if (e is java.io.IOException) { connected = false; _status.value = AdbStatus(AdbState.Disconnected, e.message) }
+            // one broken stream is not a dropped link: only give up if ADB itself says it is no longer connected
+            if (!manager.isConnected) { connected = false; _status.value = AdbStatus(AdbState.Disconnected, e.message) }
             ShellResult(false, e.message ?: e.javaClass.simpleName)
         }
     }

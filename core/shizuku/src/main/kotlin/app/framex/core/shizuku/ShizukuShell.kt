@@ -24,6 +24,8 @@ abstract class TypedShell : PrivilegedShell {
 
     override suspend fun forceStop(pkg: String) = exec(Commands.forceStop(pkg))
 
+    override suspend fun forceStopMany(pkgs: List<String>) = exec(Commands.forceStopMany(pkgs))
+
     override suspend fun setBatterySaver(on: Boolean) = exec(Commands.setBatterySaver(on))
 
     override suspend fun isBatterySaverOn(): Boolean? =

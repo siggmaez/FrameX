@@ -24,7 +24,7 @@ enum class StopMethod { ShizukuForceStop, AccessibilityForceStop, BackgroundKill
 
 enum class ItemStatus { Pending, Working, Stopped, NotRunning, Requested, Failed }
 
-data class BoostItem(val packageName: String, val label: String, val status: ItemStatus = ItemStatus.Pending)
+data class BoostItem(val packageName: String, val label: String, val status: ItemStatus = ItemStatus.Pending, val detail: String? = null)
 
 data class BoostProgress(
     val method: StopMethod,
@@ -65,8 +65,8 @@ class BoostRunner @Inject constructor(@ApplicationContext private val context: C
     fun cancel() { cancel = true }
     fun dismiss() { _progress.value = null }
 
-    private fun setStatus(index: Int, status: ItemStatus) {
-        _progress.update { p -> p?.copy(items = p.items.mapIndexed { i, it -> if (i == index) it.copy(status = status) else it }) }
+    private fun setStatus(index: Int, status: ItemStatus, detail: String? = null) {
+        _progress.update { p -> p?.copy(items = p.items.mapIndexed { i, it -> if (i == index) it.copy(status = status, detail = detail) else it }) }
     }
 
     suspend fun run(packages: List<String>): BoostProgress? = mutex.withLock {
@@ -91,6 +91,8 @@ class BoostRunner @Inject constructor(@ApplicationContext private val context: C
                 setStatus(i, try { stopOne(method, item.packageName) } catch (_: Exception) { ItemStatus.Failed })
             }
             service?.endCover()
+        } else if (method == StopMethod.ShizukuForceStop) {
+            runShellBatch(items)
         } else {
             val gate = Semaphore(PARALLEL)
             coroutineScope {
@@ -109,6 +111,28 @@ class BoostRunner @Inject constructor(@ApplicationContext private val context: C
         delay(400) // let Android settle before measuring memory again
         _progress.update { it?.copy(ramAfterMb = availMb(), finished = true, cancelled = wasCancelled) }
         _progress.value
+    }
+
+    /**
+     * One shell command stops every app; meanwhile each app's "stopped" flag is watched, so rows turn green one by one
+     * as the apps really die. After the command returns, the rest get a short grace period before being judged.
+     */
+    private suspend fun runShellBatch(items: List<BoostItem>) = coroutineScope {
+        items.indices.forEach { setStatus(it, ItemStatus.Working) }
+        val exec = async { shell.forceStopMany(items.map { it.packageName }) }
+        val pending = items.indices.toMutableSet()
+        var grace = 0
+        while (pending.isNotEmpty() && !cancel) {
+            for (i in pending.toList()) if (isStopped(items[i].packageName)) { setStatus(i, ItemStatus.Stopped); pending.remove(i) }
+            if (exec.isCompleted && ++grace > GRACE_POLLS) break
+            delay(STOP_POLL_MS)
+        }
+        val r = if (exec.isCompleted || !cancel) exec.await() else null
+        for (i in pending) {
+            if (r == null) setStatus(i, ItemStatus.Pending)
+            else if (r.ok) setStatus(i, ItemStatus.Requested)
+            else setStatus(i, ItemStatus.Failed, r.output.take(160).ifEmpty { "no answer" })
+        }
     }
 
     private suspend fun stopOne(method: StopMethod, pkg: String): ItemStatus = when (method) {
@@ -155,5 +179,6 @@ class BoostRunner @Inject constructor(@ApplicationContext private val context: C
         const val PARALLEL = 6
         const val STOP_POLLS = 10
         const val STOP_POLL_MS = 250L
+        const val GRACE_POLLS = 12
     }
 }

@@ -54,6 +54,14 @@ class ShizukuTest {
         assertNull(Commands.latency(""))
     }
 
+    @Test fun forceStopManyIsValidatedAndBatched() {
+        val c = Commands.forceStopMany(listOf("com.a.b", "com.c.d"))!!
+        assertTrue(c.contains("com.a.b com.c.d") && c.contains("am force-stop") && c.contains("wait"))
+        assertNull(Commands.forceStopMany(emptyList()))
+        assertNull(Commands.forceStopMany(listOf("com.a.b", "bad; reboot")))
+        assertNull(Commands.forceStopMany(List(61) { "com.x.p$it".replace("p", "q") }))
+    }
+
     @Test fun forceStopIsValidated() {
         assertEquals("am force-stop com.g.a", Commands.forceStop("com.g.a"))
         assertNull(Commands.forceStop("com.g.a; reboot"))
