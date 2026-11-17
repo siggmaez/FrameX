@@ -212,6 +212,13 @@ private fun OverlayCard(enabled: Boolean, onChange: (Boolean) -> Unit, capture: 
             Note(stringResource(R.string.set_recent_title))
             Text(recent.joinToString("\n"), style = MaterialTheme.typography.bodySmall, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
         }
+        val fpsDebug by vm.fpsDebug.collectAsStateWithLifecycle()
+        val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
+        Note(stringResource(R.string.set_fps_debug_title))
+        Text(fpsDebug.ifEmpty { "—" }, style = MaterialTheme.typography.bodySmall, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+        OutlinedButton(onClick = {
+            clipboard.setText(androidx.compose.ui.text.AnnotatedString("FrameX FPS diagnostics\n$fpsDebug\n\nrecent:\n" + recent.joinToString("\n")))
+        }) { Text(stringResource(R.string.set_fps_debug_copy)) }
         Note(stringResource(R.string.set_keepalive))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = { ctx.startActivity(android.content.Intent(android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) }) { Text(stringResource(R.string.set_keepalive_battery)) }

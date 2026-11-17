@@ -69,6 +69,10 @@ class WatcherState @Inject constructor() {
     private val _recent = MutableStateFlow<List<String>>(emptyList())
     /** The last few things FrameX noticed, newest first, so a missing overlay can be explained. */
     val recent: StateFlow<List<String>> = _recent.asStateFlow()
+    private val _fpsDebug = MutableStateFlow("")
+    /** Why FPS is or is not shown: what the measuring step last saw. */
+    val fpsDebug: StateFlow<String> = _fpsDebug.asStateFlow()
+    internal fun setFpsDebug(s: String) { _fpsDebug.value = s }
     internal fun log(line: String) {
         val t = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US).format(java.util.Date())
         _recent.value = (listOf("$t  $line") + _recent.value).take(14)
@@ -146,6 +150,7 @@ class GameWatcherService : Service() {
     private var tsSamples = 0
     private var lastTsFps: Float? = null
     private var layerMissing = false
+    private var lastSampleAt = 0L
     private val gameCache = HashMap<String, Boolean>()
     private val homePackages: Set<String> by lazy {
         val home = packageManager.queryIntentActivities(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), 0).map { it.activityInfo.packageName }
@@ -286,7 +291,7 @@ class GameWatcherService : Service() {
         }
         if (passivePkg != fg) {
             passivePkg = fg
-            collector = FrameCollector(); layer = null; layerAge = 0; lastFrameCount = 0; staleTicks = 0; tsSamples = 0; lastTsFps = null; modeEmpty = 0
+            collector = FrameCollector(); layer = null; layerAge = 0; lastFrameCount = 0; staleTicks = 0; tsSamples = 0; lastTsFps = null; modeEmpty = 0; lastSampleAt = android.os.SystemClock.elapsedRealtime()
             capture.reset()
         }
         sampleFrames(fg)
@@ -325,7 +330,7 @@ class GameWatcherService : Service() {
         val t = batteryTemp()
         val base = GameSessionEntity(packageName = p.packageName, label = p.label, startMs = System.currentTimeMillis(),
             appliedProfile = applied, startTempC = t, maxTempC = t, boostLevel = if (applied != null && boost != null) level.name else BoostLevel.Off.name)
-        collector = FrameCollector(); layer = null; layerAge = 0; lastFrameCount = 0; staleTicks = 0; tsSamples = 0; lastTsFps = null; modeEmpty = 0
+        collector = FrameCollector(); layer = null; layerAge = 0; lastFrameCount = 0; staleTicks = 0; tsSamples = 0; lastTsFps = null; modeEmpty = 0; lastSampleAt = android.os.SystemClock.elapsedRealtime()
         capture.reset() // frames from before the game opened (FrameX, launcher) must not count
         session = base.copy(id = games.startSession(base))
         notify(getString(R.string.games_notif_playing, p.label))
@@ -339,31 +344,46 @@ class GameWatcherService : Service() {
      * and the one that works is remembered while the service runs.
      */
     private suspend fun sampleFrames(pkg: String) {
-        if (!shell.isAvailable()) return
+        if (!shell.isAvailable()) { state.setFpsDebug("no shell access (Shizuku / wireless debugging not connected)"); return }
         var got = false
         if (sfMode == SfMode.TimeStats) {
             if (!tsEnabled) { shell.timeStatsEnable(); tsEnabled = true }
-            val sample = shell.timeStatsDumpClear()?.let { TimeStatsParser.parse(it, pkg) }
+            val r = shell.timeStatsDumpClear()
+            val sample = TimeStatsParser.parse(r.output, pkg)
+            val now = android.os.SystemClock.elapsedRealtime()
+            val elapsedS = (now - lastSampleAt) / 1000f
+            lastSampleAt = now
             if (sample != null && sample.totalFrames > 0) {
                 got = true
-                sample.averageFps?.let { lastTsFps = it }
+                // the dump's own average if present, otherwise frames shown since the previous dump / seconds since then
+                val fps = sample.averageFps ?: if (elapsedS in 0.3f..6f) sample.totalFrames / elapsedS else null
+                fps?.let { lastTsFps = it }
                 collector.addFrameTimes(sample.frameTimesMs)
                 tsSamples++
             }
+            val names = TimeStatsParser.layerNames(r.output).take(4)
+            state.setFpsDebug(buildString {
+                append("method=TimeStats shell-ok=${r.ok} dump=${r.output.length} chars\n")
+                append("layers in dump=${TimeStatsParser.layerNames(r.output).size} first=$names\n")
+                append("game=$pkg match=${sample?.layer ?: "none"} frames=${sample?.totalFrames} avgFps=${sample?.averageFps} shown=${lastTsFps}")
+                if (r.output.length < 300) append("\nreply: ${r.output.replace('\n', ' ')}")
+            })
         } else {
             if (layer == null || ++layerAge > 30) {
                 layer = shell.surfaceFlingerLayers()?.let { SurfaceFlingerLayers.pick(it, pkg) }
                 layerAge = 0
             }
             layerMissing = layer == null
+            var parsed = -1
             layer?.let { l ->
                 val text = shell.surfaceFlingerLatency(l)
                 if (text == null) layer = null else {
                     val before = collector.frameTimesMs.size
-                    collector.add(SurfaceFlingerLatencyParser.parse(text))
+                    parsed = SurfaceFlingerLatencyParser.parse(text).also { collector.add(it) }.size
                     got = collector.frameTimesMs.size > before
                 }
             }
+            state.setFpsDebug("method=latency layer=${layer ?: "not found"} timestamps parsed=$parsed frames kept=${collector.frameTimesMs.size}")
         }
         if (got) modeEmpty = 0
         else if (++modeEmpty >= SWITCH_AFTER) {

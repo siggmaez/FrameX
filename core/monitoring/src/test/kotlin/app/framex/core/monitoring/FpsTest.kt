@@ -120,6 +120,12 @@ class TimeStatsTest {
         assertEquals(30, s.totalFrames); assertEquals(30.051f, s.averageFps!!, 0.001f); assertTrue(s.frameTimesMs.isEmpty())
     }
 
+    @Test fun listsLayerNames() {
+        assertEquals(2, TimeStatsParser.layerNames(dump).size)
+        assertTrue(TimeStatsParser.layerNames(dump).first().startsWith("SurfaceView"))
+        assertEquals(listOf("SurfaceView[a/b]#1"), TimeStatsParser.layerNames("SurfaceView[a/b]#1\ntotalFrames = 3\n"))
+    }
+
     @Test fun unknownPackageOrEmptyDumpGivesNothing() {
         assertNull(TimeStatsParser.parse(dump, "com.none"))
         assertNull(TimeStatsParser.parse("", "com.g.a"))

@@ -57,6 +57,6 @@ interface PrivilegedShell {
     /** SurfaceFlinger TimeStats: per-layer presented-frame statistics. Works on newer Android where --latency can stay empty. */
     suspend fun timeStatsEnable(): ShellResult
     /** Dump, then clear, so each call covers only the time since the previous one. */
-    suspend fun timeStatsDumpClear(): String?
+    suspend fun timeStatsDumpClear(): ShellResult
     suspend fun timeStatsDisable(): ShellResult
 }

@@ -41,6 +41,7 @@ class SettingsViewModel @Inject constructor(
     fun testOverlay() { runCatching { watcher.testOverlay() } }
     val seen = watcher.state.seen
     val recent = watcher.state.recent
+    val fpsDebug = watcher.state.fpsDebug
     fun hasUsageAccess() = watcher.hasUsageAccess()
     fun setAutoStop(on: Boolean) { viewModelScope.launch { repo.setAutoStopBackground(on) } }
     fun setNeverStop(s: Set<String>) { viewModelScope.launch { repo.setNeverStopApps(s) } }

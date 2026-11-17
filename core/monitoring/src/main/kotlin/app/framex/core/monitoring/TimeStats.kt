@@ -17,6 +17,18 @@ object TimeStatsParser {
         val times = ArrayList<Float>()
     }
 
+
+    /** Names of the layers in a dump, in order (for diagnostics). */
+    fun layerNames(text: String): List<String> {
+        val lines = text.lines().map { it.trim() }
+        val out = ArrayList<String>()
+        lines.forEachIndexed { i, l ->
+            val next = lines.getOrNull(i + 1).orEmpty()
+            if (l.startsWith("layerName") && '=' in l) out += l.substringAfter('=').trim()
+            else if ('=' !in l && l.isNotEmpty() && next.startsWith("totalFrames")) out += l
+        }
+        return out
+    }
     /** The layer of [pkg] that carries the game's frames (a SurfaceView if there is one, otherwise the busiest). */
     fun parse(text: String, pkg: String): TimeStatsSample? {
         val lines = text.lines().map { it.trim() }
