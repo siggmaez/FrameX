@@ -87,4 +87,6 @@
     <string name="tip_shadows_off">Turn off shadows and effects such as anti-aliasing, bloom and motion blur.</string>
     <string name="tip_resolution_low">Lower the render resolution or scale in the game.</string>
     <string name="tip_render_distance">Reduce the draw / render distance.</string>
+    <string name="pb_game_title">Ping boost while playing</string>
+    <string name="pb_game_note">Needs shell access. Turns on the Wi-Fi low-latency modes and Data Saver so other apps stop using your connection in the background, then puts everything back. It cannot make your internet line itself faster.</string>
 </resources>

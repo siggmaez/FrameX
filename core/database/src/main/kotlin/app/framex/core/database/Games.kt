@@ -22,6 +22,8 @@ data class GameProfileEntity(
     val stopPackages: String = "",
     /** Off / Safe / Strong / Max: how far this game's boost goes. */
     val boostLevel: String = "Strong",
+    /** Also reduce lag sources on the phone while this game runs (Wi-Fi low-latency modes, Data Saver). */
+    val pingBoost: Boolean = false,
 )
 
 @Entity(tableName = "game_sessions")

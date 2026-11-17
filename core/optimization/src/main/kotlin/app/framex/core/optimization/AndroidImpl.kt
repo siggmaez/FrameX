@@ -148,6 +148,8 @@ object OptimizationModule {
             OptAction.RenderScale to RenderScaleExecutor(context, shell),
             OptAction.FixedPerformance to FixedPerformanceExecutor(context, shell),
             OptAction.RefreshLock to RefreshLockExecutor(context, shell),
+            OptAction.WifiLowLatencyMode to WifiLowLatencyModeExecutor(context, shell),
+            OptAction.BackgroundDataLimit to BackgroundDataLimitExecutor(context, shell),
         )
         return OptimizationEngine(executors, capabilities, StoreStorage(store), RoomLogger(log))
     }
@@ -295,5 +297,37 @@ class RefreshLockExecutor(private val context: Context, private val shell: Privi
         val r = shell.restoreRefreshRate(min, peak)
         return ExecResult(if (r.ok) ResultStatus.Restored else ResultStatus.Failed,
             if (r.ok) context.getString(R.string.opt_refresh_restored) else r.output.take(120))
+    }
+}
+
+/** Wi-Fi high-performance and low-latency modes (the radio stops dipping into power saving). */
+class WifiLowLatencyModeExecutor(private val context: Context, private val shell: PrivilegedShell) : ActionExecutor {
+    override suspend fun apply(action: OptAction, request: ApplyRequest): ExecResult {
+        val r = shell.setWifiPerf(true)
+        return if (r.ok) ExecResult(ResultStatus.Applied, context.getString(R.string.opt_wifi_perf_on), "1")
+        else ExecResult(ResultStatus.Failed, r.output.take(120).ifEmpty { context.getString(R.string.opt_not_confirmed) })
+    }
+
+    override suspend fun restore(action: OptAction, token: String?): ExecResult {
+        val r = shell.setWifiPerf(false)
+        return ExecResult(if (r.ok) ResultStatus.Restored else ResultStatus.Failed,
+            if (r.ok) context.getString(R.string.opt_wifi_perf_off) else r.output.take(120))
+    }
+}
+
+/** Data Saver: stops other apps from using data in the background while you play. Read back to validate; restored afterwards. */
+class BackgroundDataLimitExecutor(private val context: Context, private val shell: PrivilegedShell) : ActionExecutor {
+    override suspend fun apply(action: OptAction, request: ApplyRequest): ExecResult {
+        val previous = shell.backgroundDataRestricted() ?: return ExecResult(ResultStatus.Failed, context.getString(R.string.opt_not_confirmed))
+        val r = shell.setBackgroundDataRestricted(true)
+        if (!r.ok) return ExecResult(ResultStatus.Failed, r.output.take(120))
+        if (shell.backgroundDataRestricted() != true) return ExecResult(ResultStatus.Failed, context.getString(R.string.opt_not_confirmed))
+        return ExecResult(ResultStatus.Applied, context.getString(R.string.opt_datasaver_on), previous.toString())
+    }
+
+    override suspend fun restore(action: OptAction, token: String?): ExecResult {
+        val r = shell.setBackgroundDataRestricted(token == "true")
+        return ExecResult(if (r.ok) ResultStatus.Restored else ResultStatus.Failed,
+            if (r.ok) context.getString(R.string.opt_datasaver_off) else r.output.take(120))
     }
 }

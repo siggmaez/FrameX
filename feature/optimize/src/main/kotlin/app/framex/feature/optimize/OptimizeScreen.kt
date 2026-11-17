@@ -59,6 +59,8 @@ private fun OptAction.title() = stringResource(when (this) {
     OptAction.RenderScale -> R.string.act_scale
     OptAction.FixedPerformance -> R.string.act_fixed
     OptAction.RefreshLock -> R.string.act_refresh
+    OptAction.WifiLowLatencyMode -> R.string.act_wifi_mode
+    OptAction.BackgroundDataLimit -> R.string.act_datasaver
 })
 
 @Composable
@@ -167,6 +169,7 @@ fun OptimizeScreen(contentPadding: PaddingValues, vm: OptimizeViewModel = hiltVi
                 OutlinedButton(onClick = vm::taskKill, enabled = !ui.busy) { Text(stringResource(R.string.tk_button)) }
             }
         }
+        item { PingBoostCard() }
         ui.report?.let { rep ->
             item {
                 FrameXCard {
@@ -188,7 +191,7 @@ fun OptimizeScreen(contentPadding: PaddingValues, vm: OptimizeViewModel = hiltVi
 }
 
 @Composable
-private fun ResultRow(r: ActionResult) {
+internal fun ResultRow(r: ActionResult) {
     androidx.compose.foundation.layout.Column {
         Text("${r.action.title()} — ${r.status.text()}", style = MaterialTheme.typography.bodyMedium,
             color = if (r.status == ResultStatus.Failed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface)

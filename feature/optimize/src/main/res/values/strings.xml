@@ -69,4 +69,26 @@
     <string name="act_fixed">Fixed performance mode</string>
     <string name="act_refresh">Lock the highest refresh rate</string>
     <string name="reason_a13">Needs Android 13 or newer</string>
+    <string name="act_wifi_mode">Wi-Fi high-performance and low-latency modes</string>
+    <string name="act_datasaver">Data Saver (no background data from other apps)</string>
+    <string name="pb_title">Ping boost</string>
+    <string name="pb_note">Cuts the lag that comes from your own phone: Wi-Fi power saving, other apps using the connection in the background. It cannot make your internet line itself faster or shorten the way to the game server. It measures ping before and after, so you see what really changed. Needs shell access (Settings); without it only the low-latency Wi-Fi lock is used.</string>
+    <string name="pb_button">Boost ping</string>
+    <string name="pb_s_measure">Measuring ping…</string>
+    <string name="pb_s_apply">Applying…</string>
+    <string name="pb_s_again">Measuring again…</string>
+    <string name="pb_local">FrameX is in Local mode and makes no network connection. Change this in Settings → Network mode.</string>
+    <string name="pb_no_conn">No active Wi-Fi or mobile connection to measure.</string>
+    <string name="pb_blocked">The active connection is not allowed by the network mode in Settings.</string>
+    <string name="pb_wifi">Wi-Fi</string>
+    <string name="pb_mobile">mobile data</string>
+    <string name="pb_before">Before</string>
+    <string name="pb_after">After</string>
+    <string name="pb_line">%1$s (%2$s): %3$d ms avg · jitter %4$d ms · loss %5$d%%</string>
+    <string name="pb_line_none">%1$s (%2$s): no replies</string>
+    <string name="pb_delta_better">Average ping %1$s%% lower</string>
+    <string name="pb_delta_worse">Average ping %1$s%% higher (no gain this time)</string>
+    <string name="pb_no_delta">Could not compare: one of the runs had no replies.</string>
+    <string name="pb_honest">A short test to a public server, not to your game server. Results vary from run to run, so repeat it a few times before trusting a small difference.</string>
+    <string name="pb_stays">Stays on until you press \"Restore previous settings\" above.</string>
 </resources>

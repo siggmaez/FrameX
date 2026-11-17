@@ -96,6 +96,7 @@ class GamesViewModel @Inject constructor(
     fun setProfile(g: GameProfileEntity, p: OptimizationProfile) { viewModelScope.launch { repo.save(g.copy(profile = p.name)) } }
     fun setAuto(g: GameProfileEntity, on: Boolean) { viewModelScope.launch { repo.save(g.copy(autoApply = on)) } }
     fun setBoostLevel(g: GameProfileEntity, level: app.framex.core.optimization.BoostLevel) { viewModelScope.launch { repo.save(g.copy(boostLevel = level.name)) } }
+    fun setPingBoost(g: GameProfileEntity, on: Boolean) { viewModelScope.launch { repo.save(g.copy(pingBoost = on)) } }
     fun forgetStopList(g: GameProfileEntity) { viewModelScope.launch { repo.save(g.copy(stopPackages = "")) } }
     fun clearSessions() { viewModelScope.launch { repo.clearSessions() } }
     fun dismissNotice() { notice.value = null }

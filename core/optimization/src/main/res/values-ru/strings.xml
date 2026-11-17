@@ -32,4 +32,8 @@
     <string name="opt_refresh_set">Экран зафиксирован на %1$d Гц</string>
     <string name="opt_refresh_ignored">Этот телефон игнорирует настройку частоты (всё ещё %1$d Гц), поэтому она возвращена</string>
     <string name="opt_refresh_restored">Настройка частоты экрана возвращена</string>
+    <string name="opt_wifi_perf_on">Запрошены режимы Wi-Fi: высокая производительность и низкая задержка</string>
+    <string name="opt_wifi_perf_off">Режимы Wi-Fi возвращены как были</string>
+    <string name="opt_datasaver_on">Экономия трафика включена: другие приложения не используют данные в фоне</string>
+    <string name="opt_datasaver_off">Экономия трафика возвращена как была</string>
 </resources>

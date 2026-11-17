@@ -32,4 +32,8 @@
     <string name="opt_refresh_set">Screen locked to %1$d Hz</string>
     <string name="opt_refresh_ignored">This phone ignores the refresh-rate setting (still %1$d Hz), so it was put back</string>
     <string name="opt_refresh_restored">Refresh rate setting restored</string>
+    <string name="opt_wifi_perf_on">Wi-Fi high-performance and low-latency modes requested</string>
+    <string name="opt_wifi_perf_off">Wi-Fi modes back to normal</string>
+    <string name="opt_datasaver_on">Data Saver on: other apps cannot use data in the background</string>
+    <string name="opt_datasaver_off">Data Saver restored</string>
 </resources>

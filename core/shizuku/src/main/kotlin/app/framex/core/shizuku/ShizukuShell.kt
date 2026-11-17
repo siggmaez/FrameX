@@ -34,6 +34,11 @@ abstract class TypedShell : PrivilegedShell {
         exec(Commands.GET_REFRESH).takeIf { it.ok }?.let { Parsers.refreshSettings(it.output) }
     override suspend fun setRefreshRate(hz: Int) = exec(Commands.setRefreshRate(hz))
     override suspend fun restoreRefreshRate(min: String, peak: String) = exec(Commands.restoreRefreshRate(min, peak))
+
+    override suspend fun setWifiPerf(on: Boolean) = exec(Commands.setWifiPerf(on))
+    override suspend fun backgroundDataRestricted(): Boolean? =
+        exec(Commands.GET_DATA_SAVER).takeIf { it.ok }?.let { Parsers.dataSaverOn(it.output) }
+    override suspend fun setBackgroundDataRestricted(on: Boolean) = exec(Commands.setDataSaver(on))
     override suspend fun setBatterySaver(on: Boolean) = exec(Commands.setBatterySaver(on))
 
     override suspend fun isBatterySaverOn(): Boolean? =

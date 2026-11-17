@@ -3,6 +3,7 @@ package app.framex.feature.games
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.FilterChip
@@ -44,7 +45,7 @@ private fun BoostLevel.label() = stringResource(when (this) {
  * and the measured FPS with and without the boost.
  */
 @Composable
-fun BoostSection(g: GameProfileEntity, sessions: List<GameSessionEntity>, onLevel: (BoostLevel) -> Unit) {
+fun BoostSection(g: GameProfileEntity, sessions: List<GameSessionEntity>, onPing: (Boolean) -> Unit, onLevel: (BoostLevel) -> Unit) {
     val spec = GameBoosts.specFor(g.packageName)
     val special = GameBoosts.isSpecialized(g.packageName)
     val level = runCatching { BoostLevel.valueOf(g.boostLevel) }.getOrDefault(BoostLevel.Strong)
@@ -64,6 +65,11 @@ fun BoostSection(g: GameProfileEntity, sessions: List<GameSessionEntity>, onLeve
             Text(stringResource(R.string.gb_needs_shell), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         spec.knownCapFps?.let { Text(stringResource(R.string.gb_cap, it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary) }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+            Text(stringResource(R.string.pb_game_title), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+            androidx.compose.material3.Switch(checked = g.pingBoost, onCheckedChange = onPing)
+        }
+        Text(stringResource(R.string.pb_game_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(stringResource(R.string.gb_tips_title), style = MaterialTheme.typography.labelLarge)
         spec.tips.forEach { Text("• " + it.text(), style = MaterialTheme.typography.bodySmall) }
         val c = BoostStats.compare(sessions)

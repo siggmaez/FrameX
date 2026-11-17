@@ -17,6 +17,7 @@ import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
 import android.provider.Settings
+import app.framex.core.common.OptAction
 import app.framex.core.common.OptimizationProfile
 import app.framex.core.designsystem.overlay.OverlayColors
 import app.framex.core.designsystem.overlay.OverlayContent
@@ -196,15 +197,16 @@ class GameWatcherService : Service() {
         // this game's own boost level; Off = nothing extra
         val level = runCatching { BoostLevel.valueOf(p.boostLevel) }.getOrDefault(BoostLevel.Off)
         val boost = GameBoosts.plan(p.packageName, level)
+        val pingExtras = if (p.pingBoost) setOf(OptAction.LowLatencyWifi, OptAction.WifiLowLatencyMode, OptAction.BackgroundDataLimit) else emptySet()
         var applied: String? = null
-        if ((profile != null && profile != OptimizationProfile.Balanced) || (boost != null && (profile != null || armed != null))) {
+        if ((profile != null && profile != OptimizationProfile.Balanced) || ((boost != null || pingExtras.isNotEmpty()) && (profile != null || armed != null))) {
             // Apps are stopped only if the user approved them (Play button confirmation, a remembered list or the automatic boost).
             val custom = settings.settings.first().customActions
             val report = engine.apply(
                 profile ?: OptimizationProfile.Balanced,
                 ApplyRequest(
                     targetPackage = p.packageName, stopPackages = armed?.stopPackages.orEmpty(), customActions = custom,
-                    extraActions = boost?.extraActions.orEmpty(), renderScale = boost?.renderScale,
+                    extraActions = boost?.extraActions.orEmpty() + pingExtras, renderScale = boost?.renderScale,
                 ),
             )
             if (report.anyApplied) { applied = (profile ?: OptimizationProfile.Balanced).name; appliedByUs = true }

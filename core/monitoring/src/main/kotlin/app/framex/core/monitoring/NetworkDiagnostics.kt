@@ -89,6 +89,26 @@ class NetworkDiagnostics @Inject constructor(@ApplicationContext private val con
         }
     }
 
+    /**
+     * Ping over whatever connection the phone is using right now (what a game would use). Respects the network mode:
+     * returns Blocked in Local mode or if the active connection is not allowed.
+     */
+    suspend fun pingActive(target: PingTarget, mode: NetworkMode, count: Int = 8): NetResult? {
+        val net = cm.activeNetwork ?: return null
+        val caps = cm.getNetworkCapabilities(net) ?: return null
+        val kind = when {
+            caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> ConnectionKind.Wifi
+            caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> ConnectionKind.Mobile
+            else -> return null
+        }
+        if (!mode.allows(kind)) return NetResult(kind, NetStatus.Blocked)
+        return try {
+            NetResult(kind, NetStatus.Ok, describe(net, kind), ping(net, target, count))
+        } catch (e: Exception) {
+            NetResult(kind, NetStatus.Failed, message = e.message ?: e.javaClass.simpleName)
+        }
+    }
+
     private class Lease(val network: Network, private val cm: ConnectivityManager, private val cb: ConnectivityManager.NetworkCallback) {
         fun close() { runCatching { cm.unregisterNetworkCallback(cb) } }
     }

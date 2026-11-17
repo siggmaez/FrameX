@@ -67,6 +67,14 @@ object Commands {
         fun one(key: String, v: String) = if (v == "null") "settings delete system $key" else "settings put system $key $v"
         return one("min_refresh_rate", min) + "; " + one("peak_refresh_rate", peak)
     }
+
+    fun setWifiPerf(on: Boolean): String {
+        val v = if (on) "enabled" else "disabled"
+        return "cmd wifi force-hi-perf-mode $v; cmd wifi force-low-latency-mode $v"
+    }
+
+    const val GET_DATA_SAVER = "cmd netpolicy get restrict-background"
+    fun setDataSaver(on: Boolean) = "cmd netpolicy set restrict-background ${if (on) "true" else "false"}"
     fun setBatterySaver(on: Boolean) = "settings put global low_power ${if (on) 1 else 0}"
     const val GET_BATTERY_SAVER = "settings get global low_power"
     const val LIST_LAYERS = "dumpsys SurfaceFlinger --list"
@@ -85,6 +93,12 @@ object Parsers {
     /** Two lines: the min and the peak override, "null" when unset. */
     fun refreshSettings(output: String): Pair<String, String>? =
         output.lines().map { it.trim() }.filter { it.isNotEmpty() }.takeIf { it.size >= 2 }?.let { it[0] to it[1] }
+
+    /** "Restrict background status: enabled" / "disabled" / "whitelisted". Only "enabled" means restricted. */
+    fun dataSaverOn(output: String): Boolean? {
+        val m = Regex("(?i)restrict background status:\\s*([a-z]+)").find(output)?.groupValues?.get(1)?.lowercase() ?: return null
+        return when (m) { "enabled" -> true; "disabled", "whitelisted" -> false; else -> null }
+    }
 
     fun batterySaverOn(output: String): Boolean? = when (output.trim()) { "1" -> true; "0" -> false; else -> null }
 }

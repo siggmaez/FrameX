@@ -44,6 +44,11 @@ interface PrivilegedShell {
     /** "min|peak" refresh-rate overrides currently stored ("null" = not set), or null if unreadable. */
     suspend fun refreshRateSettings(): Pair<String, String>?
     suspend fun setRefreshRate(hz: Int): ShellResult
+    /** Wi-Fi high-performance + low-latency test modes (no power-saving dips on the radio). */
+    suspend fun setWifiPerf(on: Boolean): ShellResult
+    /** Data Saver: true = background data of apps is restricted. Null if unreadable. */
+    suspend fun backgroundDataRestricted(): Boolean?
+    suspend fun setBackgroundDataRestricted(on: Boolean): ShellResult
     suspend fun restoreRefreshRate(min: String, peak: String): ShellResult
     suspend fun setBatterySaver(on: Boolean): ShellResult
     suspend fun isBatterySaverOn(): Boolean?

@@ -100,4 +100,14 @@ class ShizukuTest {
         assertNull(Parsers.refreshSettings("90.0"))
         assertEquals("cmd power set-fixed-performance-mode-enabled true", Commands.setFixedPerformance(true))
     }
+
+    @Test fun networkCommandsAndParsing() {
+        assertEquals("cmd wifi force-hi-perf-mode enabled; cmd wifi force-low-latency-mode enabled", Commands.setWifiPerf(true))
+        assertEquals("cmd wifi force-hi-perf-mode disabled; cmd wifi force-low-latency-mode disabled", Commands.setWifiPerf(false))
+        assertEquals("cmd netpolicy set restrict-background true", Commands.setDataSaver(true))
+        assertEquals(true, Parsers.dataSaverOn("Restrict background status: enabled"))
+        assertEquals(false, Parsers.dataSaverOn("Restrict background status: disabled\n"))
+        assertEquals(false, Parsers.dataSaverOn("Restrict background status: whitelisted"))
+        assertNull(Parsers.dataSaverOn("something else"))
+    }
 }

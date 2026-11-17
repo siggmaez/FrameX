@@ -76,6 +76,8 @@ object CapabilityEvaluator {
             else -> Capability.Supported
         },
         OptAction.RefreshLock to if (shellAvailable) Capability.Supported else Capability.Unsupported(UnsupportedReason.NeedsShizuku),
+        OptAction.WifiLowLatencyMode to if (shellAvailable) Capability.Supported else Capability.Unsupported(UnsupportedReason.NeedsShizuku),
+        OptAction.BackgroundDataLimit to if (shellAvailable) Capability.Supported else Capability.Unsupported(UnsupportedReason.NeedsShizuku),
     )
 
     private fun game(shell: Boolean, sdk: Int): Capability = when {

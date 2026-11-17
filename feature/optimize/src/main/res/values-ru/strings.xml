@@ -69,4 +69,26 @@
     <string name="act_fixed">Режим фиксированной производительности</string>
     <string name="act_refresh">Зафиксировать максимальную частоту экрана</string>
     <string name="reason_a13">Нужен Android 13 или новее</string>
+    <string name="act_wifi_mode">Режимы Wi-Fi: высокая производительность и низкая задержка</string>
+    <string name="act_datasaver">Экономия трафика (без фоновых данных у других приложений)</string>
+    <string name="pb_title">Буст пинга</string>
+    <string name="pb_note">Убирает задержку, которая идёт от самого телефона: энергосбережение Wi-Fi и другие приложения, использующие соединение в фоне. Сам интернет-канал он быстрее сделать не может и путь до сервера игры не сократит. Пинг измеряется до и после, поэтому видно, что реально изменилось. Нужен доступ к оболочке (настройки); без него используется только блокировка Wi-Fi с низкой задержкой.</string>
+    <string name="pb_button">Ускорить пинг</string>
+    <string name="pb_s_measure">Измеряю пинг…</string>
+    <string name="pb_s_apply">Применяю…</string>
+    <string name="pb_s_again">Измеряю снова…</string>
+    <string name="pb_local">FrameX работает в локальном режиме и не открывает сетевых соединений. Изменить это можно в Настройки → Режим сети.</string>
+    <string name="pb_no_conn">Нет активного подключения по Wi-Fi или мобильной сети для измерения.</string>
+    <string name="pb_blocked">Активное подключение не разрешено режимом сети в настройках.</string>
+    <string name="pb_wifi">Wi-Fi</string>
+    <string name="pb_mobile">мобильный интернет</string>
+    <string name="pb_before">До</string>
+    <string name="pb_after">После</string>
+    <string name="pb_line">%1$s (%2$s): %3$d мс в среднем · джиттер %4$d мс · потери %5$d%%</string>
+    <string name="pb_line_none">%1$s (%2$s): ответов нет</string>
+    <string name="pb_delta_better">Средний пинг ниже на %1$s%%</string>
+    <string name="pb_delta_worse">Средний пинг выше на %1$s%% (в этот раз выигрыша нет)</string>
+    <string name="pb_no_delta">Сравнить не удалось: в одном из замеров не было ответов.</string>
+    <string name="pb_honest">Короткий тест до публичного сервера, а не до сервера вашей игры. Результаты от запуска к запуску различаются, поэтому небольшую разницу повторите несколько раз, прежде чем ей верить.</string>
+    <string name="pb_stays">Остаётся включённым, пока вы не нажмёте «Вернуть прежние настройки» выше.</string>
 </resources>
