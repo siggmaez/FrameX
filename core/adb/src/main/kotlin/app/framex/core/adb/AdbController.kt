@@ -9,6 +9,7 @@ import io.github.muntashirakon.adb.AbsAdbConnectionManager
 import io.github.muntashirakon.adb.AdbPairingRequiredException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -180,19 +181,28 @@ class AdbController @Inject constructor(@ApplicationContext private val context:
     }
 
     /** Runs one already-validated command (see Commands in core:shizuku). */
-    suspend fun run(command: String): ShellResult = withContext(Dispatchers.IO) {
-        if (!connected) return@withContext ShellResult(false, "ADB is not connected")
-        try {
-            withTimeout(20_000) {
-                val stream = manager.openStream("shell:" + AdbOutput.wrap(command))
-                try {
-                    AdbOutput.parse(stream.openInputStream().use { String(it.readBytes(), Charsets.UTF_8) })
-                } finally { runCatching { stream.close() } }
-            }
+    suspend fun run(command: String): ShellResult {
+        if (!connected) return ShellResult(false, "ADB is not connected")
+        val stream = try {
+            withContext(Dispatchers.IO) { manager.openStream("shell:" + AdbOutput.wrap(command)) }
+        } catch (e: Exception) {
+            if (!manager.isConnected) { connected = false; _status.value = AdbStatus(AdbState.Disconnected, e.message) }
+            return ShellResult(false, e.message ?: e.javaClass.simpleName)
+        }
+        // The read blocks until the command ends and cannot be interrupted, so it runs on its own scope;
+        // on timeout the stream is closed, which frees the blocked read.
+        val read = scope.async { String(stream.openInputStream().use { it.readBytes() }, Charsets.UTF_8) }
+        return try {
+            withTimeout(20_000) { AdbOutput.parse(read.await()) }
+        } catch (e: TimeoutCancellationException) {
+            ShellResult(false, "timed out")
         } catch (e: Exception) {
             // one broken stream is not a dropped link: only give up if ADB itself says it is no longer connected
             if (!manager.isConnected) { connected = false; _status.value = AdbStatus(AdbState.Disconnected, e.message) }
             ShellResult(false, e.message ?: e.javaClass.simpleName)
+        } finally {
+            runCatching { stream.close() }
+            read.cancel()
         }
     }
 

@@ -4,6 +4,9 @@ import android.app.ActivityManager
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -52,6 +55,7 @@ class BoostRunner @Inject constructor(@ApplicationContext private val context: C
     private val _progress = MutableStateFlow<BoostProgress?>(null)
     val progress: StateFlow<BoostProgress?> = _progress.asStateFlow()
     @Volatile private var cancel = false
+    private val detached = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     fun bestMethod(): StopMethod = when {
         shell.isAvailable() -> StopMethod.ShizukuForceStop
@@ -117,21 +121,26 @@ class BoostRunner @Inject constructor(@ApplicationContext private val context: C
      * One shell command stops every app; meanwhile each app's "stopped" flag is watched, so rows turn green one by one
      * as the apps really die. After the command returns, the rest get a short grace period before being judged.
      */
-    private suspend fun runShellBatch(items: List<BoostItem>) = coroutineScope {
+    private suspend fun runShellBatch(items: List<BoostItem>) {
         items.indices.forEach { setStatus(it, ItemStatus.Working) }
-        val exec = async { shell.forceStopMany(items.map { it.packageName }) }
+        // Started on its own scope and never waited for: a hung shell must not hold the boost screen open.
+        val exec = detached.async { shell.forceStopMany(items.map { it.packageName }) }
         val pending = items.indices.toMutableSet()
+        val started = System.currentTimeMillis()
         var grace = 0
-        while (pending.isNotEmpty() && !cancel) {
+        while (pending.isNotEmpty() && !cancel && System.currentTimeMillis() - started < HARD_TIMEOUT_MS) {
             for (i in pending.toList()) if (isStopped(items[i].packageName)) { setStatus(i, ItemStatus.Stopped); pending.remove(i) }
             if (exec.isCompleted && ++grace > GRACE_POLLS) break
             delay(STOP_POLL_MS)
         }
-        val r = if (exec.isCompleted || !cancel) exec.await() else null
+        val r = if (exec.isCompleted) exec.await() else null // never wait for a command that is still running
         for (i in pending) {
-            if (r == null) setStatus(i, ItemStatus.Pending)
-            else if (r.ok) setStatus(i, ItemStatus.Requested)
-            else setStatus(i, ItemStatus.Failed, r.output.take(160).ifEmpty { "no answer" })
+            when {
+                cancel -> setStatus(i, ItemStatus.Pending)
+                r == null -> setStatus(i, ItemStatus.Failed, "timed out")
+                r.ok -> setStatus(i, ItemStatus.Requested)
+                else -> setStatus(i, ItemStatus.Failed, r.output.take(160).ifEmpty { "no answer" })
+            }
         }
     }
 
@@ -180,5 +189,6 @@ class BoostRunner @Inject constructor(@ApplicationContext private val context: C
         const val STOP_POLLS = 10
         const val STOP_POLL_MS = 250L
         const val GRACE_POLLS = 12
+        const val HARD_TIMEOUT_MS = 30_000L
     }
 }
