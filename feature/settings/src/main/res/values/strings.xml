@@ -91,4 +91,5 @@
     <string name="set_seen_untracked">not in My games</string>
     <string name="set_test_overlay">Test the overlay (30 s)</string>
     <string name="set_test_note">Press it, then open your game within 30 seconds. If the test box shows over the game, Android allows it and the problem is detection; if not, the phone blocks overlays over that game. The line above shows what FrameX sees.</string>
+    <string name="set_recent_title">What FrameX noticed lately (newest first). Play your game, then come back here and check it.</string>
 </resources>

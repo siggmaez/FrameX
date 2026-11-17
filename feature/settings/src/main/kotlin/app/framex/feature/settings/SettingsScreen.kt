@@ -207,6 +207,11 @@ private fun OverlayCard(enabled: Boolean, onChange: (Boolean) -> Unit, capture: 
         Note(stringResource(R.string.set_seen, seen.pkg ?: "—", stringResource(if (seen.tracked) R.string.set_seen_tracked else R.string.set_seen_untracked)))
         if (granted) OutlinedButton(onClick = vm::testOverlay) { Text(stringResource(R.string.set_test_overlay)) }
         Note(stringResource(R.string.set_test_note))
+        val recent by vm.recent.collectAsStateWithLifecycle()
+        if (recent.isNotEmpty()) {
+            Note(stringResource(R.string.set_recent_title))
+            Text(recent.joinToString("\n"), style = MaterialTheme.typography.bodySmall, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+        }
         Note(stringResource(R.string.set_keepalive))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = { ctx.startActivity(android.content.Intent(android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) }) { Text(stringResource(R.string.set_keepalive_battery)) }

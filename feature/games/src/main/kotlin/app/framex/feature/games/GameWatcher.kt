@@ -66,6 +66,13 @@ class WatcherState @Inject constructor() {
     data class Seen(val pkg: String?, val tracked: Boolean)
     private val _seen = MutableStateFlow(Seen(null, false))
     val seen: StateFlow<Seen> = _seen.asStateFlow()
+    private val _recent = MutableStateFlow<List<String>>(emptyList())
+    /** The last few things FrameX noticed, newest first, so a missing overlay can be explained. */
+    val recent: StateFlow<List<String>> = _recent.asStateFlow()
+    internal fun log(line: String) {
+        val t = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US).format(java.util.Date())
+        _recent.value = (listOf("$t  $line") + _recent.value).take(14)
+    }
     internal fun setSeen(pkg: String?, tracked: Boolean) { if (_seen.value != Seen(pkg, tracked)) _seen.value = Seen(pkg, tracked) }
 
     private val armed = ConcurrentHashMap<String, ArmedLaunch>()
@@ -181,7 +188,7 @@ class GameWatcherService : Service() {
                 if (!overlayEnabled) overlay.hide()
             }
         }
-        scope.launch { screenOn.collect { on -> if (!on) { endSession(); passivePkg = null; overlay.hide() } } }
+        scope.launch { screenOn.collect { on -> state.log(if (on) "screen on" else "screen off"); if (!on) { endSession(); passivePkg = null; overlay.hide() } } }
         scope.launch { loop() }
     }
 
@@ -215,7 +222,9 @@ class GameWatcherService : Service() {
         val usm = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
         // look far back once, so a game that was already open when the service started is still found
         var lastQuery = System.currentTimeMillis() - 3 * 3600_000L
+        val tracker = ForegroundTracker()
         var foreground: String? = null
+        var lastLogged: String? = "?"
         var missing = 0
         while (scope.isActive) {
             screenOn.first { it }
@@ -226,19 +235,24 @@ class GameWatcherService : Service() {
                 val e = UsageEvents.Event()
                 while (events.hasNextEvent()) {
                     events.getNextEvent(e)
-                    when (e.eventType) {
-                        UsageEvents.Event.ACTIVITY_RESUMED -> foreground = e.packageName
-                        UsageEvents.Event.ACTIVITY_PAUSED, UsageEvents.Event.ACTIVITY_STOPPED -> if (foreground == e.packageName) foreground = null
+                    val type = when (e.eventType) {
+                        UsageEvents.Event.ACTIVITY_RESUMED -> FgEvent.Resumed
+                        UsageEvents.Event.ACTIVITY_PAUSED -> FgEvent.Paused
+                        UsageEvents.Event.ACTIVITY_STOPPED -> FgEvent.Stopped
+                        else -> null
                     }
+                    if (type != null) tracker.onEvent(type, e.packageName, e.className)
                 }
             }
             lastQuery = now
+            foreground = tracker.foreground
             state.purge()
             // capture was started for a launch that never happened: do not keep recording the screen
             if (session == null && capture.running.value && now - capture.startedAtMs > 90_000) capture.stop()
             val s = session
             val fg = foreground
             state.setSeen(fg, fg != null && profiles.containsKey(fg))
+            if (fg != lastLogged) { lastLogged = fg; state.log("front: ${fg ?: "—"} (${if (fg != null && profiles.containsKey(fg)) "in My games" else "not in My games"})") }
             if (!shell.isAvailable()) scope.launch { shell.ensureReady() } // the shell link may have dropped since the service started (debounced inside)
             if (s == null) {
                 val tracked = profiles[fg]
@@ -315,6 +329,7 @@ class GameWatcherService : Service() {
         capture.reset() // frames from before the game opened (FrameX, launcher) must not count
         session = base.copy(id = games.startSession(base))
         notify(getString(R.string.games_notif_playing, p.label))
+        state.log("session started: ${p.label}${if (applied != null) ", boost applied" else ""}")
         if (canOverlay()) { overlay.show(); refreshOverlay() }
     }
 
