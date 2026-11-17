@@ -29,6 +29,7 @@ import app.framex.core.datastore.SettingsRepository
 import app.framex.core.monitoring.FrameCollector
 import app.framex.core.monitoring.FrameStats
 import app.framex.core.monitoring.SurfaceFlingerLatencyParser
+import app.framex.core.monitoring.TimeStatsParser
 import app.framex.core.monitoring.SurfaceFlingerLayers
 import app.framex.core.optimization.ApplyRequest
 import app.framex.core.optimization.BoostLevel
@@ -60,6 +61,12 @@ class WatcherState @Inject constructor() {
     private val _running = MutableStateFlow(false)
     val running: StateFlow<Boolean> = _running.asStateFlow()
     internal fun set(v: Boolean) { _running.value = v }
+
+    /** What FrameX currently sees in front, for the status line in Settings (diagnostics). */
+    data class Seen(val pkg: String?, val tracked: Boolean)
+    private val _seen = MutableStateFlow(Seen(null, false))
+    val seen: StateFlow<Seen> = _seen.asStateFlow()
+    internal fun setSeen(pkg: String?, tracked: Boolean) { if (_seen.value != Seen(pkg, tracked)) _seen.value = Seen(pkg, tracked) }
 
     private val armed = ConcurrentHashMap<String, ArmedLaunch>()
     fun arm(pkg: String, launch: ArmedLaunch) { armed[pkg] = launch }
@@ -96,6 +103,9 @@ class WatcherController @Inject constructor(
         return ops.unsafeCheckOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(), context.packageName) == AppOpsManager.MODE_ALLOWED
     }
     fun start() { context.startForegroundService(Intent(context, GameWatcherService::class.java)) }
+
+    /** Starts the service if needed and asks it to show a sample overlay for 30 s. */
+    fun testOverlay() { context.startForegroundService(Intent(context, GameWatcherService::class.java).setAction(GameWatcherService.ACTION_TEST)) }
     fun stop() { context.stopService(Intent(context, GameWatcherService::class.java)) }
 }
 
@@ -106,6 +116,8 @@ class WatcherController @Inject constructor(
  */
 @AndroidEntryPoint
 class GameWatcherService : Service() {
+    companion object { const val ACTION_TEST = "app.framex.feature.games.TEST_OVERLAY" }
+
     @Inject lateinit var games: GamesRepository
     @Inject lateinit var engine: OptimizationEngine
     @Inject lateinit var state: WatcherState
@@ -119,7 +131,15 @@ class GameWatcherService : Service() {
     @Volatile private var profiles: Map<String, GameProfileEntity> = emptyMap()
     @Volatile private var overlayEnabled = false
     @Volatile private var overlayScope = OverlayScope.Games
+    @Volatile private var styleNow = app.framex.core.common.OverlayStyle.Stealth
     private var passivePkg: String? = null
+    private enum class SfMode { TimeStats, Latency }
+    private var sfMode = SfMode.TimeStats
+    private var tsEnabled = false
+    private var modeEmpty = 0
+    private var tsSamples = 0
+    private var lastTsFps: Float? = null
+    private var layerMissing = false
     private val gameCache = HashMap<String, Boolean>()
     private val homePackages: Set<String> by lazy {
         val home = packageManager.queryIntentActivities(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), 0).map { it.activityInfo.packageName }
@@ -156,6 +176,7 @@ class GameWatcherService : Service() {
             settings.settings.collect { s ->
                 overlayEnabled = s.fpsOverlayEnabled
                 overlayScope = s.overlayScope
+                styleNow = s.overlayStyle
                 overlay.setStyle(s.overlayStyle)
                 if (session != null) { if (canOverlay()) overlay.show() else overlay.hide() }
                 if (!overlayEnabled) overlay.hide()
@@ -165,7 +186,19 @@ class GameWatcherService : Service() {
         scope.launch { loop() }
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int) = START_NOT_STICKY
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent?.action == ACTION_TEST) showTestOverlay()
+        return START_NOT_STICKY
+    }
+
+    /** Shows the overlay with sample numbers for 30 s, over whatever is open, to check that Android lets it appear there. */
+    private fun showTestOverlay() {
+        if (!Settings.canDrawOverlays(this)) return
+        overlay.setStyle(styleNow)
+        overlay.show()
+        overlay.update(OverlayContent("TEST", getString(R.string.overlay_unit_test), OverlayColors.GOOD, "36.6°C", OverlayColors.TEXT))
+        scope.launch { delay(30_000); if (session == null && passivePkg == null) overlay.hide() }
+    }
 
     override fun onDestroy() {
         state.set(false)
@@ -206,6 +239,8 @@ class GameWatcherService : Service() {
             if (session == null && capture.running.value && now - capture.startedAtMs > 90_000) capture.stop()
             val s = session
             val fg = foreground
+            state.setSeen(fg, fg != null && profiles.containsKey(fg))
+            if (!shell.isAvailable()) scope.launch { shell.ensureReady() } // the shell link may have dropped since the service started (debounced inside)
             if (s == null) {
                 val tracked = profiles[fg]
                 if (tracked != null) { passivePkg = null; startSession(tracked) } else passive(fg)
@@ -233,12 +268,12 @@ class GameWatcherService : Service() {
             OverlayScope.Apps -> true
         }
         if (!allowed || fg == null) {
-            if (passivePkg != null) { passivePkg = null; overlay.hide() }
+            if (passivePkg != null) { passivePkg = null; overlay.hide(); stopTimeStats() }
             return
         }
         if (passivePkg != fg) {
             passivePkg = fg
-            collector = FrameCollector(); layer = null; layerAge = 0; lastFrameCount = 0; staleTicks = 0
+            collector = FrameCollector(); layer = null; layerAge = 0; lastFrameCount = 0; staleTicks = 0; tsSamples = 0; lastTsFps = null; modeEmpty = 0
             capture.reset()
         }
         sampleFrames(fg)
@@ -277,24 +312,57 @@ class GameWatcherService : Service() {
         val t = batteryTemp()
         val base = GameSessionEntity(packageName = p.packageName, label = p.label, startMs = System.currentTimeMillis(),
             appliedProfile = applied, startTempC = t, maxTempC = t, boostLevel = if (applied != null && boost != null) level.name else BoostLevel.Off.name)
-        collector = FrameCollector(); layer = null; layerAge = 0; lastFrameCount = 0; staleTicks = 0
+        collector = FrameCollector(); layer = null; layerAge = 0; lastFrameCount = 0; staleTicks = 0; tsSamples = 0; lastTsFps = null; modeEmpty = 0
         capture.reset() // frames from before the game opened (FrameX, launcher) must not count
         session = base.copy(id = games.startSession(base))
         notify(getString(R.string.games_notif_playing, p.label))
         if (canOverlay()) { overlay.show(); refreshOverlay() }
     }
 
-    /** Real frame timestamps from SurfaceFlinger; only possible while Shizuku is connected. */
+    /**
+     * Real frame data from SurfaceFlinger; needs shell access. TimeStats first (works on newer Android, including 15),
+     * the older --latency as a fallback. If a method returns nothing for [SWITCH_AFTER] samples, the other one is tried,
+     * and the one that works is remembered while the service runs.
+     */
     private suspend fun sampleFrames(pkg: String) {
         if (!shell.isAvailable()) return
-        if (layer == null || ++layerAge > 30) {
-            layer = shell.surfaceFlingerLayers()?.let { SurfaceFlingerLayers.pick(it, pkg) }
-            layerAge = 0
+        var got = false
+        if (sfMode == SfMode.TimeStats) {
+            if (!tsEnabled) { shell.timeStatsEnable(); tsEnabled = true }
+            val sample = shell.timeStatsDumpClear()?.let { TimeStatsParser.parse(it, pkg) }
+            if (sample != null && sample.totalFrames > 0) {
+                got = true
+                sample.averageFps?.let { lastTsFps = it }
+                collector.addFrameTimes(sample.frameTimesMs)
+                tsSamples++
+            }
+        } else {
+            if (layer == null || ++layerAge > 30) {
+                layer = shell.surfaceFlingerLayers()?.let { SurfaceFlingerLayers.pick(it, pkg) }
+                layerAge = 0
+            }
+            layerMissing = layer == null
+            layer?.let { l ->
+                val text = shell.surfaceFlingerLatency(l)
+                if (text == null) layer = null else {
+                    val before = collector.frameTimesMs.size
+                    collector.add(SurfaceFlingerLatencyParser.parse(text))
+                    got = collector.frameTimesMs.size > before
+                }
+            }
         }
-        val l = layer ?: return
-        val text = shell.surfaceFlingerLatency(l)
-        if (text == null) { layer = null; return }
-        collector.add(SurfaceFlingerLatencyParser.parse(text))
+        if (got) modeEmpty = 0
+        else if (++modeEmpty >= SWITCH_AFTER) {
+            modeEmpty = 0
+            sfMode = if (sfMode == SfMode.TimeStats) SfMode.Latency else SfMode.TimeStats
+            layer = null; layerMissing = false
+        }
+    }
+
+    private fun stopTimeStats() {
+        if (!tsEnabled) return
+        tsEnabled = false
+        CoroutineScope(Dispatchers.IO).launch { runCatching { shell.timeStatsDisable() } } // less work for SurfaceFlinger when nobody is measuring
     }
 
     /** Measured through SurfaceFlinger if Shizuku is connected, else estimated from screen capture, else none. */
@@ -314,19 +382,25 @@ class GameWatcherService : Service() {
 
     private fun refreshOverlay() {
         if (!canOverlay()) return
+        overlay.show() // idempotent: if the window was never created or the system dropped it, it comes back on the next tick
         val tempC = batteryTemp()
         val temp = tempC?.let { String.format(java.util.Locale.US, "%.1f°C", it) } ?: "—"
         val src = source()
         var value = "—"
-        var unit = getString(R.string.overlay_unit_na)
+        var unit = getString(R.string.overlay_unit_noshell) // no shell access and no capture: say why, not just "n/a"
         var fpsInt: Int? = null
         if (src != Source.None) {
-            val count = activeTimes(src).size
+            val count = if (src == Source.Measured && sfMode == SfMode.TimeStats) tsSamples else activeTimes(src).size
             staleTicks = if (count == lastFrameCount) staleTicks + 1 else 0
             lastFrameCount = count
             // no new frames for 3 s: do not show an old number
-            val fps = if (staleTicks >= 3) null else if (src == Source.Measured) collector.currentFps() else capture.currentFps()
-            if (fps == null) unit = getString(R.string.overlay_unit_wait)
+            val fps = when {
+                staleTicks >= 3 -> null
+                src == Source.Measured && sfMode == SfMode.TimeStats -> lastTsFps
+                src == Source.Measured -> collector.currentFps()
+                else -> capture.currentFps()
+            }
+            if (fps == null) unit = getString(if (src == Source.Measured && sfMode == SfMode.Latency && layerMissing) R.string.overlay_unit_nolayer else R.string.overlay_unit_wait)
             else {
                 fpsInt = fps.toInt()
                 value = if (src == Source.Estimated) "~$fpsInt" else "$fpsInt"
@@ -381,6 +455,8 @@ class GameWatcherService : Service() {
 
     private companion object {
         const val CHANNEL = "game_watcher"
+        const val SWITCH_AFTER = 5
+
         const val ID = 1001
     }
 }

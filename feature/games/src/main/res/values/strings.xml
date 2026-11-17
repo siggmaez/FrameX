@@ -103,4 +103,7 @@
     <string name="gb_does_ping">• Adds the Wi-Fi low-latency modes (this game is ping-sensitive).</string>
     <string name="gb_no_scale">• No resolution cut: this game is not limited by the graphics chip, so it would only blur the picture.</string>
     <string name="gb_does_dim" formatted="false">• Max also dims the screen to about 30% so the phone runs cooler (needs the permission to change system settings).</string>
+    <string name="overlay_unit_noshell">FPS no shell</string>
+    <string name="overlay_unit_nolayer">FPS no layer</string>
+    <string name="overlay_unit_test">TEST overlay</string>
 </resources>

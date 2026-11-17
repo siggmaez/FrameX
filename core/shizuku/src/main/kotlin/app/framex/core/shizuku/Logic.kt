@@ -75,6 +75,11 @@ object Commands {
 
     const val GET_DATA_SAVER = "cmd netpolicy get restrict-background"
     fun setDataSaver(on: Boolean) = "cmd netpolicy set restrict-background ${if (on) "true" else "false"}"
+
+    const val TIMESTATS_ENABLE = "dumpsys SurfaceFlinger --timestats -enable"
+    const val TIMESTATS_DISABLE = "dumpsys SurfaceFlinger --timestats -disable"
+    /** Two plain calls instead of combined flags, so it works however the flags are handled. */
+    const val TIMESTATS_DUMP_CLEAR = "dumpsys SurfaceFlinger --timestats -dump; dumpsys SurfaceFlinger --timestats -clear"
     fun setBatterySaver(on: Boolean) = "settings put global low_power ${if (on) 1 else 0}"
     const val GET_BATTERY_SAVER = "settings get global low_power"
     const val LIST_LAYERS = "dumpsys SurfaceFlinger --list"

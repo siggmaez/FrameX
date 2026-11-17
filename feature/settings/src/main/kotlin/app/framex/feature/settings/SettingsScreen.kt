@@ -203,6 +203,10 @@ private fun OverlayCard(enabled: Boolean, onChange: (Boolean) -> Unit, capture: 
         if (granted && usage && !running) {
             OutlinedButton(onClick = vm::startWatcher) { Text(stringResource(R.string.set_status_start)) }
         }
+        val seen by vm.seen.collectAsStateWithLifecycle()
+        Note(stringResource(R.string.set_seen, seen.pkg ?: "—", stringResource(if (seen.tracked) R.string.set_seen_tracked else R.string.set_seen_untracked)))
+        if (granted) OutlinedButton(onClick = vm::testOverlay) { Text(stringResource(R.string.set_test_overlay)) }
+        Note(stringResource(R.string.set_test_note))
         Note(stringResource(R.string.set_keepalive))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = { ctx.startActivity(android.content.Intent(android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) }) { Text(stringResource(R.string.set_keepalive_battery)) }

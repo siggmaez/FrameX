@@ -101,6 +101,11 @@ class ShizukuTest {
         assertEquals("cmd power set-fixed-performance-mode-enabled true", Commands.setFixedPerformance(true))
     }
 
+    @Test fun timeStatsCommands() {
+        assertEquals("dumpsys SurfaceFlinger --timestats -enable", Commands.TIMESTATS_ENABLE)
+        assertTrue(Commands.TIMESTATS_DUMP_CLEAR.contains("-dump") && Commands.TIMESTATS_DUMP_CLEAR.contains("-clear"))
+    }
+
     @Test fun networkCommandsAndParsing() {
         assertEquals("cmd wifi force-hi-perf-mode enabled; cmd wifi force-low-latency-mode enabled", Commands.setWifiPerf(true))
         assertEquals("cmd wifi force-hi-perf-mode disabled; cmd wifi force-low-latency-mode disabled", Commands.setWifiPerf(false))

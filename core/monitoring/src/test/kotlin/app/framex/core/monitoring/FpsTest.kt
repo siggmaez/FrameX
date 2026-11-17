@@ -88,3 +88,46 @@ class FpsTest {
         assertEquals(60, c.frameTimesMs.size)
     }
 }
+
+class TimeStatsTest {
+    private val dump = """
+        AverageFPS summary
+        layerName = SurfaceView[com.supercell.brawlstars/com.supercell.titan.GameApp]@0(BLAST)#123
+        packageName = com.supercell.brawlstars
+        totalFrames = 120
+        droppedFrames = 0
+        averageFPS = 59.842
+        presentToPresent histogram is as below:
+        0ms=0 1ms=0 15ms=2 16ms=70 17ms=40 33ms=8
+        layerName = com.other.app/com.other.Main#0
+        totalFrames = 500
+        averageFPS = 61.0
+        presentToPresent histogram is as below:
+        16ms=500
+    """.trimIndent()
+
+    @Test fun picksTheGamesLayerAndReadsFpsAndFrameTimes() {
+        val s = TimeStatsParser.parse(dump, "com.supercell.brawlstars")!!
+        assertEquals(120, s.totalFrames); assertEquals(59.842f, s.averageFps!!, 0.001f)
+        assertEquals(120, s.frameTimesMs.size)
+        assertEquals(8, s.frameTimesMs.count { it == 33f })
+        assertTrue(s.layer.startsWith("SurfaceView"))
+    }
+
+    @Test fun supportsTheNameOnItsOwnLineForm() {
+        val t = "SurfaceView[com.g.a/com.g.A]@0(BLAST)#9\ntotalFrames = 30\nframeRate = 30.00\naverageFPS = 30.051\n"
+        val s = TimeStatsParser.parse(t, "com.g.a")!!
+        assertEquals(30, s.totalFrames); assertEquals(30.051f, s.averageFps!!, 0.001f); assertTrue(s.frameTimesMs.isEmpty())
+    }
+
+    @Test fun unknownPackageOrEmptyDumpGivesNothing() {
+        assertNull(TimeStatsParser.parse(dump, "com.none"))
+        assertNull(TimeStatsParser.parse("", "com.g.a"))
+    }
+
+    @Test fun collectorTakesExternalFrameTimes() {
+        val c = FrameCollector()
+        c.addFrameTimes(listOf(16f, 17f, 0f, 9000f))
+        assertEquals(2, c.frameTimesMs.size)
+    }
+}

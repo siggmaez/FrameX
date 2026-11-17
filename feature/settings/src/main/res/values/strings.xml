@@ -86,4 +86,9 @@
     <string name="set_keepalive">If the overlay disappears after a while, the phone is probably stopping FrameX in the background. On HyperOS open the app info and set Battery saver to \"No restrictions\", turn on Autostart, and lock FrameX in the recent apps.</string>
     <string name="set_keepalive_battery">Battery optimization</string>
     <string name="set_keepalive_app">FrameX app info</string>
+    <string name="set_seen">The app FrameX sees in front right now: %1$s (%2$s)</string>
+    <string name="set_seen_tracked">in My games</string>
+    <string name="set_seen_untracked">not in My games</string>
+    <string name="set_test_overlay">Test the overlay (30 s)</string>
+    <string name="set_test_note">Press it, then open your game within 30 seconds. If the test box shows over the game, Android allows it and the problem is detection; if not, the phone blocks overlays over that game. The line above shows what FrameX sees.</string>
 </resources>

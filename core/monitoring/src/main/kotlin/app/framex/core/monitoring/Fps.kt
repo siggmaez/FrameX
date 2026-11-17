@@ -109,6 +109,9 @@ class FrameCollector {
         }
     }
 
+    /** Frame times (ms) measured elsewhere, e.g. from a TimeStats histogram. */
+    fun addFrameTimes(ms: List<Float>) { times += ms.filter { it > 0f && it < MAX_GAP_MS } }
+
     /** One live frame timestamp (ns, monotonic), e.g. from a screen-capture callback. */
     fun addSample(tsNs: Long) {
         if (lastTs > 0) {

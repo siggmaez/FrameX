@@ -103,4 +103,7 @@
     <string name="gb_does_ping">• Добавляет режимы Wi-Fi с низкой задержкой (эта игра чувствительна к пингу).</string>
     <string name="gb_no_scale">• Без снижения разрешения: эта игра не упирается в графический чип, поэтому оно только размыло бы картинку.</string>
     <string name="gb_does_dim" formatted="false">• «Максимум» ещё снижает яркость примерно до 30%, чтобы телефон меньше грелся (нужно разрешение на изменение системных настроек).</string>
+    <string name="overlay_unit_noshell">FPS нет доступа</string>
+    <string name="overlay_unit_nolayer">FPS нет слоя</string>
+    <string name="overlay_unit_test">ТЕСТ оверлея</string>
 </resources>

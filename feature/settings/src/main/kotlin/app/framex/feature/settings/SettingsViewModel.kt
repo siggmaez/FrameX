@@ -38,6 +38,8 @@ class SettingsViewModel @Inject constructor(
     fun setOverlayScope(s: app.framex.core.common.OverlayScope) { viewModelScope.launch { repo.setOverlayScope(s) } }
     val watcherRunning = watcher.state.running
     fun startWatcher() { runCatching { watcher.start() } }
+    fun testOverlay() { runCatching { watcher.testOverlay() } }
+    val seen = watcher.state.seen
     fun hasUsageAccess() = watcher.hasUsageAccess()
     fun setAutoStop(on: Boolean) { viewModelScope.launch { repo.setAutoStopBackground(on) } }
     fun setNeverStop(s: Set<String>) { viewModelScope.launch { repo.setNeverStopApps(s) } }
