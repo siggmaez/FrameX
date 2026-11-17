@@ -16,6 +16,7 @@ import javax.inject.Singleton
 @Singleton
 class AdbShell @Inject constructor(private val adb: AdbController) : TypedShell() {
     override fun isAvailable() = adb.isConnected()
+    override suspend fun ensureReady() = adb.ensureConnected()
 
     override suspend fun exec(command: String?): ShellResult =
         if (command == null) ShellResult(false, "rejected: invalid input") else adb.run(command)
@@ -27,7 +28,7 @@ class CompositeShell @Inject constructor(private val shizuku: ShizukuShell, priv
     private fun pick(): PrivilegedShell = if (shizuku.isAvailable()) shizuku else adb
 
     override fun isAvailable() = shizuku.isAvailable() || adb.isAvailable()
-    override suspend fun ensureReady() { if (!shizuku.isAvailable()) adb.ensureConnected() }
+    override suspend fun ensureReady() { if (!shizuku.isAvailable()) adb.ensureReady() }
     override suspend fun setGameMode(pkg: String, level: GameModeLevel) = pick().setGameMode(pkg, level)
     override suspend fun getGameMode(pkg: String) = pick().getGameMode(pkg)
     override suspend fun forceStop(pkg: String) = pick().forceStop(pkg)
