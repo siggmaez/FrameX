@@ -116,7 +116,6 @@ class WatcherController @Inject constructor(
  */
 @AndroidEntryPoint
 class GameWatcherService : Service() {
-    companion object { const val ACTION_TEST = "app.framex.feature.games.TEST_OVERLAY" }
 
     @Inject lateinit var games: GamesRepository
     @Inject lateinit var engine: OptimizationEngine
@@ -453,7 +452,8 @@ class GameWatcherService : Service() {
         if (Build.VERSION.SDK_INT >= 34) startForeground(ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE) else startForeground(ID, n)
     }
 
-    private companion object {
+    companion object {
+        const val ACTION_TEST = "app.framex.feature.games.TEST_OVERLAY"
         const val CHANNEL = "game_watcher"
         const val SWITCH_AFTER = 5
 
