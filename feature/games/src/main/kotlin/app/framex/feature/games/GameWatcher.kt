@@ -259,7 +259,7 @@ class GameWatcherService : Service() {
             ?: if (p.autoApply) runCatching { OptimizationProfile.valueOf(p.profile) }.getOrDefault(OptimizationProfile.Gaming) else null
         // this game's own boost level; Off = nothing extra
         val level = runCatching { BoostLevel.valueOf(p.boostLevel) }.getOrDefault(BoostLevel.Off)
-        val boost = GameBoosts.plan(p.packageName, level)
+        val boost = GameBoosts.plan(p.packageName, level, supportedRefreshRates(this)) // null for games without a tuned strategy
         val pingExtras = if (p.pingBoost) setOf(OptAction.LowLatencyWifi, OptAction.WifiLowLatencyMode, OptAction.BackgroundDataLimit) else emptySet()
         var applied: String? = null
         if ((profile != null && profile != OptimizationProfile.Balanced) || ((boost != null || pingExtras.isNotEmpty()) && (profile != null || armed != null))) {
@@ -269,14 +269,14 @@ class GameWatcherService : Service() {
                 profile ?: OptimizationProfile.Balanced,
                 ApplyRequest(
                     targetPackage = p.packageName, stopPackages = armed?.stopPackages.orEmpty(), customActions = custom,
-                    extraActions = boost?.extraActions.orEmpty() + pingExtras, renderScale = boost?.renderScale,
+                    extraActions = boost?.extraActions.orEmpty() + pingExtras, renderScale = boost?.renderScale, refreshHz = boost?.refreshHz,
                 ),
             )
             if (report.anyApplied) { applied = (profile ?: OptimizationProfile.Balanced).name; appliedByUs = true }
         }
         val t = batteryTemp()
         val base = GameSessionEntity(packageName = p.packageName, label = p.label, startMs = System.currentTimeMillis(),
-            appliedProfile = applied, startTempC = t, maxTempC = t, boostLevel = if (applied != null) level.name else BoostLevel.Off.name)
+            appliedProfile = applied, startTempC = t, maxTempC = t, boostLevel = if (applied != null && boost != null) level.name else BoostLevel.Off.name)
         collector = FrameCollector(); layer = null; layerAge = 0; lastFrameCount = 0; staleTicks = 0
         capture.reset() // frames from before the game opened (FrameX, launcher) must not count
         session = base.copy(id = games.startSession(base))

@@ -149,22 +149,46 @@ class EngineTest {
         assertEquals(listOf("b.two"), AppRanking.select(a, emptyMap(), emptySet(), limit = 1).map { it.packageName })
     }
 
-    @Test fun gameBoostPlans() {
+    @Test fun brawlStarsIsPacingFirstWithoutAResolutionCut() {
         assertNull(GameBoosts.plan("com.supercell.brawlstars", BoostLevel.Off))
-        val safe = GameBoosts.plan("com.supercell.brawlstars", BoostLevel.Safe)!!
-        assertEquals(setOf(OptAction.RefreshLock), safe.extraActions); assertNull(safe.renderScale)
-        val strong = GameBoosts.plan("com.supercell.brawlstars", BoostLevel.Strong)!!
-        assertTrue(OptAction.FixedPerformance in strong.extraActions && OptAction.RenderScale in strong.extraActions)
-        assertEquals(0.9f, strong.renderScale!!, 0f)
-        assertEquals(0.8f, GameBoosts.plan("com.supercell.brawlstars", BoostLevel.Max)!!.renderScale!!, 0f)
+        val strong = GameBoosts.plan("com.supercell.brawlstars", BoostLevel.Strong, listOf(60, 90))!!
+        assertNull(strong.renderScale)                                       // light on the GPU: lowering resolution would only blur it
+        assertTrue(OptAction.RenderScale !in strong.extraActions)
+        assertEquals(setOf(OptAction.RefreshLock, OptAction.WifiLowLatencyMode, OptAction.FixedPerformance), strong.extraActions)
+        assertEquals(60, strong.refreshHz)                                   // 60 FPS game: 60 Hz is even, 90 Hz would judder
         assertEquals(60, strong.spec.knownCapFps)
+        assertEquals(GameStrategy.PacingFirst, strong.spec.strategy)
     }
 
-    @Test fun unknownGamesUseGenericBoostAndSpecializedAreFlagged() {
-        assertTrue(GameBoosts.isSpecialized("com.roblox.client"))
+    @Test fun heavyGpuGamesLowerResolutionAndMaxDimsTheScreen() {
+        val strong = GameBoosts.plan("com.miHoYo.GenshinImpact", BoostLevel.Strong, listOf(60, 90))!!
+        assertEquals(0.8f, strong.renderScale!!, 0f)
+        assertTrue(OptAction.ReduceBrightness !in strong.extraActions)
+        val max = GameBoosts.plan("com.miHoYo.GenshinImpact", BoostLevel.Max, listOf(60, 90))!!
+        assertEquals(0.7f, max.renderScale!!, 0f)
+        assertTrue(OptAction.ReduceBrightness in max.extraActions && OptAction.RenderScale in max.extraActions)
+    }
+
+    @Test fun competitiveGamesGetLowLatencyAndTheHighestRefreshWhenUncapped() {
+        val p = GameBoosts.plan("com.tencent.ig", BoostLevel.Safe, listOf(60, 90, 120))!!
+        assertTrue(OptAction.WifiLowLatencyMode in p.extraActions)
+        assertEquals(120, p.refreshHz)                                       // no known cap: highest rate
+        assertNull(GameBoosts.plan("com.roblox.client", BoostLevel.Safe)!!.refreshHz) // unknown rates: executor picks the maximum
+    }
+
+    @Test fun refreshChoiceMatchesTheGamesCap() {
+        val spec = GameBoosts.specFor("com.supercell.brawlstars")!!
+        assertEquals(120, GameBoosts.refreshFor(spec, listOf(60, 90, 120)))  // 120 is a multiple of 60
+        assertEquals(60, GameBoosts.refreshFor(spec, listOf(60, 90)))
+        assertEquals(90, GameBoosts.refreshFor(spec, listOf(90)))            // no multiple: the next rate up
+        assertNull(GameBoosts.refreshFor(spec, emptyList()))
+    }
+
+    @Test fun unsupportedGamesGetNoSpecialBoostAtAnyLevel() {
         assertTrue(!GameBoosts.isSpecialized("com.some.game"))
-        assertEquals("generic", GameBoosts.specFor("com.some.game").id)
-        assertEquals(0.75f, GameBoosts.plan("com.some.game", BoostLevel.Max)!!.renderScale!!, 0f)
+        assertNull(GameBoosts.specFor("com.some.game"))
+        BoostLevel.entries.forEach { assertNull(GameBoosts.plan("com.some.game", it, listOf(60, 90))) }
+        assertTrue(GameBoosts.isSpecialized("com.roblox.client"))
     }
 
     @Test fun extraActionsAreAppliedOnTopOfTheProfileAndRenderScaleNeedsAGame() = runTest {
