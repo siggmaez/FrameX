@@ -60,11 +60,18 @@
     <string name="adb_s_not_found">Wireless debugging not found</string>
     <string name="adb_s_failed">Could not connect</string>
     <string name="adb_note">Gives FrameX the same shell access Shizuku gives: game mode, battery saver, real FPS and real force-stop. FrameX connects only to your own phone, never to the internet. Pairing is needed once; reconnecting later is one tap.</string>
-    <string name="adb_steps">1) Settings → About phone → tap the build number 7 times. 2) Developer options → turn on Wireless debugging (the phone must be on Wi-Fi). 3) Press Pair here: FrameX opens Developer options and posts a notification. 4) Open Wireless debugging → Pair device with pairing code. 5) Pull the notification down and type the 6-digit code there. 6) Press Connect.</string>
+    <string name="adb_steps">1) Settings → About phone → tap the build number 7 times. 2) Developer options → turn on Wireless debugging (the phone must be on Wi-Fi). 3) Press Pair here: FrameX opens Developer options and posts a notification. 4) Open Wireless debugging → Pair device with pairing code. 5) Pull the notification down and type the 6-digit code there. 6) Press Connect. 7) For mobile data only: press \"Keep working without Wi-Fi\" once, then you can leave Wi-Fi.</string>
     <string name="adb_pair">Pair</string>
     <string name="adb_connect">Connect</string>
     <string name="adb_disconnect">Disconnect</string>
     <string name="adb_port_note">If Connect finds nothing, type the port shown under \"IP address &amp; Port\" on the Wireless debugging screen.</string>
     <string name="adb_port">Port</string>
     <string name="adb_connect_port">Connect to port</string>
+    <string name="adb_s_approve">Waiting for your approval</string>
+    <string name="adb_s_connected_tcp">Connected (TCP, works without Wi-Fi)</string>
+    <string name="adb_tcp_note">Wireless debugging needs Wi-Fi. Press the button below once while connected: FrameX switches ADB to plain TCP (the same as \"adb tcpip 5555\"), so it keeps working on mobile data after you leave Wi-Fi. Android will ask \"Allow USB debugging?\" for FrameX: tick \"Always allow\" and accept. Also turn on USB debugging in Developer options. It resets when the phone restarts. While it is on, port 5555 accepts connections only from devices you approve.</string>
+    <string name="adb_tcp_on">Keep working without Wi-Fi</string>
+    <string name="adb_tcp_on_note">TCP mode is on: this works without Wi-Fi until the phone restarts. After a restart you need Wi-Fi once more (it can be a network without internet).</string>
+    <string name="adb_tcp_off">Switch back to normal</string>
+    <string name="adb_approve_note">Accept the \"Allow USB debugging?\" dialog for FrameX (tick \"Always allow\"). You have about a minute.</string>
 </resources>

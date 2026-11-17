@@ -41,6 +41,8 @@ class SettingsViewModel @Inject constructor(
     fun adbStartPairing() = adb.startPairing()
     fun adbConnect(port: Int? = null) { viewModelScope.launch { adb.connect(port) } }
     fun adbDisconnect() = adb.disconnect()
+    fun adbEnableTcp() { viewModelScope.launch { adb.enableTcpMode() } }
+    fun adbDisableTcp() { viewModelScope.launch { adb.disableTcpMode() } }
     fun stopMethod() = runner.bestMethod()
     fun a11yBundled() = app.framex.core.optimization.AutomationHolder.isBundled(appContext)
     suspend fun userApps() = appsProvider.userApps()

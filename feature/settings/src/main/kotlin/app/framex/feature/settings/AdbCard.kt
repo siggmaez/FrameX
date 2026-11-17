@@ -35,7 +35,8 @@ fun AdbCard(vm: SettingsViewModel) {
         Text(stringResource(when (st.state) {
             AdbState.Disconnected -> R.string.adb_s_disconnected
             AdbState.Connecting -> R.string.adb_s_connecting
-            AdbState.Connected -> R.string.adb_s_connected
+            AdbState.AwaitingApproval -> R.string.adb_s_approve
+            AdbState.Connected -> if (st.viaTcp) R.string.adb_s_connected_tcp else R.string.adb_s_connected
             AdbState.NeedsPairing -> R.string.adb_s_needs_pairing
             AdbState.NotFound -> R.string.adb_s_not_found
             AdbState.Failed -> R.string.adb_s_failed
@@ -44,6 +45,18 @@ fun AdbCard(vm: SettingsViewModel) {
         Text(stringResource(R.string.adb_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         if (st.state != AdbState.Connected) {
             Text(stringResource(R.string.adb_steps), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        if (st.state == AdbState.Connected) {
+            if (st.viaTcp) {
+                Text(stringResource(R.string.adb_tcp_on_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                OutlinedButton(onClick = vm::adbDisableTcp) { Text(stringResource(R.string.adb_tcp_off)) }
+            } else {
+                Text(stringResource(R.string.adb_tcp_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Button(onClick = vm::adbEnableTcp) { Text(stringResource(R.string.adb_tcp_on)) }
+            }
+        }
+        if (st.state == AdbState.AwaitingApproval) {
+            Text(stringResource(R.string.adb_approve_note), style = MaterialTheme.typography.bodyMedium)
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (st.state == AdbState.Connected) {
