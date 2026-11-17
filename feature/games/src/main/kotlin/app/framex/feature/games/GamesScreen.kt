@@ -89,6 +89,7 @@ fun GamesScreen(contentPadding: PaddingValues, vm: GamesViewModel = hiltViewMode
                 Note(stringResource(R.string.g_auto_note))
             }
         }
+        item { VendorToolsCard() }
         ui.notice?.let { n ->
             item {
                 FrameXCard {

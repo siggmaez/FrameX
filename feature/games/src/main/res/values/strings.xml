@@ -89,4 +89,8 @@
     <string name="tip_render_distance">Reduce the draw / render distance.</string>
     <string name="pb_game_title">Ping boost while playing</string>
     <string name="pb_game_note">Needs shell access. Turns on the Wi-Fi low-latency modes and Data Saver so other apps stop using your connection in the background, then puts everything back. It cannot make your internet line itself faster.</string>
+    <string name="vt_title">Your phone\'s own game booster</string>
+    <string name="vt_note">FrameX cannot generate frames itself: that is done only by the phone maker\'s driver or by the game. Some phones (usually pricier models) have a game booster (Game Turbo, Game Space, Game Booster) with options such as frame insertion or a higher frame rate. FrameX finds the screens that exist on this phone and opens them, but cannot see which features your model has. Turn one on, play, then compare the measured FPS in the game\'s card.</string>
+    <string name="vt_none">No game booster screens were found on this phone.</string>
+    <string name="vt_failed">That screen could not be opened.</string>
 </resources>
