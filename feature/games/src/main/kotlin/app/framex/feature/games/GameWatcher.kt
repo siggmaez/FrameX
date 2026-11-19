@@ -54,7 +54,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /** A launch the user started with the Play button: the profile to apply once the game shows up. */
-data class ArmedLaunch(val profile: OptimizationProfile, val stopPackages: List<String>, val armedAtMs: Long = System.currentTimeMillis())
+/** [preApplied]: the whole boost (including the lower screen resolution) was already applied before the game opened; the watcher only restores it afterwards. */
+data class ArmedLaunch(val profile: OptimizationProfile, val stopPackages: List<String>, val armedAtMs: Long = System.currentTimeMillis(), val preApplied: Boolean = false)
 
 @Singleton
 class WatcherState @Inject constructor() {
@@ -83,7 +84,12 @@ class WatcherState @Inject constructor() {
     fun arm(pkg: String, launch: ArmedLaunch) { armed[pkg] = launch }
     /** Returns and removes the armed launch if it is not older than [MAX_AGE_MS]. */
     internal fun take(pkg: String): ArmedLaunch? = armed.remove(pkg)?.takeIf { System.currentTimeMillis() - it.armedAtMs < MAX_AGE_MS }
-    internal fun purge() { val now = System.currentTimeMillis(); armed.entries.removeIf { now - it.value.armedAtMs >= MAX_AGE_MS } }
+    /** Drops launches that never happened. True if one of them had already changed the system (Ultra), so it must be undone. */
+    internal fun purge(): Boolean {
+        val now = System.currentTimeMillis(); var hard = false
+        armed.entries.removeIf { val old = now - it.value.armedAtMs >= MAX_AGE_MS; if (old && it.value.preApplied) hard = true; old }
+        return hard
+    }
 
     private companion object { const val MAX_AGE_MS = 60_000L }
 }
@@ -92,6 +98,7 @@ class WatcherState @Inject constructor() {
 class WatcherController @Inject constructor(
     @ApplicationContext private val context: Context,
     val state: WatcherState,
+    private val engine: app.framex.core.optimization.OptimizationEngine,
     private val settings: SettingsRepository,
 ) {
     private val io = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -101,6 +108,8 @@ class WatcherController @Inject constructor(
      * (re)start the service. Called from the foreground (app start, switching the overlay on), where Android allows it.
      */
     fun startIfWantedAsync() {
+        // if FrameX stopped while the screen resolution was lowered and no game session is running, put it back
+        io.launch { if (!state.running.value) runCatching { engine.restoreIfHard() } }
         io.launch {
             val s = settings.settings.first()
             if (s.fpsOverlayEnabled && android.provider.Settings.canDrawOverlays(context) && hasUsageAccess() && !state.running.value) {
@@ -256,7 +265,7 @@ class GameWatcherService : Service() {
             }
             lastQuery = now
             foreground = tracker.foreground
-            state.purge()
+            if (state.purge() && session == null) engine.restore() // Ultra was applied but the game never opened: put everything back
             // capture was started for a launch that never happened: do not keep recording the screen
             if (session == null && capture.running.value && now - capture.startedAtMs > 90_000) capture.stop()
             val s = session
@@ -326,14 +335,19 @@ class GameWatcherService : Service() {
         val boost = GameBoosts.plan(p.packageName, level, supportedRefreshRates(this)) // null for games without a tuned strategy
         val pingExtras = if (p.pingBoost) setOf(OptAction.LowLatencyWifi, OptAction.WifiLowLatencyMode, OptAction.BackgroundDataLimit) else emptySet()
         var applied: String? = null
-        if ((profile != null && profile != OptimizationProfile.Balanced) || ((boost != null || pingExtras.isNotEmpty()) && (profile != null || armed != null))) {
+        val preApplied = armed?.preApplied == true // Ultra: already applied before the game opened
+        if (preApplied) {
+            applied = (profile ?: OptimizationProfile.Performance).name
+            appliedByUs = true // the watcher restores it when the session ends
+        } else if ((profile != null && profile != OptimizationProfile.Balanced) || ((boost != null || pingExtras.isNotEmpty()) && (profile != null || armed != null))) {
             // Apps are stopped only if the user approved them (Play button confirmation, a remembered list or the automatic boost).
             val custom = settings.settings.first().customActions
             val report = engine.apply(
                 profile ?: OptimizationProfile.Balanced,
                 ApplyRequest(
                     targetPackage = p.packageName, stopPackages = armed?.stopPackages.orEmpty(), customActions = custom,
-                    extraActions = boost?.extraActions.orEmpty() + pingExtras, renderScale = boost?.renderScale, refreshHz = boost?.refreshHz,
+                    extraActions = (boost?.extraActions.orEmpty() - OptAction.ScreenResolution) + pingExtras, // never change the screen size under a running game
+                    renderScale = boost?.renderScale, refreshHz = boost?.refreshHz,
                 ),
             )
             if (report.anyApplied) { applied = (profile ?: OptimizationProfile.Balanced).name; appliedByUs = true }

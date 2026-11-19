@@ -187,7 +187,8 @@ class EngineTest {
     @Test fun unsupportedGamesGetNoSpecialBoostAtAnyLevel() {
         assertTrue(!GameBoosts.isSpecialized("com.some.game"))
         assertNull(GameBoosts.specFor("com.some.game"))
-        BoostLevel.entries.forEach { assertNull(GameBoosts.plan("com.some.game", it, listOf(60, 90))) }
+        BoostLevel.entries.filter { it != BoostLevel.Ultra }.forEach { assertNull(GameBoosts.plan("com.some.game", it, listOf(60, 90))) }
+        assertTrue(GameBoosts.plan("com.some.game", BoostLevel.Ultra, listOf(60, 90)) != null) // Ultra is for any game
         assertTrue(GameBoosts.isSpecialized("com.roblox.client"))
     }
 
@@ -206,5 +207,40 @@ class EngineTest {
         assertEquals(Capability.Supported, old[OptAction.FixedPerformance])
         assertEquals(Capability.Supported, CapabilityEvaluator.evaluate(true, true, 33)[OptAction.RenderScale])
         assertEquals(Capability.Unsupported(UnsupportedReason.NeedsShizuku), CapabilityEvaluator.evaluate(true, false, 35)[OptAction.RefreshLock])
+    }
+
+    @Test fun ultraDoesEverythingForGraphicsLimitedGames() {
+        val p = GameBoosts.plan("com.miHoYo.GenshinImpact", BoostLevel.Ultra, listOf(60, 90))!!
+        val a = p.extraActions
+        assertTrue(listOf(OptAction.RefreshLock, OptAction.FixedPerformance, OptAction.RenderScale, OptAction.ScreenResolution,
+            OptAction.BackgroundDataLimit, OptAction.WifiLowLatencyMode, OptAction.ReduceBrightness).all { it in a })
+        assertEquals(0.7f, p.screenScale!!, 0f)     // heavy game: harder cut
+        assertEquals(0.63f, p.renderScale!!, 0.001f) // the per-game Max scale (0.7) lowered a little more (x0.9)
+    }
+
+    @Test fun ultraSkipsTheResolutionCutForFrameCappedGames() {
+        val p = GameBoosts.plan("com.supercell.brawlstars", BoostLevel.Ultra, listOf(60, 90))!!
+        assertTrue(OptAction.ScreenResolution !in p.extraActions && OptAction.RenderScale !in p.extraActions)
+        assertNull(p.screenScale); assertNull(p.renderScale)
+        assertTrue(OptAction.FixedPerformance in p.extraActions && OptAction.RefreshLock in p.extraActions)
+        assertEquals(60, p.refreshHz)
+    }
+
+    @Test fun ultraWorksForAnyUnknownGame() {
+        val p = GameBoosts.plan("com.some.game", BoostLevel.Ultra, listOf(60, 90))!!
+        assertTrue(OptAction.ScreenResolution in p.extraActions && OptAction.RenderScale in p.extraActions)
+        assertEquals(90, p.refreshHz)
+    }
+
+    @Test fun screenScalingKeepsAspectInMultiplesOfEightAndNeverGrows() {
+        assertEquals(1080 to 2400, ScreenScaling.target(1440 to 3200, 0.75f))
+        assertNull(ScreenScaling.target(480 to 800, 0.75f))                // would be too small
+        val t = ScreenScaling.target(720 to 1640, 1.0f)!!           // the factor is capped, so it is never "no change" or larger
+        assertTrue(t.first < 720 && t.second < 1640)
+    }
+
+    @Test fun screenResolutionCapabilityNeedsShell() {
+        assertEquals(Capability.Unsupported(UnsupportedReason.NeedsShizuku), CapabilityEvaluator.evaluate(true, false, 35)[OptAction.ScreenResolution])
+        assertEquals(Capability.Supported, CapabilityEvaluator.evaluate(true, true, 35)[OptAction.ScreenResolution])
     }
 }

@@ -4,6 +4,7 @@ import app.framex.core.common.ShizukuState
 import app.framex.core.optimization.GameModeLevel
 import app.framex.core.optimization.PrivilegedShell
 import app.framex.core.optimization.ShellResult
+import app.framex.core.optimization.WmSize
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
@@ -43,6 +44,10 @@ abstract class TypedShell : PrivilegedShell {
     override suspend fun timeStatsEnable() = exec(Commands.TIMESTATS_ENABLE)
     override suspend fun timeStatsDumpClear(light: Boolean) = exec(if (light) Commands.TIMESTATS_DUMP_CLEAR_LIGHT else Commands.TIMESTATS_DUMP_CLEAR)
     override suspend fun timeStatsDisable() = exec(Commands.TIMESTATS_DISABLE)
+
+    override suspend fun wmSize(): WmSize? = exec(Commands.GET_WM_SIZE).takeIf { it.ok }?.let { Parsers.wmSize(it.output) }
+    override suspend fun setWmSize(w: Int, h: Int) = exec(Commands.setWmSize(w, h))
+    override suspend fun resetWmSize() = exec(Commands.RESET_WM_SIZE)
     override suspend fun setBatterySaver(on: Boolean) = exec(Commands.setBatterySaver(on))
 
     override suspend fun isBatterySaverOn(): Boolean? =

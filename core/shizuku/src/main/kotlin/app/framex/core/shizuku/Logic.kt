@@ -82,6 +82,10 @@ object Commands {
     /** Only the busiest few layers: a much smaller dump for SurfaceFlinger to build while a game is running. */
     const val TIMESTATS_DUMP_CLEAR_LIGHT = "dumpsys SurfaceFlinger --timestats -dump -maxlayers 6; dumpsys SurfaceFlinger --timestats -clear"
     const val TIMESTATS_DUMP_CLEAR = "dumpsys SurfaceFlinger --timestats -dump; dumpsys SurfaceFlinger --timestats -clear"
+
+    const val GET_WM_SIZE = "wm size"
+    const val RESET_WM_SIZE = "wm size reset"
+    fun setWmSize(w: Int, h: Int): String? = if (w in 320..4000 && h in 320..8000) "wm size ${w}x$h" else null
     fun setBatterySaver(on: Boolean) = "settings put global low_power ${if (on) 1 else 0}"
     const val GET_BATTERY_SAVER = "settings get global low_power"
     const val LIST_LAYERS = "dumpsys SurfaceFlinger --list"
@@ -105,6 +109,13 @@ object Parsers {
     fun dataSaverOn(output: String): Boolean? {
         val m = Regex("(?i)restrict background status:\\s*([a-z]+)").find(output)?.groupValues?.get(1)?.lowercase() ?: return null
         return when (m) { "enabled" -> true; "disabled", "whitelisted" -> false; else -> null }
+    }
+
+    /** "Physical size: 720x1640" and, if set, "Override size: 540x1230". */
+    fun wmSize(output: String): app.framex.core.optimization.WmSize? {
+        val phys = Regex("(?i)physical size:\\s*(\\d+)x(\\d+)").find(output)?.groupValues ?: return null
+        val over = Regex("(?i)override size:\\s*(\\d+)x(\\d+)").find(output)?.groupValues
+        return app.framex.core.optimization.WmSize(phys[1].toInt() to phys[2].toInt(), over?.let { it[1].toInt() to it[2].toInt() })
     }
 
     fun batterySaverOn(output: String): Boolean? = when (output.trim()) { "1" -> true; "0" -> false; else -> null }

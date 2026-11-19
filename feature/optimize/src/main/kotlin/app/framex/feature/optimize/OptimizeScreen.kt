@@ -61,6 +61,7 @@ private fun OptAction.title() = stringResource(when (this) {
     OptAction.RefreshLock -> R.string.act_refresh
     OptAction.WifiLowLatencyMode -> R.string.act_wifi_mode
     OptAction.BackgroundDataLimit -> R.string.act_datasaver
+    OptAction.ScreenResolution -> R.string.act_resolution
 })
 
 @Composable

@@ -64,6 +64,7 @@ class GamesViewModel @Inject constructor(
     private val capture: CaptureFpsController,
     private val runner: app.framex.core.optimization.BoostRunner,
     private val adb: app.framex.core.adb.AdbController,
+    private val engine: app.framex.core.optimization.OptimizationEngine,
 ) : ViewModel() {
     private val installed = MutableStateFlow<List<InstalledApp>?>(null)
     private val showAll = MutableStateFlow(false)
@@ -169,15 +170,33 @@ class GamesViewModel @Inject constructor(
         }
     }
 
-    /** Stops the apps BEFORE the game opens (so they do not compete while it loads), then starts it. */
+    /**
+     * Stops the apps BEFORE the game opens (so they do not compete while it loads), then starts it.
+     * Ultra applies the whole boost here too, including the lower screen resolution: changing the size under a running
+     * game could make it re-layout, so it happens first and the watcher only restores it afterwards.
+     */
     private suspend fun armAndLaunch(g: GameProfileEntity, profile: OptimizationProfile, stop: List<String>) {
-        if (stop.isNotEmpty()) {
+        val level = runCatching { app.framex.core.optimization.BoostLevel.valueOf(g.boostLevel) }.getOrDefault(app.framex.core.optimization.BoostLevel.Off)
+        val ultra = if (level == app.framex.core.optimization.BoostLevel.Ultra) app.framex.core.optimization.GameBoosts.plan(g.packageName, level, supportedRefreshRates(context)) else null
+        var preApplied = false
+        if (ultra != null) {
+            val report = engine.apply(
+                OptimizationProfile.Performance,
+                app.framex.core.optimization.ApplyRequest(
+                    targetPackage = g.packageName, stopPackages = stop, extraActions = ultra.extraActions,
+                    renderScale = ultra.renderScale, refreshHz = ultra.refreshHz, screenScale = ultra.screenScale,
+                ),
+            )
+            if (stop.isNotEmpty()) { kotlinx.coroutines.delay(1500); runner.dismiss() }
+            preApplied = report.anyApplied
+        } else if (stop.isNotEmpty()) {
             runner.run(stop)
             kotlinx.coroutines.delay(1500) // let the result be read
             runner.dismiss()
         }
-        if (profile != OptimizationProfile.Balanced) {
-            watcher.state.arm(g.packageName, ArmedLaunch(profile, emptyList())) // stopping is already done
+        val armedProfile = if (preApplied) OptimizationProfile.Performance else profile
+        if (preApplied || profile != OptimizationProfile.Balanced) {
+            watcher.state.arm(g.packageName, ArmedLaunch(armedProfile, emptyList(), preApplied = preApplied)) // stopping is already done
             if (!watcher.state.running.value) watcher.start()
         }
         if (!launchGame(g.packageName)) notice.value = PlayNotice.CannotLaunch

@@ -24,6 +24,8 @@ data class ApplyRequest(
     val renderScale: Float? = null,
     /** Refresh rate for [OptAction.RefreshLock]; null = the highest the screen supports. */
     val refreshHz: Int? = null,
+    /** Whole-screen resolution factor for [OptAction.ScreenResolution], e.g. 0.75 (default when null). */
+    val screenScale: Float? = null,
 )
 
 enum class ResultStatus { Applied, Restored, Failed, Skipped }
@@ -78,6 +80,7 @@ object CapabilityEvaluator {
         OptAction.RefreshLock to if (shellAvailable) Capability.Supported else Capability.Unsupported(UnsupportedReason.NeedsShizuku),
         OptAction.WifiLowLatencyMode to if (shellAvailable) Capability.Supported else Capability.Unsupported(UnsupportedReason.NeedsShizuku),
         OptAction.BackgroundDataLimit to if (shellAvailable) Capability.Supported else Capability.Unsupported(UnsupportedReason.NeedsShizuku),
+        OptAction.ScreenResolution to if (shellAvailable) Capability.Supported else Capability.Unsupported(UnsupportedReason.NeedsShizuku),
     )
 
     private fun game(shell: Boolean, sdk: Int): Capability = when {
@@ -141,5 +144,23 @@ object GamePlanner {
             if (highRam) add(Advisory.HighMemory)
         }
         return LaunchPlan(profile, adv)
+    }
+}
+
+/** The screen's own size and any override currently set (what `wm size` reports). */
+data class WmSize(val physical: Pair<Int, Int>, val override: Pair<Int, Int>?) {
+    val current: Pair<Int, Int> get() = override ?: physical
+}
+
+object ScreenScaling {
+    private const val STEP = 8
+    private const val MIN_SIDE = 480
+
+    /** [scale] of the PHYSICAL size, in multiples of 8 pixels; null if that would not be smaller or is too small. */
+    fun target(physical: Pair<Int, Int>, scale: Float): Pair<Int, Int>? {
+        val s = scale.coerceIn(0.5f, 0.95f)
+        val w = Math.round(physical.first * s / STEP) * STEP
+        val h = Math.round(physical.second * s / STEP) * STEP
+        return if (w >= physical.first || h >= physical.second || minOf(w, h) < MIN_SIDE) null else w to h
     }
 }

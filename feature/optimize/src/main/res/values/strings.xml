@@ -91,4 +91,5 @@
     <string name="pb_no_delta">Could not compare: one of the runs had no replies.</string>
     <string name="pb_honest">A short test to a public server, not to your game server. Results vary from run to run, so repeat it a few times before trusting a small difference.</string>
     <string name="pb_stays">Stays on until you press \"Restore previous settings\" above.</string>
+    <string name="act_resolution">Lower the whole screen resolution (looks softer; use before a game)</string>
 </resources>

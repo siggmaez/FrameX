@@ -39,6 +39,16 @@ class OptimizationEngine(
         EngineReport(profile, results)
     }
 
+    /**
+     * If FrameX stopped while the screen resolution was lowered, put everything back. A normal profile is left alone,
+     * so this never undoes something you applied on purpose.
+     */
+    suspend fun restoreIfHard(): EngineReport? = mutex.withLock {
+        val snap = storage.load() ?: return null
+        if (OptAction.ScreenResolution !in snap.tokens) return null
+        EngineReport(snap.profile, restoreInternal(snap))
+    }
+
     /** Puts every changed setting back to what it was before FrameX applied a profile. */
     suspend fun restore(): EngineReport? = mutex.withLock {
         val snap = storage.load() ?: return null

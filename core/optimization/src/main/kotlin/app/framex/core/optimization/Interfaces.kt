@@ -44,6 +44,10 @@ interface PrivilegedShell {
     /** "min|peak" refresh-rate overrides currently stored ("null" = not set), or null if unreadable. */
     suspend fun refreshRateSettings(): Pair<String, String>?
     suspend fun setRefreshRate(hz: Int): ShellResult
+    /** The screen size and any override (`wm size`). Lowering it is a hard way to cut the work for the graphics chip. */
+    suspend fun wmSize(): WmSize?
+    suspend fun setWmSize(w: Int, h: Int): ShellResult
+    suspend fun resetWmSize(): ShellResult
     /** Wi-Fi high-performance + low-latency test modes (no power-saving dips on the radio). */
     suspend fun setWifiPerf(on: Boolean): ShellResult
     /** Data Saver: true = background data of apps is restricted. Null if unreadable. */

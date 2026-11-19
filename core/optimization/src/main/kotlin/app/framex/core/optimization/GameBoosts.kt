@@ -2,7 +2,8 @@ package app.framex.core.optimization
 
 import app.framex.core.common.OptAction
 
-enum class BoostLevel { Off, Safe, Strong, Max }
+/** Ultra: everything at once, for any game. Lowers the whole screen resolution too, unless the game is not graphics-limited. */
+enum class BoostLevel { Off, Safe, Strong, Max, Ultra }
 
 /** Advice for settings INSIDE the game; FrameX cannot change those and never pretends to. */
 enum class GameTip { FrameRateMax, HighFrameRateMode, GraphicsLow, ShadowsOff, ResolutionLow, RenderDistance }
@@ -32,7 +33,11 @@ data class GameBoostSpec(
 )
 
 /** What a boost level does for one game on this phone. Each part is a real system request, applied only if the phone supports it. */
-data class BoostPlan(val level: BoostLevel, val extraActions: Set<OptAction>, val renderScale: Float?, val refreshHz: Int?, val spec: GameBoostSpec)
+data class BoostPlan(
+    val level: BoostLevel, val extraActions: Set<OptAction>, val renderScale: Float?, val refreshHz: Int?, val spec: GameBoostSpec,
+    /** Whole-screen resolution factor (Ultra only, null when it would not help this game). */
+    val screenScale: Float? = null,
+)
 
 object GameBoosts {
     private val catalog: Map<String, GameBoostSpec> = buildMap {
@@ -76,21 +81,34 @@ object GameBoosts {
         return supportedHz.filter { it % cap == 0 }.maxOrNull() ?: supportedHz.filter { it >= cap }.minOrNull() ?: supportedHz.max()
     }
 
+    /** Used by Ultra for games without a tuned strategy: treated as graphics-limited. */
+    val generic = GameBoostSpec("generic", GameStrategy.GpuHeavy, mapOf(BoostLevel.Strong to 0.9f, BoostLevel.Max to 0.8f),
+        listOf(GameTip.GraphicsLow, GameTip.ShadowsOff, GameTip.FrameRateMax), heavy = true, pingSensitive = true)
+
     /**
      * Safe: lock a matching refresh rate (+ Wi-Fi low-latency modes for ping-sensitive games).
      * Strong: + fixed performance mode, and lower render resolution if this game is resolution-limited.
      * Max: + a lower resolution still, and for heavy games a dimmer screen so the phone runs cooler.
-     * Null for games without a tuned strategy: no special boost there.
+     * Ultra (any game): everything, plus Data Saver and, for games limited by the graphics chip, a lower resolution of the
+     * whole screen. Games that stop at their own frame cap (PacingFirst) do not get that: it would only blur them.
+     * Levels below Ultra are null for games without a tuned strategy.
      */
     fun plan(pkg: String, level: BoostLevel, supportedHz: List<Int> = emptyList()): BoostPlan? {
         if (level == BoostLevel.Off) return null
-        val spec = catalog[pkg] ?: return null
+        val spec = catalog[pkg] ?: if (level == BoostLevel.Ultra) generic else return null
+        val ultra = level == BoostLevel.Ultra
         val actions = linkedSetOf(OptAction.RefreshLock)
-        if (spec.pingSensitive) actions += OptAction.WifiLowLatencyMode
+        if (spec.pingSensitive || ultra) actions += OptAction.WifiLowLatencyMode
         if (level.ordinal >= BoostLevel.Strong.ordinal) actions += OptAction.FixedPerformance
-        val scale = spec.scales[level]?.takeIf { it < 1f }
+        // Ultra reuses the lowest per-game render scale, a little lower still
+        val scale = (if (ultra) spec.scales[BoostLevel.Max]?.let { it * 0.9f } else spec.scales[level])?.takeIf { it < 1f }
         if (scale != null) actions += OptAction.RenderScale
-        if (level == BoostLevel.Max && spec.heavy) actions += OptAction.ReduceBrightness
-        return BoostPlan(level, actions, scale, refreshFor(spec, supportedHz), spec)
+        if ((level == BoostLevel.Max && spec.heavy) || ultra) actions += OptAction.ReduceBrightness
+        var screen: Float? = null
+        if (ultra) {
+            actions += OptAction.BackgroundDataLimit
+            if (spec.strategy != GameStrategy.PacingFirst) { actions += OptAction.ScreenResolution; screen = if (spec.heavy) 0.7f else 0.75f }
+        }
+        return BoostPlan(level, actions, scale, refreshFor(spec, supportedHz), spec, screen)
     }
 }

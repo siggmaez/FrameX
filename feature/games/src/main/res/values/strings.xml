@@ -94,7 +94,7 @@
     <string name="vt_none">No game booster screens were found on this phone.</string>
     <string name="vt_failed">That screen could not be opened.</string>
     <string name="gb_unsupported_title">No special boost for this game</string>
-    <string name="gb_unsupported_text">Special boosts exist only for games FrameX has a tuned strategy for: Brawl Stars, Clash Royale and Clash of Clans, Roblox, PUBG Mobile and BGMI, Call of Duty Mobile, Genshin Impact and Honkai Star Rail, Free Fire, Mobile Legends, Minecraft and Standoff 2. This game still gets the regular profile above and can use the ping boost below. Its own settings matter most.</string>
+    <string name="gb_unsupported_text">The tuned levels (Safe, Strong, Max) exist only for games FrameX has a strategy for: Brawl Stars, Clash Royale and Clash of Clans, Roblox, PUBG Mobile and BGMI, Call of Duty Mobile, Genshin Impact and Honkai Star Rail, Free Fire, Mobile Legends, Minecraft and Standoff 2. For any other game you can use Ultra, which does everything at once.</string>
     <string name="gb_strategy_pacing">Strategy: this game is light on the graphics chip and stops at its own frame cap, so lowering resolution would only blur it. The boost fixes frame pacing instead: a screen rate that matches the game, and steady performance.</string>
     <string name="gb_strategy_gpu">Strategy: this game is heavy for the graphics chip, so render resolution is the main lever. Max also dims the screen so the phone runs cooler.</string>
     <string name="gb_strategy_sandbox">Strategy: this game depends on both the processor and the graphics chip. The boost lowers resolution a little and keeps performance steady; draw distance inside the game matters most.</string>
@@ -106,4 +106,10 @@
     <string name="overlay_unit_noshell">FPS no shell</string>
     <string name="overlay_unit_nolayer">FPS no layer</string>
     <string name="overlay_unit_test">TEST overlay</string>
+    <string name="gb_title_any">Boost for this game</string>
+    <string name="gb_level_ultra">Ultra</string>
+    <string name="gb_does_screen">• Lowers the whole screen resolution to %1$d%% while the game runs: the graphics chip draws far fewer pixels. Everything on screen looks softer meanwhile.</string>
+    <string name="gb_ultra_nores">• No screen resolution cut: this game stops at its own frame cap and is not limited by the graphics chip, so it would only blur it.</string>
+    <string name="gb_does_datasaver">• Data Saver: other apps cannot use your connection in the background.</string>
+    <string name="gb_ultra_warn">Ultra changes the resolution of the whole phone while you play and puts it back afterwards, and it is set before the game opens, so start the game with the Play button. If FrameX is stopped meanwhile, it restores the resolution the next time it starts.</string>
 </resources>

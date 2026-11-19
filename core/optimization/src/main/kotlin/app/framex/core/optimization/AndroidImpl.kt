@@ -149,6 +149,7 @@ object OptimizationModule {
             OptAction.FixedPerformance to FixedPerformanceExecutor(context, shell),
             OptAction.RefreshLock to RefreshLockExecutor(context, shell),
             OptAction.WifiLowLatencyMode to WifiLowLatencyModeExecutor(context, shell),
+            OptAction.ScreenResolution to ScreenResolutionExecutor(context, shell),
             OptAction.BackgroundDataLimit to BackgroundDataLimitExecutor(context, shell),
         )
         return OptimizationEngine(executors, capabilities, StoreStorage(store), RoomLogger(log))
@@ -330,4 +331,43 @@ class BackgroundDataLimitExecutor(private val context: Context, private val shel
         return ExecResult(if (r.ok) ResultStatus.Restored else ResultStatus.Failed,
             if (r.ok) context.getString(R.string.opt_datasaver_off) else r.output.take(120))
     }
+}
+
+/**
+ * Lowers the resolution of the WHOLE screen while a game runs (what resolution-changer apps do). The graphics chip then
+ * draws fewer pixels, which is the strongest lever for games it struggles with. Everything looks softer meanwhile and
+ * apps may re-layout, so it is applied BEFORE the game opens and put back afterwards. Read back to validate.
+ */
+class ScreenResolutionExecutor(private val context: Context, private val shell: PrivilegedShell) : ActionExecutor {
+    override suspend fun apply(action: OptAction, request: ApplyRequest): ExecResult {
+        val before = shell.wmSize() ?: return ExecResult(ResultStatus.Failed, context.getString(R.string.opt_not_confirmed))
+        val target = ScreenScaling.target(before.physical, request.screenScale ?: DEFAULT_SCALE)
+            ?: return ExecResult(ResultStatus.Failed, context.getString(R.string.opt_res_too_small))
+        val token = before.override?.let { "${it.first}x${it.second}" } ?: "reset"
+        val r = shell.setWmSize(target.first, target.second)
+        if (!r.ok) return ExecResult(ResultStatus.Failed, r.output.take(120))
+        delay(400)
+        if (shell.wmSize()?.override != target) {
+            restoreSize(token)
+            return ExecResult(ResultStatus.Failed, context.getString(R.string.opt_not_confirmed))
+        }
+        return ExecResult(ResultStatus.Applied, context.getString(R.string.opt_res_set, target.first, target.second, before.physical.first, before.physical.second), token)
+    }
+
+    override suspend fun restore(action: OptAction, token: String?): ExecResult {
+        val ok = restoreSize(token ?: "reset")
+        return ExecResult(if (ok) ResultStatus.Restored else ResultStatus.Failed,
+            if (ok) context.getString(R.string.opt_res_restored) else context.getString(R.string.opt_res_restore_failed))
+    }
+
+    private suspend fun restoreSize(token: String): Boolean {
+        val r = if (token == "reset") shell.resetWmSize() else {
+            val p = token.split('x')
+            val w = p.getOrNull(0)?.toIntOrNull(); val h = p.getOrNull(1)?.toIntOrNull()
+            if (w == null || h == null) shell.resetWmSize() else shell.setWmSize(w, h)
+        }
+        return r.ok
+    }
+
+    private companion object { const val DEFAULT_SCALE = 0.75f }
 }

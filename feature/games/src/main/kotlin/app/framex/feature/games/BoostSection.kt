@@ -43,26 +43,29 @@ private fun BoostLevel.label() = stringResource(when (this) {
     BoostLevel.Safe -> R.string.gb_level_safe
     BoostLevel.Strong -> R.string.gb_level_strong
     BoostLevel.Max -> R.string.gb_level_max
+    BoostLevel.Ultra -> R.string.gb_level_ultra
 })
 
 /**
- * Per-game section. Special boosts exist only for games FrameX has a tuned strategy for; every other game gets a plain
- * note (and still has the regular profile and the ping boost). Shows what each level really does for THIS game on THIS
- * screen, the settings only the player can change inside the game, and the measured FPS with and without the boost.
+ * Per-game section. Special levels (Safe .. Max) exist only for games FrameX has a tuned strategy for; the Ultra level
+ * (everything at once) is available for any game. Shows what each level really does for THIS game on THIS screen, the
+ * settings only the player can change inside the game, and the measured FPS with and without the boost.
  */
 @Composable
 fun BoostSection(g: GameProfileEntity, sessions: List<GameSessionEntity>, onPing: (Boolean) -> Unit, onLevel: (BoostLevel) -> Unit) {
     val ctx = LocalContext.current
     val rates = remember { supportedRefreshRates(ctx) }
     val spec = GameBoosts.specFor(g.packageName)
+    val stored = runCatching { BoostLevel.valueOf(g.boostLevel) }.getOrDefault(BoostLevel.Strong)
+    // games without a tuned strategy only have Off and Ultra
+    val level = if (spec == null && stored != BoostLevel.Ultra) BoostLevel.Off else stored
+    val levels = if (spec == null) listOf(BoostLevel.Off, BoostLevel.Ultra) else BoostLevel.entries
+    val plan = GameBoosts.plan(g.packageName, level, rates)
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(stringResource(if (spec != null) R.string.gb_title_special else R.string.gb_title_any), style = MaterialTheme.typography.titleSmall)
         if (spec == null) {
-            Text(stringResource(R.string.gb_unsupported_title), style = MaterialTheme.typography.titleSmall)
             Text(stringResource(R.string.gb_unsupported_text), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
-            val level = runCatching { BoostLevel.valueOf(g.boostLevel) }.getOrDefault(BoostLevel.Strong)
-            val plan = GameBoosts.plan(g.packageName, level, rates)
-            Text(stringResource(R.string.gb_title_special), style = MaterialTheme.typography.titleSmall)
             Text(stringResource(R.string.gb_honest), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(stringResource(when (spec.strategy) {
                 GameStrategy.PacingFirst -> R.string.gb_strategy_pacing
@@ -70,36 +73,40 @@ fun BoostSection(g: GameProfileEntity, sessions: List<GameSessionEntity>, onPing
                 GameStrategy.Sandbox -> R.string.gb_strategy_sandbox
                 GameStrategy.Competitive -> R.string.gb_strategy_competitive
             }), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
-            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                BoostLevel.entries.forEach { l -> FilterChip(selected = l == level, onClick = { onLevel(l) }, label = { Text(l.label()) }) }
-            }
-            if (plan == null) {
-                Text(stringResource(R.string.gb_does_nothing), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            } else {
-                Text(
-                    if (plan.refreshHz != null) stringResource(R.string.gb_does_refresh_hz, plan.refreshHz!!) else stringResource(R.string.gb_does_refresh),
-                    style = MaterialTheme.typography.bodySmall,
-                )
-                if (OptAction.WifiLowLatencyMode in plan.extraActions) Text(stringResource(R.string.gb_does_ping), style = MaterialTheme.typography.bodySmall)
-                if (OptAction.FixedPerformance in plan.extraActions) Text(stringResource(R.string.gb_does_fixed), style = MaterialTheme.typography.bodySmall)
-                val scale = plan.renderScale
-                if (scale != null) Text(stringResource(R.string.gb_does_scale, (scale * 100).roundToInt()), style = MaterialTheme.typography.bodySmall)
-                else if (level.ordinal >= BoostLevel.Strong.ordinal && spec.scales.isEmpty()) Text(stringResource(R.string.gb_no_scale), style = MaterialTheme.typography.bodySmall)
-                if (OptAction.ReduceBrightness in plan.extraActions) Text(stringResource(R.string.gb_does_dim), style = MaterialTheme.typography.bodySmall)
-                Text(stringResource(R.string.gb_needs_shell), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            spec.knownCapFps?.let { Text(stringResource(R.string.gb_cap, it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary) }
-            Text(stringResource(R.string.gb_tips_title), style = MaterialTheme.typography.labelLarge)
-            spec.tips.forEach { Text("• " + it.text(), style = MaterialTheme.typography.bodySmall) }
-            val c = BoostStats.compare(sessions)
-            Text(stringResource(R.string.gb_cmp_title), style = MaterialTheme.typography.labelLarge)
-            val f = { v: Float -> String.format(Locale.US, "%.0f", v) }
-            if (c.boostedAvg != null && c.plainAvg != null) {
-                Text(stringResource(R.string.gb_cmp_both, f(c.boostedAvg), c.boostedSessions, f(c.plainAvg), c.plainSessions) +
-                    if (c.estimated) " " + stringResource(R.string.gb_cmp_est) else "", style = MaterialTheme.typography.bodySmall)
-            } else {
-                Text(stringResource(R.string.gb_cmp_need), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
+        }
+        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            levels.forEach { l -> FilterChip(selected = l == level, onClick = { onLevel(l) }, label = { Text(l.label()) }) }
+        }
+        if (plan == null) {
+            Text(stringResource(R.string.gb_does_nothing), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        } else {
+            Text(
+                if (plan.refreshHz != null) stringResource(R.string.gb_does_refresh_hz, plan.refreshHz!!) else stringResource(R.string.gb_does_refresh),
+                style = MaterialTheme.typography.bodySmall,
+            )
+            if (OptAction.WifiLowLatencyMode in plan.extraActions) Text(stringResource(R.string.gb_does_ping), style = MaterialTheme.typography.bodySmall)
+            if (OptAction.FixedPerformance in plan.extraActions) Text(stringResource(R.string.gb_does_fixed), style = MaterialTheme.typography.bodySmall)
+            val scale = plan.renderScale
+            if (scale != null) Text(stringResource(R.string.gb_does_scale, (scale * 100).roundToInt()), style = MaterialTheme.typography.bodySmall)
+            else if (plan.level.ordinal >= BoostLevel.Strong.ordinal && plan.spec.scales.isEmpty()) Text(stringResource(R.string.gb_no_scale), style = MaterialTheme.typography.bodySmall)
+            plan.screenScale?.let { Text(stringResource(R.string.gb_does_screen, (it * 100).roundToInt()), style = MaterialTheme.typography.bodySmall) }
+            if (plan.level == BoostLevel.Ultra && plan.screenScale == null) Text(stringResource(R.string.gb_ultra_nores), style = MaterialTheme.typography.bodySmall)
+            if (OptAction.BackgroundDataLimit in plan.extraActions) Text(stringResource(R.string.gb_does_datasaver), style = MaterialTheme.typography.bodySmall)
+            if (OptAction.ReduceBrightness in plan.extraActions) Text(stringResource(R.string.gb_does_dim), style = MaterialTheme.typography.bodySmall)
+            Text(stringResource(R.string.gb_needs_shell), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (plan.level == BoostLevel.Ultra) Text(stringResource(R.string.gb_ultra_warn), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+        }
+        spec?.knownCapFps?.let { Text(stringResource(R.string.gb_cap, it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary) }
+        Text(stringResource(R.string.gb_tips_title), style = MaterialTheme.typography.labelLarge)
+        (spec ?: GameBoosts.generic).tips.forEach { Text("• " + it.text(), style = MaterialTheme.typography.bodySmall) }
+        val c = BoostStats.compare(sessions)
+        Text(stringResource(R.string.gb_cmp_title), style = MaterialTheme.typography.labelLarge)
+        val f = { v: Float -> String.format(Locale.US, "%.0f", v) }
+        if (c.boostedAvg != null && c.plainAvg != null) {
+            Text(stringResource(R.string.gb_cmp_both, f(c.boostedAvg), c.boostedSessions, f(c.plainAvg), c.plainSessions) +
+                if (c.estimated) " " + stringResource(R.string.gb_cmp_est) else "", style = MaterialTheme.typography.bodySmall)
+        } else {
+            Text(stringResource(R.string.gb_cmp_need), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         // the ping boost is not tied to a catalog entry: every game can use it
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {

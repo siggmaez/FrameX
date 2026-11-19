@@ -94,7 +94,7 @@
     <string name="vt_none">Экраны игрового бустера на этом телефоне не найдены.</string>
     <string name="vt_failed">Этот экран не удалось открыть.</string>
     <string name="gb_unsupported_title">Особого буста для этой игры нет</string>
-    <string name="gb_unsupported_text">Особые бусты есть только у игр, для которых у FrameX настроена своя стратегия: Brawl Stars, Clash Royale и Clash of Clans, Roblox, PUBG Mobile и BGMI, Call of Duty Mobile, Genshin Impact и Honkai Star Rail, Free Fire, Mobile Legends, Minecraft и Standoff 2. Эта игра по-прежнему получает обычный профиль выше и может использовать буст пинга ниже. Главное для неё это её собственные настройки.</string>
+    <string name="gb_unsupported_text">Настроенные уровни («Безопасный», «Сильный», «Максимум») есть только у игр, для которых у FrameX есть стратегия: Brawl Stars, Clash Royale и Clash of Clans, Roblox, PUBG Mobile и BGMI, Call of Duty Mobile, Genshin Impact и Honkai Star Rail, Free Fire, Mobile Legends, Minecraft и Standoff 2. Для любой другой игры доступен «Ультра»: он делает всё сразу.</string>
     <string name="gb_strategy_pacing">Стратегия: эта игра лёгкая для графического чипа и упирается в собственный потолок кадров, поэтому снижение разрешения только размыло бы картинку. Буст вместо этого выравнивает вывод кадров: частота экрана подбирается под игру, производительность держится стабильной.</string>
     <string name="gb_strategy_gpu">Стратегия: эта игра тяжёлая для графического чипа, поэтому главный рычаг — разрешение рендера. «Максимум» ещё и снижает яркость, чтобы телефон меньше грелся.</string>
     <string name="gb_strategy_sandbox">Стратегия: эта игра зависит и от процессора, и от графического чипа. Буст немного снижает разрешение и держит производительность стабильной; важнее всего дальность прорисовки внутри игры.</string>
@@ -106,4 +106,10 @@
     <string name="overlay_unit_noshell">FPS нет доступа</string>
     <string name="overlay_unit_nolayer">FPS нет слоя</string>
     <string name="overlay_unit_test">ТЕСТ оверлея</string>
+    <string name="gb_title_any">Буст для этой игры</string>
+    <string name="gb_level_ultra">Ультра</string>
+    <string name="gb_does_screen">• Снижает разрешение всего экрана до %1$d%% на время игры: графический чип рисует намного меньше пикселей. Всё на экране при этом выглядит мягче.</string>
+    <string name="gb_ultra_nores">• Без снижения разрешения экрана: эта игра упирается в собственный потолок кадров, а не в графический чип, поэтому оно только размыло бы картинку.</string>
+    <string name="gb_does_datasaver">• Экономия трафика: другие приложения не могут использовать ваше соединение в фоне.</string>
+    <string name="gb_ultra_warn">«Ультра» меняет разрешение всего телефона на время игры и возвращает его после, и это делается до открытия игры, поэтому запускайте игру кнопкой «Играть». Если FrameX остановится, он вернёт разрешение при следующем запуске.</string>
 </resources>

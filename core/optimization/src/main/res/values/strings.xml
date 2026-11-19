@@ -36,4 +36,8 @@
     <string name="opt_wifi_perf_off">Wi-Fi modes back to normal</string>
     <string name="opt_datasaver_on">Data Saver on: other apps cannot use data in the background</string>
     <string name="opt_datasaver_off">Data Saver restored</string>
+    <string name="opt_res_set">Screen resolution lowered to %1$dx%2$d (from %3$dx%4$d) while the game runs</string>
+    <string name="opt_res_restored">Screen resolution restored</string>
+    <string name="opt_res_restore_failed">Could not restore the screen resolution. Use \"Restore previous settings\" in Optimize</string>
+    <string name="opt_res_too_small">The screen resolution cannot be lowered further</string>
 </resources>

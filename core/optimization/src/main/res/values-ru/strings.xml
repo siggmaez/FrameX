@@ -36,4 +36,8 @@
     <string name="opt_wifi_perf_off">Режимы Wi-Fi возвращены как были</string>
     <string name="opt_datasaver_on">Экономия трафика включена: другие приложения не используют данные в фоне</string>
     <string name="opt_datasaver_off">Экономия трафика возвращена как была</string>
+    <string name="opt_res_set">Разрешение экрана снижено до %1$dx%2$d (было %3$dx%4$d) на время игры</string>
+    <string name="opt_res_restored">Разрешение экрана возвращено</string>
+    <string name="opt_res_restore_failed">Не удалось вернуть разрешение экрана. Нажмите «Вернуть прежние настройки» в «Оптимизации»</string>
+    <string name="opt_res_too_small">Разрешение экрана нельзя снизить сильнее</string>
 </resources>
