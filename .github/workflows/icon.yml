@@ -1,6 +1,8 @@
 name: Icon
 on:
   workflow_dispatch:
+  push:
+    paths: [tools/icon.svg, .github/workflows/icon.yml]
 jobs:
   icon:
     runs-on: ubuntu-latest
